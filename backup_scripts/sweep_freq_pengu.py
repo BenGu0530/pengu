@@ -15,7 +15,7 @@ import numpy as np
 import mujoco
 
 # ─── Config ───────────────────────────────────────────────────────
-XML_PATH = "penguV2/scene.xml"
+XML_PATH = "/home/rml2/Documents/ben_gu/ben_pengu/pengu/penguV2/scene.xml"
 ACTUATORS = ["hip-L", "hip-R", "crank1-R", "torso", "crank1-L"]
 
 # ═════════════════════════════════════════════════════════════════
@@ -28,8 +28,8 @@ STAND_HIP_DEG  = -25.0
 # ═════════════════════════════════════════════════════════════════
 #  WALK PARAMS (fixed for this sweep — conservative)
 # ═════════════════════════════════════════════════════════════════
-WALK_HIP_OFFSET_DEG = -20.0    # hip center during walk
-WALK_HIP_AMP_DEG    = 5.0   # keep low for frequency sweep
+WALK_HIP_OFFSET_DEG = -30.0    # hip center during walk
+WALK_HIP_AMP_DEG    = 10.0   # keep low for frequency sweep
 WALK_CRANK_AMP_DEG  = 0.0    # crank OFF
 WALK_TORSO_AMP_DEG  = 0.0    # torso passive
 
@@ -39,9 +39,9 @@ T_TRANSITION = 2.0
 # ═════════════════════════════════════════════════════════════════
 #  SWEEP RANGE
 # ═════════════════════════════════════════════════════════════════
-FREQ_MIN  = 1.0
+FREQ_MIN  = 1.4
 FREQ_MAX  = 2.0
-FREQ_STEP = 0.02
+FREQ_STEP = 0.005
 
 MAX_SIM_TIME = 30.0   # max seconds per trial
 FALL_Z_THRESH = 0.05  # COM z below this = fallen
