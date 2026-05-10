@@ -1,0 +1,7 @@
+MUJOCO_LOG.TXT
+__pycache__/
+*.pyc
+sweep_out/
+*.png
+*.csv
+.DS_Store

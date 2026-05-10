@@ -26,10 +26,10 @@ STAND_HIP_DEG  = -25.0      # [deg]
 WALK_FREQ           = 1.64  # [Hz]
 
 # Amplitudes
-WALK_HIP_AMP_DEG    = 10.0  # [deg] hip swing (C and D)
+WALK_HIP_AMP_DEG    = 0.0  # [deg] hip swing (C and D)
 WALK_HIP_OFFSET_DEG = 0.0   # [deg] hip center during walk
 WALK_CRANK_AMP_DEG  = 30.0  # [deg] leg extension (A and B)
-WALK_TORSO_AMP_DEG  = 10.0  # [deg] torso roll (E)
+WALK_TORSO_AMP_DEG  = 15.0  # [deg] torso roll (E)
 
 # ═════════════════════════════════════════════════════════════════
 #  PHASE OFFSETS — extra shift on top of built-in phasing [deg]
@@ -37,8 +37,8 @@ WALK_TORSO_AMP_DEG  = 10.0  # [deg] torso roll (E)
 #  Built-in:  A=0°  B=180°  C=180°  D=0°  E=0°
 #  These add to that.
 # ═════════════════════════════════════════════════════════════════
-PHASE_OFFSET_A_DEG = 0.0    # left leg (crank-L)
-PHASE_OFFSET_B_DEG = 0.0    # right leg (crank-R)
+PHASE_OFFSET_A_DEG = 45.0    # left leg (crank-L)
+PHASE_OFFSET_B_DEG = 45.0    # right leg (crank-R)
 PHASE_OFFSET_C_DEG = 0.0    # left hip swing
 PHASE_OFFSET_D_DEG = 0.0    # right hip swing
 PHASE_OFFSET_E_DEG = 0.0    # torso roll
