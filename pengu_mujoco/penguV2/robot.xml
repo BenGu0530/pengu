@@ -61,7 +61,8 @@
             <inertial pos="0.00309728 -0.00816562 -0.0519937" mass="0.149685" fullinertia="0.000166324 0.000359285 0.000426047 1.24008e-06 2.46733e-06 -8.22166e-06"/>
             <!-- Part right_foot0080 -->
             <geom type="mesh" class="visual" pos="-0.000764396 0.032498 0.0472219" quat="0.5 -0.5 -0.5 -0.5" mesh="right_foot0080" material="right_foot0080_material"/>
-            <geom type="mesh" class="collision" pos="-0.000764396 0.032498 0.0472219" quat="0.5 -0.5 -0.5 -0.5" mesh="right_foot0080" material="right_foot0080_material"/>
+            <!-- Foot sliding friction = 0.9 (rubbery plastic estimate; floor mu should be < this so the floor dominates MuJoCo's min() contact pair). Torsional/rolling kept at MuJoCo defaults. -->
+            <geom type="mesh" class="collision" pos="-0.000764396 0.032498 0.0472219" quat="0.5 -0.5 -0.5 -0.5" mesh="right_foot0080" material="right_foot0080_material" friction="0.9 0.005 0.0001"/>
             <!-- Frame closing_crank3-R_2 -->
             <site group="3" name="closing_crank3-R_2" pos="-0.000764396 0.0222 -0.01511" quat="0.707107 0.707107 0 3.76264e-17"/>
             <!-- Frame closing_crank3-R_2_z -->
@@ -122,7 +123,8 @@
         <inertial pos="0.00809087 -0.00363119 -0.0521227" mass="0.149685" fullinertia="0.000359248 0.000166321 0.000426014 1.24152e-06 8.21367e-06 -2.46626e-06"/>
         <!-- Part right_foot0080___fillet13 -->
         <geom type="mesh" class="visual" pos="-0.04257 0.00023 0.047094" quat="6.52375e-18 -0.707107 -0 -0.707107" mesh="right_foot0080___fillet13" material="right_foot0080___fillet13_material"/>
-        <geom type="mesh" class="collision" pos="-0.04257 0.00023 0.047094" quat="6.52375e-18 -0.707107 -0 -0.707107" mesh="right_foot0080___fillet13" material="right_foot0080___fillet13_material"/>
+        <!-- Foot sliding friction = 0.9 (rubbery plastic estimate; floor mu should be < this so the floor dominates MuJoCo's min() contact pair). Torsional/rolling kept at MuJoCo defaults. -->
+        <geom type="mesh" class="collision" pos="-0.04257 0.00023 0.047094" quat="6.52375e-18 -0.707107 -0 -0.707107" mesh="right_foot0080___fillet13" material="right_foot0080___fillet13_material" friction="0.9 0.005 0.0001"/>
         <!-- Frame closing_crank3-L_2 -->
         <site group="3" name="closing_crank3-L_2" pos="-0.0222673 0.00023 -0.0152379" quat="3.4355e-17 0.707107 0 0.707107"/>
         <!-- Frame closing_crank3-L_2_z -->
