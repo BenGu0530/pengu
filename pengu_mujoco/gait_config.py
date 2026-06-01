@@ -176,3 +176,14 @@ def print_config():
     print(f"  C left hip:   amp={WALK_HIP_AMP_DEG:.1f}°   built-in=180°  extra={PHASE_OFFSET_C_DEG:+.1f}°")
     print(f"  D right hip:  amp={WALK_HIP_AMP_DEG:.1f}°   built-in=0°    extra={PHASE_OFFSET_D_DEG:+.1f}°")
     print(f"  E torso:      amp={WALK_TORSO_AMP_DEG:.1f}°  built-in=0°    extra={PHASE_OFFSET_E_DEG:+.1f}°")
+
+
+def set_walk_freq(hz):
+    """Override the global walk frequency [Hz] at runtime (used by sweeps).
+
+    apply_ctrl/compute_gait read WALK_FREQ as a module global, so mutating it
+    here takes effect immediately. The file default (1.64) is unchanged; callers
+    that mutate this should restore the original value when done.
+    """
+    global WALK_FREQ
+    WALK_FREQ = hz

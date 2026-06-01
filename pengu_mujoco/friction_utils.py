@@ -16,7 +16,7 @@ import mujoco
 
 # Estimated sliding-friction coefficients for the 4 ablation surfaces.
 SURFACES = {
-    "mocap_floor": 0.5,    # baseline (mu ~ 0.4-0.7)
+    "mocap_floor": 0.7,    # baseline (mu ~ 0.4-0.7, upper end)
     "acrylic":     0.30,
     "uhmw_pe":     0.14,
     "ptfe_ice":    0.06,   # acrylic + PTFE film, ice-analog (mu ~ 0.04-0.08)

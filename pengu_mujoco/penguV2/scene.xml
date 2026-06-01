@@ -19,8 +19,8 @@
 
     <worldbody>
         <light pos="0 0 3.5" dir="0 0 -1" directional="true" />
-        <!-- Surface friction: 0.5 = mocap floor baseline. Change the first number to test other surfaces:
+        <!-- Surface friction: 0.7 = mocap floor baseline (mu ~ 0.4-0.7 range, upper end). Change the first number to test other surfaces:
              0.30 = acrylic, 0.14 = UHMW-PE, 0.06 = PTFE ice-analog. -->
-        <geom name="floor" size="0 0 0.05" pos="0 0 0" type="plane" material="groundplane" friction="0.5 0.005 0.0001" />
+        <geom name="floor" size="0 0 0.05" pos="0 0 0" type="plane" material="groundplane" friction="0.7 0.005 0.0001" />
     </worldbody>
 </mujoco>

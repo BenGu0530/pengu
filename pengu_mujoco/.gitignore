@@ -2,6 +2,7 @@ MUJOCO_LOG.TXT
 __pycache__/
 *.pyc
 sweep_out/
+results/
 *.png
 *.csv
 .DS_Store
