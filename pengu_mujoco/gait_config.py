@@ -187,3 +187,36 @@ def set_walk_freq(hz):
     """
     global WALK_FREQ
     WALK_FREQ = hz
+
+
+def set_hip_amp(deg):
+    """Override the global hip-swing amplitude [deg] at runtime (used by sweeps).
+
+    compute_gait reads WALK_HIP_AMP_DEG as a module global, so mutating it here
+    takes effect immediately. The file default is unchanged; callers that mutate
+    this should restore the original value when done.
+    """
+    global WALK_HIP_AMP_DEG
+    WALK_HIP_AMP_DEG = deg
+
+
+def set_crank_amp(deg):
+    """Override the global crank (leg-extension) amplitude [deg] at runtime.
+
+    compute_gait reads WALK_CRANK_AMP_DEG as a module global, so mutating it here
+    takes effect immediately. The file default is unchanged; callers that mutate
+    this should restore the original value when done.
+    """
+    global WALK_CRANK_AMP_DEG
+    WALK_CRANK_AMP_DEG = deg
+
+
+def set_torso_amp(deg):
+    """Override the global torso-roll amplitude [deg] at runtime (used by sweeps).
+
+    compute_gait reads WALK_TORSO_AMP_DEG as a module global, so mutating it here
+    takes effect immediately. The file default is unchanged; callers that mutate
+    this should restore the original value when done.
+    """
+    global WALK_TORSO_AMP_DEG
+    WALK_TORSO_AMP_DEG = deg

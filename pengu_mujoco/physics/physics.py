@@ -13,6 +13,8 @@ Outputs:
 import math
 import numpy as np
 import mujoco
+import matplotlib
+matplotlib.use("Agg")  # headless-safe: must precede the pyplot import
 import matplotlib.pyplot as plt
 from gait_config import XML_PATH, build_ids, set_initial_pose
 
