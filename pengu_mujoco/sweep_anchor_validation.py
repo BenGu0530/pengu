@@ -81,7 +81,7 @@ CSV_FIELDS = [
     "anchor_name", "hip_amp", "crank_amp", "torso_amp", "freq_hz", "mu_floor",
     "survived", "fall_time", "walk_time",
     "dist_xy", "dist_fwd", "dist_lat",
-    "mean_speed_fwd", "torso_roll_amp_deg", "pitch_drift_deg", "error_msg",
+    "mean_speed_fwd", "torso_roll_amp_deg", "pitch_offset_deg", "pitch_amp_deg", "error_msg",
 ]
 
 
@@ -110,7 +110,8 @@ def run_trial(idx, n_total, anchor, freq, sim_duration, log):
         "survived": False, "fall_time": float("nan"), "walk_time": 0.0,
         "dist_xy": 0.0, "dist_fwd": 0.0, "dist_lat": 0.0,
         "mean_speed_fwd": float("nan"),
-        "torso_roll_amp_deg": float("nan"), "pitch_drift_deg": float("nan"),
+        "torso_roll_amp_deg": float("nan"),
+        "pitch_offset_deg": float("nan"), "pitch_amp_deg": float("nan"),
         "error_msg": "",
     }
     t_wall0 = time.perf_counter()
@@ -141,12 +142,13 @@ def run_trial(idx, n_total, anchor, freq, sim_duration, log):
         # RELATIVE to spawn makes the -30 deg spawn pitch the zero reference.
         #   roll(t)  = atan2(up[0], up[2])  -> lateral lean about forward (y)
         #   pitch(t) = atan2(up[1], up[2])  -> fwd/back lean about lateral (x)
+        #     + = leaning MORE forward than spawn,  - = recovering toward upright
         R0 = data.xmat[root_id].reshape(3, 3).copy()
         up_local = R0.T @ np.array([0.0, 0.0, 1.0])
 
         walk_start = gc.T_HOLD + gc.T_TRANSITION
         roll_min = roll_max = None
-        pitch_abs_max = None
+        pitch_min = pitch_max = None
         pos_ws = None
         last_pos = data.xpos[root_id][:2].copy()
 
@@ -162,18 +164,19 @@ def run_trial(idx, n_total, anchor, freq, sim_duration, log):
                 break
             if pos_ws is None and data.time >= walk_start:
                 pos_ws = p[:2].copy()
-            if data.time >= walk_start:
+            # roll + pitch off the spawn-relative up vector; skip the first
+            # ROLL_SETTLE s of walk so the gait settles before we measure.
+            if data.time >= walk_start + ROLL_SETTLE:
                 R = data.xmat[root_id].reshape(3, 3)
                 up = R @ up_local
-                # pitch drift: measured over the whole walk window
+                roll = math.degrees(math.atan2(up[0], up[2]))
+                roll_min = roll if roll_min is None else min(roll_min, roll)
+                roll_max = roll if roll_max is None else max(roll_max, roll)
+                # pitch sign: + = leaning MORE forward than spawn,
+                #             - = recovering toward upright (or past it)
                 pitch = math.degrees(math.atan2(up[1], up[2]))
-                pa = abs(pitch)
-                pitch_abs_max = pa if pitch_abs_max is None else max(pitch_abs_max, pa)
-                # roll amplitude: skip the first ROLL_SETTLE s for settling
-                if data.time >= walk_start + ROLL_SETTLE:
-                    roll = math.degrees(math.atan2(up[0], up[2]))
-                    roll_min = roll if roll_min is None else min(roll_min, roll)
-                    roll_max = roll if roll_max is None else max(roll_max, roll)
+                pitch_min = pitch if pitch_min is None else min(pitch_min, pitch)
+                pitch_max = pitch if pitch_max is None else max(pitch_max, pitch)
 
         survived = math.isnan(res["fall_time"])
         res["survived"] = bool(survived)
@@ -190,8 +193,12 @@ def run_trial(idx, n_total, anchor, freq, sim_duration, log):
                 res["mean_speed_fwd"] = dy / res["walk_time"]
         if roll_min is not None:
             res["torso_roll_amp_deg"] = (roll_max - roll_min) / 2.0
-        if pitch_abs_max is not None:
-            res["pitch_drift_deg"] = pitch_abs_max
+        if pitch_min is not None:
+            # Metric A: most extreme signed deviation from spawn pitch
+            res["pitch_offset_deg"] = (pitch_max if abs(pitch_max) >= abs(pitch_min)
+                                       else pitch_min)
+            # Metric B: pitch oscillation amplitude (peak-to-peak / 2)
+            res["pitch_amp_deg"] = (pitch_max - pitch_min) / 2.0
 
     except Exception as e:                            # never let one trial kill the sweep
         res["error_msg"] = f"{type(e).__name__}: {e}"
@@ -208,8 +215,8 @@ def run_trial(idx, n_total, anchor, freq, sim_duration, log):
 
 def _fmt_row(r):
     return (f"freq={r['freq_hz']:.3f} Hz  dist_fwd={r['dist_fwd']:+.3f} m  "
-            f"roll={r['torso_roll_amp_deg']:.2f}°  pitch={r['pitch_drift_deg']:.2f}°  "
-            f"survived={r['survived']}")
+            f"roll={r['torso_roll_amp_deg']:.2f}°  poff={r['pitch_offset_deg']:+.2f}°  "
+            f"pamp={r['pitch_amp_deg']:.2f}°  survived={r['survived']}")
 
 
 def write_summary(path, results):
