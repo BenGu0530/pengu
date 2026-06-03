@@ -1,7 +1,14 @@
 # Validates that sim reproduces known real-robot walking anchors.
-# Real robot data:
-#   - Hip-only walk: hip_amp=11°, crank=0, torso=0, freq~unknown (sweeping)
-#   - Crank-only walk: hip=0, crank_amp=104°, torso=0, freq~unknown (sweeping)
+# Real-machine ground-truth configs (from pengu_mujoco/videos/ filenames):
+#   Isolated single-signal modes (verify sim's natural freq):
+#     - hip_only:        hip_amp=11°,  crank=0,    torso=0    (freq swept)
+#     - crank_only:      hip=0,        crank=104°, torso=0    (freq swept)
+#   4-dof combined modes (hip + crank, no torso; real machine ran freq=1.25):
+#     - 4dof_c73_h12:    hip=12°,      crank=73°,  torso=0
+#     - 4dof_c77_h17:    hip=17°,      crank=77°,  torso=0
+#   5-dof all-signal modes (real machine ran freq=1.25):
+#     - 5dof_t1_c73_h12: hip=12°,      crank=73°,  torso=1°
+#     - 5dof_t9_c73_h12: hip=12°,      crank=73°,  torso=9°
 #
 # Run from pengu_mujoco/:
 #   conda activate mujoco
@@ -9,13 +16,20 @@
 # Tail progress:
 #   tail -f results/sweep_anchor_validation_<latest>/progress.log
 """
-sweep_anchor_validation.py - Two narrow 1D fine-frequency sweeps to check
+sweep_anchor_validation.py - Independent 1D fine-frequency sweeps to check
 whether sim reproduces the known real-robot walking anchors (sim-to-real
 validation, NOT exploration).
 
-Two independent 1D sweeps (NO grid): for each anchor we hold the amplitudes
-fixed at the real-robot values and sweep frequency at a fine 0.01 Hz step to
-locate sim's natural walking frequency. Uses the CURRENT gait controller
+Real-machine validation across isolated and combined modes: the ISOLATED modes
+(hip_only, crank_only) verify sim's natural walking frequency for a single
+signal; the COMBINED modes (4dof hip+crank, 5dof hip+crank+torso) verify
+multi-signal coordination at the real-machine amplitudes.
+
+One independent 1D sweep per anchor (NO grid): for each anchor we hold the three
+amplitudes fixed at the real-robot values and sweep frequency at a fine 0.01 Hz
+step to locate sim's natural walking frequency. Even though the combined modes
+ran at freq=1.25 on the real machine, we sweep freq to find sim's natural
+resonance for direct comparison. Uses the CURRENT gait controller
 (gait_config.apply_ctrl, same as walk_pengu.py) and the explicit friction model
 (foot mu 0.9 fixed, floor mu set per surface via friction_utils). One fresh
 model load per trial.
@@ -46,6 +60,7 @@ from friction_utils import set_floor_friction, SURFACES
 # Sweep frequency at fine step around each anchor to find sim's natural freq.
 
 ANCHORS = [
+    # Isolated single-signal modes — sweep freq to find sim's natural freq
     {
         "name": "hip_only",
         "hip_amp_deg":   11.0,
@@ -57,6 +72,33 @@ ANCHORS = [
         "hip_amp_deg":    0.0,
         "crank_amp_deg":104.0,
         "torso_amp_deg":  0.0,
+    },
+    # 4-dof combined modes (hip + crank, no torso) — real machine used freq=1.25
+    # but we sweep freq to find sim's natural resonance for direct comparison
+    {
+        "name": "4dof_c73_h12",
+        "hip_amp_deg":   12.0,
+        "crank_amp_deg": 73.0,
+        "torso_amp_deg":  0.0,
+    },
+    {
+        "name": "4dof_c77_h17",
+        "hip_amp_deg":   17.0,
+        "crank_amp_deg": 77.0,
+        "torso_amp_deg":  0.0,
+    },
+    # 5-dof all-signal modes — real machine used freq=1.25
+    {
+        "name": "5dof_t1_c73_h12",
+        "hip_amp_deg":   12.0,
+        "crank_amp_deg": 73.0,
+        "torso_amp_deg":  1.0,
+    },
+    {
+        "name": "5dof_t9_c73_h12",
+        "hip_amp_deg":   12.0,
+        "crank_amp_deg": 73.0,
+        "torso_amp_deg":  9.0,
     },
 ]
 
