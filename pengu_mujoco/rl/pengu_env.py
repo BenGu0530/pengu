@@ -85,11 +85,15 @@ class PenguCPGEnv(gym.Env):
 
     def __init__(self, control_hz=50.0, episode_s=10.0, vx_cmd=0.15,
                  domain_rand=True, seed=None, model_kind="prismatic",
-                 bio_imitate=False):
+                 bio_imitate=False, propulsion=True):
         super().__init__()
         cfg = _CFG[model_kind]
         self.kind = model_kind
         self.bio_imitate = bio_imitate
+        # bio-reward variant: propulsion=False -> v3 (clean waddle, cleanest lean,
+        # rocks ~in place); propulsion=True -> v4 (adds r_swing: swing foot reaches
+        # FORWARD so the rock turns into a step; shifts lateral KE toward forward).
+        self.propulsion = propulsion
         ACTS = cfg["acts"]
         OBS_JOINTS = cfg["obs_joints"]
         self.leg_acts = cfg["leg_acts"]
@@ -314,20 +318,23 @@ class PenguCPGEnv(gym.Env):
             # (cadence 1.27 Hz, 8 deg lateral rock, small lean) while RL keeps it
             # balanced and gently moving forward. Forward-progress pressure is LOW
             # on purpose -- chasing speed is what pushed the baseline up to 2 Hz.
-            # v4 (propulsion): v3 was a clean waddle that rocked nearly IN PLACE
-            # (lateral KE 76% vs penguin 30%, net speed ~0.04) -- it never turned the
-            # rock into a forward STEP. Single change vs v3: add r_swing, rewarding the
-            # swing foot protracting FORWARD relative to the body, so it lands ahead and
-            # the body vaults over the planted stance foot. This pumps the lateral rock
-            # into forward progress WITHOUT a velocity command (v2's velocity push only
-            # made it fall). Everything else is identical to v3 for clean attribution.
+            # Penguin imitation reward. Two variants (see self.propulsion):
+            #   v3 (propulsion=False): cadence + 8deg rock + small-lean + gentle
+            #     forward pressure. Clean slow waddle, cleanest lean, but rocks
+            #     nearly IN PLACE (lateral KE ~76% vs penguin 30%, net speed ~0.04).
+            #   v4 (propulsion=True): v3 + r_swing, rewarding the swing foot
+            #     protracting FORWARD relative to the body so it lands ahead and the
+            #     body vaults over the planted stance foot -> turns the rock into a
+            #     STEP (lateral KE ~76%->47%) WITHOUT a velocity command (v2's
+            #     velocity push only made it fall). Single-term diff vs v3.
             r_cadence = 1.0 * math.exp(-((f_cpg - PENGUIN_FREQ) / 0.15) ** 2)
             r_rock = 1.2 * math.exp(-((roll_amp_deg - PENGUIN_ROLL_DEG) / 3.0) ** 2)
             r_lean = -0.05 * max(0.0, pitch_amp_deg - 2.0 * PENGUIN_LEAN_DEG) ** 2
             r_track = 0.5 * math.exp(-((vx - self.vx_cmd) ** 2) / 0.02)
             r_progress = 1.0 * max(0.0, vx)
             r_back = 2.0 * min(0.0, vx)
-            r_swing = 1.5 * float(np.clip(swing_rate, 0.0, 0.6))  # swing foot reaches FWD -> real steps
+            # v4 only: reward swing foot reaching FWD -> real steps (0 in v3)
+            r_swing = 1.5 * float(np.clip(swing_rate, 0.0, 0.6)) if self.propulsion else 0.0
             r_single = 0.3 * single_frac
             r_scrub = -0.8 * scrub
             r_bob = -0.15 * bob_rate

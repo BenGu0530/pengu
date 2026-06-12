@@ -37,18 +37,23 @@ OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "runs")
 os.makedirs(OUT, exist_ok=True)
 VX_CMD = 0.05            # v1 (restored): slow, penguin-like; imitation reward leads,
                          # not speed. (v2's 0.15 push only made it fall -> reverted.)
+# bio-reward variant: "v4" = propulsion (swing-foot reaches forward -> steps);
+# "v3" = clean waddle (no r_swing, rocks ~in place, cleanest lean). Override with
+# 3rd CLI arg, e.g.  python rl/train_penguin.py 3000000 8 v3
+PROPULSION = (len(sys.argv) <= 3) or (sys.argv[3].lower() not in ("v3", "0", "false"))
 
 
 def _mk(seed):
     def f():
         return Monitor(PenguCPGEnv(domain_rand=False, seed=seed, bio_imitate=True,
-                                   vx_cmd=VX_CMD))
+                                   vx_cmd=VX_CMD, propulsion=PROPULSION))
     return f
 
 
 def eval_bio(model, n_ep=4):
     """Deterministic eval: report the penguin signature + survival."""
-    env = PenguCPGEnv(domain_rand=False, seed=999, bio_imitate=True, vx_cmd=VX_CMD)
+    env = PenguCPGEnv(domain_rand=False, seed=999, bio_imitate=True, vx_cmd=VX_CMD,
+                      propulsion=PROPULSION)
     env.set_cmd_range(VX_CMD, VX_CMD)
     surv, fs, rolls, leans, speeds = [], [], [], [], []
     for ep in range(n_ep):
@@ -110,18 +115,21 @@ def main():
     # v2: also dump an intermediate checkpoint every 250k steps -- the most
     # penguin-like gait (roll ~8 deg) showed up mid-run last time and we lost it
     # because only the final (over-smoothed) policy was saved.
+    variant = "v4" if PROPULSION else "v3"
+    out_zip = os.path.join(OUT, f"ppo_penguin_{variant}.zip")
     ckpt = CheckpointCallback(save_freq=max(1, 250000 // n_envs),
-                              save_path=OUT, name_prefix="penguin_ckpt")
+                              save_path=OUT, name_prefix=f"penguin_ckpt_{variant}")
     cb = CallbackList([BioEval(eval_every=250000), ckpt])
-    print(f"# PENGUIN BIO-IMITATION TRAIN v2 total={total} n_envs={n_envs} device=cpu  DR=OFF  vx_cmd={VX_CMD}")
+    print(f"# PENGUIN BIO-IMITATION TRAIN {variant} (propulsion={PROPULSION}) "
+          f"total={total} n_envs={n_envs} device=cpu  DR=OFF  vx_cmd={VX_CMD}")
     t0 = time.time()
     model.learn(total_timesteps=total, callback=cb, progress_bar=False)
     dt = time.time() - t0
-    model.save(os.path.join(OUT, "ppo_penguin.zip"))
+    model.save(out_zip)
     e = eval_bio(model, n_ep=6)
     print(f"# DONE {total} steps in {dt/60:.1f} min ({total/dt:.0f} steps/s)")
     print(f"# FINAL: surv={e['surv']:.2f} f={e['f']:.2f}Hz roll={e['roll']:.1f}deg "
-          f"lean={e['lean']:.1f}deg speed={e['speed']:.3f}  saved ppo_penguin.zip")
+          f"lean={e['lean']:.1f}deg speed={e['speed']:.3f}  saved {os.path.basename(out_zip)}")
     venv.close()
 
 
