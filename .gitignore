@@ -1,2 +1,12 @@
 .DS_Store
 __pycache__/
+
+# Generated training / experiment artifacts (large binaries — keep out of git)
+*.log
+*.zip
+*.gif
+*.mp4
+pengu_mujoco/rl/runs/
+pengu_mujoco/backups/
+pengu_mujoco/penguV2/backup/
+pengu_mujoco/outcmaes/

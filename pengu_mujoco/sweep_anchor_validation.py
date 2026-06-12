@@ -104,7 +104,10 @@ ANCHORS = [
 
 FREQ_MIN  = 1.0    # Hz
 FREQ_MAX  = 2.2    # Hz
-FREQ_STEP = 0.01   # fine step — Pengu is non-linear, regime changes are narrow
+FREQ_STEP = 0.005  # fine step — Pengu is non-linear, regime changes are narrow.
+                   # At 0.01 the dist_fwd curve is already jagged by ~0.1 m near the
+                   # peak (nonlinear sensitivity, not noise); 0.005 is ~the finest
+                   # meaningful step for a single deterministic trial.
 
 SURFACE   = "mocap_floor"   # μ = 0.7 baseline, single surface for this validation
 SIM_DURATION = 20.0          # 5s stand + 2s transition + 13s walk window

@@ -27,7 +27,9 @@ WALK_FREQ           = 1.64  # [Hz]
 
 # Amplitudes
 WALK_HIP_AMP_DEG    = 0.0  # [deg] hip swing (C and D)
-WALK_HIP_OFFSET_DEG = 0.0   # [deg] hip center during walk
+WALK_HIP_OFFSET_DEG = 0.0   # [deg] hip center during walk (symmetric, both hips)
+WALK_HIP_LEAN_DEG   = 0.0   # [deg] ANTISYMMETRIC hip lean: hip_L -= lean, hip_R += lean
+                            # (postural lean, mirrors real-robot p_leanAngle). 0 = none.
 WALK_CRANK_AMP_DEG  = 30.0  # [deg] leg extension (A and B)
 WALK_TORSO_AMP_DEG  = 15.0  # [deg] torso roll (E)
 
@@ -95,10 +97,12 @@ def compute_gait(phase, alpha=1.0):
     sD = math.sin(phase + 0.0      + po_d)   # D: built-in 0°
     sE = math.sin(phase + 0.0      + po_e)   # E: built-in 0°
 
+    hip_lean = math.radians(WALK_HIP_LEAN_DEG)
+
     crank_L = alpha * crank_amp * 0.5 * (1.0 + sA)   # [0, amp]
     crank_R = alpha * crank_amp * 0.5 * (1.0 + sB)   # [0, amp]
-    hip_L   = hip_off + alpha * hip_amp * max(0.0, sC)  # half-rectified
-    hip_R   = hip_off + alpha * hip_amp * max(0.0, sD)  # half-rectified
+    hip_L   = hip_off - hip_lean + alpha * hip_amp * max(0.0, sC)  # half-rectified
+    hip_R   = hip_off + hip_lean + alpha * hip_amp * max(0.0, sD)  # half-rectified
     torso   = alpha * torso_amp * sE                     # full sine
 
     return hip_L, hip_R, crank_L, crank_R, torso
