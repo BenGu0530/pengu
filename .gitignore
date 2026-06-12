@@ -10,3 +10,6 @@ pengu_mujoco/rl/runs/
 pengu_mujoco/backups/
 pengu_mujoco/penguV2/backup/
 pengu_mujoco/outcmaes/
+
+# ...but DO track curated deliverable policies (small ~2MB SB3 zips)
+!pengu_mujoco/rl/models/*.zip
