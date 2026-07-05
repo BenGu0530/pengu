@@ -139,6 +139,7 @@ for mode, mo in MODES.items():
           f"mu_req@{REF_MU}={row['mu_req_p95']:.3f} min_mu={min_mu}")
 
 OUT = os.path.join(_ROOT, "results", "friction_study", "matched_speed_v3.csv")
+os.makedirs(os.path.dirname(OUT), exist_ok=True)
 with open(OUT, "w", newline="") as f:
     w = csv.DictWriter(f, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
 
