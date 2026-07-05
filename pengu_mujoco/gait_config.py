@@ -9,16 +9,30 @@ import math
 import mujoco
 
 # ─── Model ────────────────────────────────────────────────────────
-XML_PATH  = "penguV2/scene.xml"
+# Model switch via env var PENGU_MODEL (default v2). penguV3 is the upright
+# re-export (pitch fixed) with the SAME 5 actuator names (hip-L/R, crank1-R,
+# crank1-L, torso) so this controller works on both unchanged.
+import os as _os
+_MODEL = _os.environ.get("PENGU_MODEL", "v2")
 ACTUATORS = ["hip-L", "hip-R", "crank1-R", "torso", "crank1-L"]
-JOINTS    = ["hip-L", "hip-R", "crank1-L", "crank1-R", "torso"]
+if _MODEL == "v3":
+    XML_PATH = "penguV3/scene.xml"
+    JOINTS   = ["hip-L", "hip-R", "torso"]
+else:
+    XML_PATH = "penguV2/scene.xml"
+    JOINTS   = ["hip-L", "hip-R", "crank1-L", "crank1-R", "torso"]
 
 # ═════════════════════════════════════════════════════════════════
 #  INIT POSE
 # ═════════════════════════════════════════════════════════════════
-INIT_Z         = 0.20       # [m]
-INIT_PITCH_DEG = -30.0      # [deg]
-STAND_HIP_DEG  = -25.0      # [deg]
+if _MODEL == "v3":
+    INIT_Z         = 0.18    # [m]  upright re-export stands ~0.16-0.18
+    INIT_PITCH_DEG = 0.0     # [deg] pitch fixed in CAD -> natively upright
+    STAND_HIP_DEG  = 0.0     # [deg] stands with hips at neutral
+else:
+    INIT_Z         = 0.20    # [m]
+    INIT_PITCH_DEG = -30.0   # [deg]
+    STAND_HIP_DEG  = -25.0   # [deg]
 
 # ═════════════════════════════════════════════════════════════════
 #  WALK PARAMS
