@@ -1,0 +1,4 @@
+config,torso_phi,leg_amp,hip_amp,torso_amp,freq,opt_speed,min_mu_to_walk,mu_req_p95,speed,com_z,foot_roll,foot_pitch,torso_stance_corr
+upright,0.0,113.5,11.5,0.0,1.717,0.08,0.4,0.997,0.08,0.21,7.2,7.6,-0.01
+over_stance,75.0,118.8,1.3,15.0,1.548,0.082,0.2,0.419,0.082,0.216,10.7,8.4,0.52
+over_swing,59.0,67.3,0.9,15.0,1.696,0.08,0.06,0.975,0.08,0.205,10.7,9.6,-0.01
