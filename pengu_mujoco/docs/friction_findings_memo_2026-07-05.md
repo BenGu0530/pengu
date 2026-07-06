@@ -154,10 +154,31 @@ defensible route. Onshape targets: human 54-57%, suggested mid ≈ 46%. The harn
 (stand calibration + per-mode matched-speed + min_mu ladder) becomes the runner for
 the exported variants: swap `make_variant` for loading the variant XML.
 
-**7d. Gait axis in progress:** `physics/gait_family_torso_study.py` tests whether the
-over_stance min_mu advantage generalizes across fine3c gait families (hip_phi 210 /
-110 / 270). Adds per-family **torso-phase calibration** via an instrumented
-`torso_stance_corr` rollout — smoke run already showed the naive assumption wrong:
-family 210's true phi_swing is **225, not 180** (so matched_speed_v3's over_swing
-condition was mis-phased; upright/over_stance unaffected). 3 families × 3 seeds ×
-mf400 running.
+**7d. Gait axis DONE (3 families × 3 seeds × mf400, all speed-matched err≈0):**
+`physics/gait_family_torso_study.py`, data `gait_family_mf400_*`. Per-family torso-phase
+calibration matters — the true phi_stance differs by family (**0° / 225° / 270°** for
+hip_phi 110 / 210 / 270), confirming torso_phi=0 ≠ "over stance" outside the 210 family
+(matched_speed_v3's over_swing was mis-phased).
+
+min_mu (clean-walk), over_stance vs upright:
+| family | upright | over_stance | over_stance better? |
+|---|---|---|---|
+| 110 | 0.5/0.4/0.5 | 0.3/0.4/0.15 | yes 3/3 |
+| 210 | 0.5/0.5/0.3 | 0.3/0.25/0.3 | yes 3/3 |
+| 270 | 0.3/0.3/0.25 | 0.5/0.7/0.7 | **NO — reversed 0/3** |
+
+→ **the min_mu advantage is NOT gait-family universal** — real in 110/210, reversed in
+270 (there over_stance needs high freq 1.48-1.65 to match speed while upright finds a
+low-freq low-μ gait). Weakens a clean "penguin gait needs less friction" claim.
+
+**The one robust thing across ALL families/seeds:** `torso_stance_corr` for over_stance =
+**0.68-0.96 (mean ~0.83, small std)** — over_stance genuinely realizes torso-over-stance
+everywhere; over_swing is erratic (0.02-0.58). So the seed/family-robust result is the
+KINEMATIC signature (penguin posture), while the friction benefit is a gait-dependent
+by-product. This reframes the likely paper spine: *the penguin torso strategy is a
+robust posture, and where it helps friction depends on the gait regime* — not *penguin
+gait universally needs less friction*.
+
+**Cumulative status:** μ_req_p95 dead on v3 (n=10, two independent replications, 0.9×);
+min_mu directionally real but family-dependent + coarse; torso_stance_corr robust; the
+strong friction effect still lives only in v2 (single seed, unverified — top priority).

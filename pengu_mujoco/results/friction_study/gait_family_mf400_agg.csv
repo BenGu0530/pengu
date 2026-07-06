@@ -1,0 +1,10 @@
+family,mode,n_matched,min_mu_per_seed,corr_mean
+110,upright,3,0.5|0.4|0.5,0.398
+110,over_stance,3,0.3|0.4|0.15,0.839
+110,over_swing,3,0.7|0.3|0.7,0.075
+210,upright,3,0.5|0.5|0.3,0.675
+210,over_stance,3,0.3|0.25|0.3,0.786
+210,over_swing,3,0.5|0.4|0.4,0.279
+270,upright,3,0.3|0.3|0.25,0.657
+270,over_stance,3,0.5|0.7|0.7,0.871
+270,over_swing,3,0.4|0.2|0.25,0.253

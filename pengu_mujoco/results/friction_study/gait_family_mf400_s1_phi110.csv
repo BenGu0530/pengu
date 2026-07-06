@@ -1,0 +1,4 @@
+family,seed,mode,torso_phi,torso_amp,opt_leg,opt_hip,opt_freq,opt_hip_off,speed,speed_err,single,corr,mu_req_p95,min_mu_to_walk
+110,1,upright,0.0,0.0,118.8,24.3,1.391,41.4,0.08,0.0,0.767,0.024,0.657,0.5
+110,1,over_stance,225.0,20.0,119.7,15.2,1.11,39.0,0.08,0.0,0.745,0.735,0.686,0.3
+110,1,over_swing,45.0,20.0,28.7,21.4,1.948,31.4,0.08,0.0,0.998,0.015,0.599,0.7
