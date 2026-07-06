@@ -1,0 +1,4 @@
+seed,mode,opt_leg,opt_hip,opt_freq,torso_amp,torso_phi,speed,speed_err,single,straight,mu_req_p95,min_mu_to_walk
+10,upright,85.0,29.4,1.711,0.0,0.0,0.08,0.0,1.0,0.532,0.511,0.7
+10,over_stance,87.7,17.0,1.135,20.0,0.0,0.08,0.0,0.898,0.549,0.576,0.06
+10,over_swing,56.9,14.2,1.398,20.0,180.0,0.0713,-0.0087,0.98,0.419,0.496,

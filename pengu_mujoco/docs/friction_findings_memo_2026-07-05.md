@@ -126,3 +126,38 @@ v2 shows 2.4×, v3 shows 1.2×. Candidate causes, to disentangle:
 - New: `physics/killtest_torso_modes.py`, `physics/matched_speed_v3.py`
 - Data: `results/friction_study/{killtest_v3_AB,matched_speed_v3,penguin_configs}.csv`
 - Context: `docs/fable_review_2026-07-04.md`, `docs/fable_strategy_notes.md`
+
+---
+
+## 7. Evening update (2026-07-05): seed variance verdict + reframe + COM probe
+
+**7a. μ_req_p95 verdict REVERSED by seed variance.** Local seeds 6-10 (mf400, all
+matched-speed): over_stance beats upright on μ_req in only **2/6 seeds** (incl. Mac
+seed 1); gap mean 0.92× ± 0.25. The earlier 1.10×/1.20× was optimizer noise — upright
+finds very different families per seed (freq 1.36-1.99) incl. low-μ_req operating
+points (0.39-0.41). **μ_req_p95 is dead as the headline metric on v3.**
+**BUT min_mu_to_walk is seed-robust:** over_stance ≤ upright in **6/6 seeds** (4 strictly
+lower, incl. two runs reaching 0.06/0.25 vs upright 0.3-0.7). Peak *demand* vs actual
+*slip robustness* are different things; the paper cares about the latter, and the
+robust readout favors over_stance. Data: `matched_speed_v3_mf400_s{6..10}.csv`.
+
+**7b. Reframe (Ben, aligned with the plan):** friction is the READOUT, not the subject.
+Manipulated variables = gait (torso phasing) × mass distribution. The seed-variance
+work was readout calibration: the big matrices use **min_mu (clean-walk) + foot
+roll/pitch + COM**, with μ_req demoted to diagnostic.
+
+**7c. Mass axis → Onshape (Ben).** In-memory mass transfer (probe + prototype harness
+`physics/com_variant_study.py`) showed: baseline penguin COM = **36.7%** of standing
+height (0.188/0.512 m, 1.772 kg total); naive transfer to 42% breaks gait B outright,
+≥47% cannot even stand with the penguin stand pose → real CAD variants are the
+defensible route. Onshape targets: human 54-57%, suggested mid ≈ 46%. The harness
+(stand calibration + per-mode matched-speed + min_mu ladder) becomes the runner for
+the exported variants: swap `make_variant` for loading the variant XML.
+
+**7d. Gait axis in progress:** `physics/gait_family_torso_study.py` tests whether the
+over_stance min_mu advantage generalizes across fine3c gait families (hip_phi 210 /
+110 / 270). Adds per-family **torso-phase calibration** via an instrumented
+`torso_stance_corr` rollout — smoke run already showed the naive assumption wrong:
+family 210's true phi_swing is **225, not 180** (so matched_speed_v3's over_swing
+condition was mis-phased; upright/over_stance unaffected). 3 families × 3 seeds ×
+mf400 running.
