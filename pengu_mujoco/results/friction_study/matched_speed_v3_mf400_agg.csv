@@ -1,0 +1,4 @@
+mode,n_seeds,mu_req_mean,mu_req_std,speed_err_mean,min_mu_per_seed
+upright,5,0.513,0.1061,-0.0,0.5|0.4|0.5|0.3|0.7
+over_stance,5,0.545,0.018,-0.0001,0.06|0.2|0.4|0.4|0.3
+over_swing,5,0.501,0.0163,-0.0175,None|None|None|None|None

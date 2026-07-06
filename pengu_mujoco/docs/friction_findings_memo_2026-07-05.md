@@ -3,9 +3,11 @@
 **Date:** 2026-07-05 · **Author:** Fable (advisory) · **Status:** first data, needs firming
 
 ## TL;DR
-1. **Paper direction CONFIRMED (on 2 models):** at matched walking speed, the penguin
-   **over_stance** torso strategy needs **less floor friction** than **upright** — and
-   walks on lower μ. Positive sign on both v2 and v3.
+1. **Paper direction holds on v2 only.** At matched walking speed the penguin
+   **over_stance** strategy needs **less floor friction** than **upright** on **v2 (2.4×,
+   strong)**. On **v3 it does NOT survive multi-seed CMA** — 5-seed sweep: over_stance
+   wins only **2/5**, gap mean **0.94×** (slightly *reversed*). The v3 "advantage" was a
+   single-seed artifact of upright's multi-modality. See §4 UPDATE 2.
 2. **Design correction (important):** you **cannot** build the upright / over_swing
    conditions by flipping the torso on a fixed over-stance gait — the gait then stops
    walking, so μ_req becomes meaningless. Each mode **must be independently re-optimized
@@ -13,8 +15,9 @@
    `fable_prompt.md` step "inject marked gait into friction_study" is only valid in the
    *re-optimize-per-mode* sense, NOT "fix gait B and flip the torso."
 3. **Two metric traps found & fixed** — see §3.
-4. **Open flag:** the v2 effect is huge (2.4×), the v3 effect is modest (1.2×). Resolve
-   before quoting a number.
+4. **RESOLVED (§4 UPDATE 2):** the v3 1.2×/1.1× was a single-seed artifact of upright's
+   multi-modality; the 5-seed sweep gives mean **0.94× ± 0.19**, over_stance wins **2/5**.
+   Do NOT quote a v3 μ_req number. v2's 2.4× stands (still to be seed-checked).
 
 ## 1. What was run
 | script | model | what |
@@ -70,6 +73,34 @@ v2 shows 2.4×, v3 shows 1.2×. Candidate causes, to disentangle:
   per-seed CSVs + `_agg.csv` (mean±std) + a speed-gated cross-seed verdict
   (|speed_err|≤0.01 for BOTH modes, else seed excluded — the smoke test showed an
   underspeed upright faking mu_req 0.419 and reversing the verdict).
+- **UPDATE 2 — RESOLVED (Mac, maxfev=400, seeds 1–5):** the 5-seed sweep KILLS the v3
+  μ_req claim. All 5 seeds matched speed (0 excluded); speed-gated verdict:
+
+  | seed | 1 | 2 | 3 | 4 | 5 | mean±std |
+  |---|---|---|---|---|---|---|
+  | upright μ_req | 0.631 | 0.397 | 0.469 | 0.448 | 0.620 | **0.513 ± 0.106** |
+  | over_stance μ_req | 0.573 | 0.534 | 0.540 | 0.551 | 0.527 | **0.545 ± 0.018** |
+  | gap (up/over) | 1.10 | 0.74 | 0.87 | 0.81 | 1.18 | **0.94× ± 0.19** |
+
+  over_stance wins **2/5**; mean gap **0.94×** (on average over_stance needs MORE friction).
+  **Mechanism:** upright is *multi-modal* at matched speed. CMA finds a low-friction
+  high-freq upright gait (freq 1.7–2.0, single_frac≈1.0, μ_req 0.40–0.47) in 3/5 seeds and
+  the high-friction low-freq basin (μ_req 0.62–0.63) in only 2/5. Seed 1 and the 140
+  baseline both happened to land in the high-friction basin — that, not physics, produced
+  the 1.10–1.20× "advantage." over_stance is a tight single point (std 0.018); upright is a
+  basket spanning 0.40–0.63.
+  **Worse for the claim:** best-per-mode across seeds is upright **0.397** (s2) vs
+  over_stance **0.527** (s5) — so a "μ_req-into-the-objective" constrained-matched-speed
+  redesign would likely **REVERSE** the claim on v3, not rescue it: upright has access to
+  lower-friction matched-speed gaits than over_stance does. (Do not assume the redesign
+  saves v3 — it may falsify it.)
+  **min_mu fallback is weaker than TL;DR §2 implies:** over_stance walks on ≤μ in 4/5 seeds
+  (over 0.06|0.2|0.4|0.4|0.3 vs up 0.5|0.4|0.5|0.3|0.7), but the headline "0.06 vs 0.5" was
+  seed 1 only — over_stance's median min_mu is ~0.3, and seed 4 reverses it. Real tendency
+  but coarse (one deterministic rollout per ladder rung).
+  **over_swing** confirmed degenerate across all 5 seeds (never reaches matched speed, err
+  −0.006…−0.032, min_mu all None).
+  Data: `results/friction_study/matched_speed_v3_mf400_s{1..5}.csv` + `_agg.csv`.
 - **Real model difference:** v2 = crank-slider closed-loop, native −30° pitch; v3 =
   upright re-export with dynamic hip_off=30° pitch. Different contact/dynamics could
   genuinely change the effect size.
@@ -77,8 +108,11 @@ v2 shows 2.4×, v3 shows 1.2×. Candidate causes, to disentangle:
   v2 is where the strong friction effect + the existing friction_study live.
 
 ## 5. Recommended next steps (in order)
-1. **Firm up v3 matched-speed:** maxfev ≥ 400, 3–5 CMA seeds → mean±std μ_req per mode.
-   Confirm the direction and pin the magnitude. (Addresses the single-seed rigor gap.)
+1. ~~**Firm up v3 matched-speed:** maxfev ≥ 400, 3–5 CMA seeds → mean±std μ_req per mode.~~
+   **DONE (§4 UPDATE 2) — negative:** 5-seed mean 0.94×, over_stance wins 2/5. v3 μ_req does
+   not support the claim. **Next on v3:** either (a) seed-check v2's 2.4× to anchor the paper
+   there, or (b) rebuild the v3 objective as constrained-matched-speed (min μ_req s.t.
+   speed=V) — but expect it may reverse v3 (upright's best 0.397 < over_stance's 0.527).
 2. **Multi-speed:** repeat at V ∈ {0.05, 0.08, 0.12} → μ_req-vs-speed curves per mode
    (reviewers will ask; one speed is too thin).
 3. **Decide v2 vs v3** for the paper (Ben), then run the full matched-speed × μ-ladder ×
