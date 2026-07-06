@@ -60,6 +60,16 @@ v2 shows 2.4×, v3 shows 1.2×. Candidate causes, to disentangle:
 - **Under-optimization on v3:** `matched_speed_v3.py` used maxfev=140, single CMA seed;
   the upright optimum was scrappy (`single_frac` 0.65). Re-run with larger budget +
   multiple seeds before trusting the magnitude.
+- **UPDATE (Mac, maxfev=400, seed=1, commit 31723eb):** bigger budget SHRANK the gap
+  (1.20×→1.10×) — the 140 over_stance was slightly underspeeding (err −0.0005), and an
+  underspeeding gait fakes a LOW mu_req (small Ft). So the margin is budget-sensitive
+  and 140 overestimated it. Qualitative min_mu story got STRONGER at 400: over_stance
+  cleanly walks down to μ=0.06 (ice) vs upright 0.5. μ_req is a measured quantity at
+  the optimum, not the objective → non-monotone in budget; single seed cannot separate
+  1.10× from noise. `matched_speed_v3.py` now takes `<maxfev> <seeds>` and emits
+  per-seed CSVs + `_agg.csv` (mean±std) + a speed-gated cross-seed verdict
+  (|speed_err|≤0.01 for BOTH modes, else seed excluded — the smoke test showed an
+  underspeed upright faking mu_req 0.419 and reversing the verdict).
 - **Real model difference:** v2 = crank-slider closed-loop, native −30° pitch; v3 =
   upright re-export with dynamic hip_off=30° pitch. Different contact/dynamics could
   genuinely change the effect size.

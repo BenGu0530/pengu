@@ -50,7 +50,12 @@ NETV_OK = 0.15 / WALK_TIME
 SINGLE_OK = 0.6
 BOUNDS = {"leg_amp": (10.0, 120.0), "hip_amp": (0.0, 30.0), "freq": (1.0, 2.0)}
 FREE = ["leg_amp", "hip_amp", "freq"]
+# usage: matched_speed_v3.py [maxfev] [seeds]   e.g. 400 1,2,3,4,5
+# mu_req_p95 is a MEASURED quantity at the matched-speed optimum, not the objective —
+# it is non-monotone in budget and noisy across CMA seeds, so the paper margin needs
+# mean±std across seeds (single-seed 1.10x vs 1.20x is indistinguishable from noise).
 MAXFEV = int(sys.argv[1]) if len(sys.argv) > 1 else 140
+SEEDS = [int(s) for s in sys.argv[2].split(",")] if len(sys.argv) > 2 else [1]
 
 MODES = {
     "upright":     dict(torso_amp=0.0,   torso_phi=0.0),
@@ -90,10 +95,11 @@ def objective(x, mo):
     return -J                                                    # cma minimizes
 
 
-def optimize(mo):
+def optimize(mo, cma_seed):
     x0 = np.array([(SEED[k] - BOUNDS[k][0]) / (BOUNDS[k][1] - BOUNDS[k][0]) for k in FREE])
     es = cma.CMAEvolutionStrategy(x0, 0.30,
-                                  {"bounds": [0, 1], "maxfevals": MAXFEV, "verb_disp": 0, "seed": 1})
+                                  {"bounds": [0, 1], "maxfevals": MAXFEV, "verb_disp": 0,
+                                   "seed": cma_seed})
     best = {"J": 1e9, "p": None}
     while not es.stop():
         xs = es.ask()
@@ -120,34 +126,85 @@ def min_mu_contiguous(p):
     return lo
 
 
-rows = []
+OUTDIR = os.path.join(_ROOT, "results", "friction_study")
+os.makedirs(OUTDIR, exist_ok=True)
+
+all_rows = []
 print(f"MATCHED-SPEED v3 | V_TARGET={V_TARGET} | REF_MU={REF_MU} | maxfev={MAXFEV} | "
-      f"clean=survived&net_fwd>{NETV_OK:.4f}&single>{SINGLE_OK}")
-for mode, mo in MODES.items():
-    p = optimize(mo)
-    r = measure(p, REF_MU)
-    min_mu = min_mu_contiguous(p)
-    row = dict(mode=mode,
-               opt_leg=round(p["leg_amp"], 1), opt_hip=round(p["hip_amp"], 1),
-               opt_freq=round(p["freq"], 3), torso_amp=p["torso_amp"], torso_phi=p["torso_phi"],
-               speed=round(r["net_fwd_speed"], 4), speed_err=round(r["net_fwd_speed"] - V_TARGET, 4),
-               single=round(r["single_frac"], 3), straight=round(r["straightness"], 3),
-               mu_req_p95=round(r["mu_req_p95"], 3), min_mu_to_walk=min_mu)
-    rows.append(row)
-    print(f"  {mode:12s} opt(leg={row['opt_leg']:5.1f} hip={row['opt_hip']:4.1f} f={row['opt_freq']:.3f}) "
-          f"speed={row['speed']:.3f}(err{row['speed_err']:+.3f}) single={row['single']:.3f} "
-          f"mu_req@{REF_MU}={row['mu_req_p95']:.3f} min_mu={min_mu}")
+      f"seeds={SEEDS} | clean=survived&net_fwd>{NETV_OK:.4f}&single>{SINGLE_OK}")
+for cma_seed in SEEDS:
+    rows = []
+    print(f"--- seed {cma_seed} ---")
+    for mode, mo in MODES.items():
+        p = optimize(mo, cma_seed)
+        r = measure(p, REF_MU)
+        min_mu = min_mu_contiguous(p)
+        row = dict(seed=cma_seed, mode=mode,
+                   opt_leg=round(p["leg_amp"], 1), opt_hip=round(p["hip_amp"], 1),
+                   opt_freq=round(p["freq"], 3), torso_amp=p["torso_amp"], torso_phi=p["torso_phi"],
+                   speed=round(r["net_fwd_speed"], 4), speed_err=round(r["net_fwd_speed"] - V_TARGET, 4),
+                   single=round(r["single_frac"], 3), straight=round(r["straightness"], 3),
+                   mu_req_p95=round(r["mu_req_p95"], 3), min_mu_to_walk=min_mu)
+        rows.append(row); all_rows.append(row)
+        print(f"  {mode:12s} opt(leg={row['opt_leg']:5.1f} hip={row['opt_hip']:4.1f} f={row['opt_freq']:.3f}) "
+              f"speed={row['speed']:.3f}(err{row['speed_err']:+.3f}) single={row['single']:.3f} "
+              f"mu_req@{REF_MU}={row['mu_req_p95']:.3f} min_mu={min_mu}")
+    out = os.path.join(OUTDIR, f"matched_speed_v3_mf{MAXFEV}_s{cma_seed}.csv")
+    with open(out, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
+    print(f"  wrote {out}")
 
-OUT = os.path.join(_ROOT, "results", "friction_study", "matched_speed_v3.csv")
-os.makedirs(os.path.dirname(OUT), exist_ok=True)
-with open(OUT, "w", newline="") as f:
-    w = csv.DictWriter(f, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
 
-print("\n=== v3 MATCHED-SPEED @ %.2f m/s ===" % V_TARGET)
-print(f"{'mode':12s} {'mu_req_p95':>10s} {'min_mu':>7s} {'speed':>7s} {'single':>7s}")
-for r in rows:
-    print(f"{r['mode']:12s} {r['mu_req_p95']:>10.3f} {str(r['min_mu_to_walk']):>7s} "
-          f"{r['speed']:>7.3f} {r['single']:>7.3f}")
-print(f"\nwrote {OUT}")
-print("PAPER CLAIM holds iff over_stance mu_req < upright mu_req at matched speed.")
+def _mean_std(vals):
+    m = sum(vals) / len(vals)
+    s = (sum((v - m) ** 2 for v in vals) / (len(vals) - 1)) ** 0.5 if len(vals) > 1 else 0.0
+    return m, s
+
+
+# ---- cross-seed aggregation ------------------------------------------------------
+agg_rows = []
+print(f"\n=== v3 MATCHED-SPEED @ {V_TARGET} m/s | maxfev={MAXFEV} | n_seeds={len(SEEDS)} ===")
+print(f"{'mode':12s} {'mu_req mean±std':>18s} {'speed_err mean':>14s} {'min_mu (per seed)':>20s}")
+for mode in MODES:
+    sub = [r for r in all_rows if r["mode"] == mode]
+    mu_m, mu_s = _mean_std([r["mu_req_p95"] for r in sub])
+    se_m, _ = _mean_std([r["speed_err"] for r in sub])
+    minmus = "|".join(str(r["min_mu_to_walk"]) for r in sub)
+    agg_rows.append(dict(mode=mode, n_seeds=len(sub),
+                         mu_req_mean=round(mu_m, 4), mu_req_std=round(mu_s, 4),
+                         speed_err_mean=round(se_m, 4), min_mu_per_seed=minmus))
+    print(f"{mode:12s} {mu_m:>10.3f} ±{mu_s:.3f} {se_m:>14.4f} {minmus:>20s}")
+
+AGG = os.path.join(OUTDIR, f"matched_speed_v3_mf{MAXFEV}_agg.csv")
+with open(AGG, "w", newline="") as f:
+    w = csv.DictWriter(f, fieldnames=list(agg_rows[0].keys())); w.writeheader(); w.writerows(agg_rows)
+
+# ---- seed-robustness verdict: is over_stance < upright beyond optimizer noise? ----
+# GATE on matched speed: an underspeeding config has fake-low mu_req (small Ft), so a
+# seed only counts if BOTH modes actually hit V_TARGET (the smoke test showed a 20-eval
+# upright at speed 0.021 faking mu_req 0.419 and reversing the verdict).
+SPEED_TOL = 0.01
+gaps = []
+print(f"\n=== cross-seed verdict: over_stance vs upright (|speed_err|<={SPEED_TOL}) ===")
+for cma_seed in SEEDS:
+    up = next(r for r in all_rows if r["seed"] == cma_seed and r["mode"] == "upright")
+    ov = next(r for r in all_rows if r["seed"] == cma_seed and r["mode"] == "over_stance")
+    ok = abs(up["speed_err"]) <= SPEED_TOL and abs(ov["speed_err"]) <= SPEED_TOL
+    if not ok:
+        print(f"  seed {cma_seed}: EXCLUDED (underspeed: upright err {up['speed_err']:+.3f}, "
+              f"over_stance err {ov['speed_err']:+.3f}) -> mu_req not comparable")
+        continue
+    gaps.append(up["mu_req_p95"] / ov["mu_req_p95"])
+    print(f"  seed {cma_seed}: upright {up['mu_req_p95']:.3f} vs over_stance {ov['mu_req_p95']:.3f} "
+          f"-> gap {gaps[-1]:.2f}x {'OK' if gaps[-1] > 1 else 'REVERSED'}")
+if gaps:
+    g_m, g_s = _mean_std(gaps)
+    wins = sum(1 for g in gaps if g > 1)
+    print(f"  gap mean±std = {g_m:.2f}x ± {g_s:.2f} | over_stance wins {wins}/{len(gaps)} "
+          f"matched seeds ({len(SEEDS) - len(gaps)} excluded)")
+else:
+    print("  no seed had both modes at matched speed — increase maxfev.")
+print(f"\nwrote {AGG}")
+print("PAPER CLAIM holds iff over_stance mu_req < upright mu_req at matched speed, "
+      "robust across seeds.")
 print("real surfaces: mocap 0.7 | acrylic 0.30 | uhmw 0.14 | ptfe/ice 0.06")
