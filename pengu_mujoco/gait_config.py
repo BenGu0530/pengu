@@ -139,6 +139,13 @@ def set_initial_pose(model, data, act_ids, jnt_adr):
     mujoco.mj_forward(model, data)
 
 
+# Optional reactive torso override. When None (default) the torso follows the open-loop
+# sinusoid below and behaviour is bit-identical to before. When set to a callable
+# f(data, t, alpha) -> torso joint command [rad] (see torso_control.TorsoKappaPID), it
+# replaces the sinusoid during the transition and walk phases.
+TORSO_CONTROLLER = None
+
+
 def apply_ctrl(data, act_ids, t):
     """
     Full controller: hold → transition → walk.
@@ -158,6 +165,8 @@ def apply_ctrl(data, act_ids, t):
         alpha = _smoothstep(t, T_HOLD, t_walk_start)
         phase = 2 * math.pi * WALK_FREQ * (t - T_HOLD)
         hip_L_w, hip_R_w, crank_L, crank_R, torso = compute_gait(phase, alpha)
+        if TORSO_CONTROLLER is not None:
+            torso = TORSO_CONTROLLER(data, t, alpha)
 
         data.ctrl[act_ids["hip-L"]]    = stand_hip * (1.0 - alpha) + hip_L_w
         data.ctrl[act_ids["hip-R"]]    = stand_hip * (1.0 - alpha) + hip_R_w
@@ -168,6 +177,8 @@ def apply_ctrl(data, act_ids, t):
     else:
         phase = 2 * math.pi * WALK_FREQ * (t - T_HOLD)
         hip_L, hip_R, crank_L, crank_R, torso = compute_gait(phase)
+        if TORSO_CONTROLLER is not None:
+            torso = TORSO_CONTROLLER(data, t, 1.0)
 
         data.ctrl[act_ids["hip-L"]]    = hip_L
         data.ctrl[act_ids["hip-R"]]    = hip_R
