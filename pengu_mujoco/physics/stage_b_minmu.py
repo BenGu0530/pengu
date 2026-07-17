@@ -129,7 +129,12 @@ def instrumented(model, data, ids, p, mu=0.7):
                 agree.append(1.0 if sf == st else -1.0)
 
     def amp(a):
-        return round((max(a) - min(a)) / 2.0, 2) if a else float("nan")
+        # atan2 wraps at +-180: a foot crossing the branch cut faked amp=180 (2% of cells).
+        # unwrap the series before taking peak-to-peak.
+        if not a:
+            return float("nan")
+        d = np.degrees(np.unwrap(np.radians(np.asarray(a))))
+        return round((d.max() - d.min()) / 2.0, 2)
     corr = round(float(np.mean(agree)), 3) if agree else float("nan")
     return corr, amp(rolls), amp(pitches)
 
