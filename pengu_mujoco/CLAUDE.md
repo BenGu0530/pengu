@@ -31,39 +31,66 @@ Robot: **penguV3** only (v2 retired — fundamental model problems). MuJoCo, 5 a
 
 The study is a **co-design** question over two axes:
 
-### Axis 1 — DESIGN: COM height / hip-axis height (≈ leg length)
-Sweep values: **1.05 (human), 1.2, 1.4, 1.6 (penguin)**.
-⚠️ Definition conflict to resolve with Ben: `results/BEST_GAITS.md:3` records the current
-model as "COM/leg = 1.05 (penguin)", while Ben's spec says 1.05 = human, 1.6 = penguin.
-Pin the exact ratio definition and where penguV3 sits on it before building variants.
-Mass-distribution variants come from Onshape CAD exports (Ben).
+### NAMING RULE (Ben, explicit)
+**Never label a parameter value "penguin" or "human".** Use the number only
+(COM ratio 1.05 / 1.2 / 1.4 / 1.6; Gait 1 / Gait 2 / Gait 3; foot gap 80 / 100 mm).
+No species framing on any axis, in code, docs, plots, or prose.
 
-### Axis 2 — CONTROL: torso strategy (3 conditions)
+### Axis 1 — DESIGN: COM height / hip-axis height
+Sweep values: **1.05, 1.2, 1.4, 1.6**.
+Definition (measured, to confirm with Ben): **whole-robot COM height above the floor
+divided by hip-axis (`easyaxis`) height above the floor**, at the neutral standing pose.
+penguV3 today measures **1.108** on this definition (COM 0.1881 m, axis 0.1697 m,
+`STAND_HIP_DEG=0`) — i.e. the current model already sits at the LOW end of the range;
+variants must push the ratio UP.
+Open questions for Ben before CAD:
+1. Raise the ratio by **moving mass up** (long legs, top-heavy) or **shortening legs**
+   (squat, short legs)? Same ratio, physically different robots. Or both (2-D design space)?
+2. Which **canonical pose** defines the ratio (neutral stand vs the hip_off=30° walk posture)?
+3. **Whole-robot COM** (assumed) or upper-body only?
+Variants come from Onshape CAD exports (Ben).
+
+### Axis 2 — CONTROL: torso strategy
 Kinematic fact: `easytorso` is a child of `easyaxis`, so the torso joint angle is
-**relative to the hip axis**. With the torso motor as a fixed joint, the torso stays
-perpendicular to the hip axis and **rolls with the axis**.
-- **Gait 1 (human-like)**: reactive, well-tuned **PID holds the torso at absolute 0 roll
-  in the world** — i.e. it rotates *counter* to the hip-axis roll. Humans keep the body
-  upright and still.
-- **Gait 2 (penguin-like)**: reactive **PID leans the torso toward the stance leg** —
-  i.e. *with* the axis roll direction, further into it. Torso leads the gait; hypothesised
-  energy recovery.
-- **Gait 3 (comparison only)**: torso removed.
-These are **assumptions to test with data**, not claims.
-⚠️ Implementation note: the existing `gait_config.py` torso is an **open-loop sinusoid**
-(`torso_amp`, `torso_phi`) on the torso joint. `torso_amp=0` is the *fixed-joint* case
-(torso rolls with the axis) — it is **not** Gait 1. Gait 1/2 need new reactive PID torso
-control modes.
+**relative to the hip axis**; torso world roll ≈ hip-axis roll + torso joint angle.
+With the torso motor as a fixed joint the torso rolls **with** the axis.
+
+Proposed continuous parameterization — **torso follow gain κ**:
+`target torso world roll = κ × (hip-axis roll)`, tracked by an outer-loop PID
+(feedforward `(κ−1)×axis_roll` + Kp·e + Ki∫e + Kd·ė, D from roll rate), output clamped
+to the torso ctrlrange (±45°).
+- **κ = 0 → Gait 1**: torso held at absolute 0 roll in the world (counter-rotates the
+  axis). Benchmark: measured torso world roll stays ≈ 0 (report `torso_roll_rms`).
+- κ = 1 → the fixed-joint case (what the old `torso_amp=0` sweep slice did).
+- **κ > 1 → Gait 2**: torso leans further into the roll, toward the stance leg.
+- κ < 0 → torso leans away from the stance leg (control condition).
+- **Gait 3**: torso removed (comparison only).
+κ makes torso strategy a continuous sweepable scalar; Gait 1/2 are points on it.
+Readout `torso_stance_corr` verifies whether κ>1 actually puts the torso over the stance
+foot. These are **assumptions to test with data**, not claims.
+
+Note: the torso motor is limited to **±4.1 N·m** (XM430 stall). At high COM ratios the
+PID may saturate and fail to hold upright — that is a **co-design result**, not a bug;
+`torso_roll_rms` exposes it.
+
+⚠️ The existing `gait_config.py` torso is an **open-loop sinusoid** (`torso_amp`,
+`torso_phi`). It implements none of Gait 1/2/3; `torso_amp=0` is the κ=1 fixed-joint
+case. The κ PID mode is new code to write.
 
 ### Minor axes (more evidence for the table)
-- **Foot gap**: 80 mm (current V3) vs 100 mm (wider = penguin; narrow = human).
+- **Foot gap**: 80 mm (current V3) vs 100 mm.
 - **Foot geometry**: rolling contact; contact point moves as foot geometry changes.
 - **Surfaces**: friction ladder (`friction_utils.SURFACES`).
 
 ### Deliverable
-A **2 (gait) × 4 (COM) table** = 8 configs (+ gait 3 as control) — sweep all and compare:
-does human-gait + human-COM win? does penguin-gait + penguin-COM win on low-friction
-surfaces? Foot gap and extra surfaces add evidence.
+A **gait × COM table** (2 main gaits × 4 COM ratios = 8 configs, + Gait 3 as control) —
+sweep all and compare which combinations do best, including on low-friction surfaces.
+Foot gap and extra surfaces add evidence.
+
+### Order of work (Ben)
+1. **PID torso (κ) first** — it is the prerequisite for every cell of the table.
+2. **Sweep script** ready next.
+3. **RL / co-design emergence last** — not urgent.
 
 ### Co-design extension (professor's idea)
 At each COM design point: (a) sweep again, and/or (b) control optimization, and/or
