@@ -90,10 +90,12 @@ class TorsoKappaPID:
     time goes backwards (i.e. a new trial started).
     """
 
-    def __init__(self, model, kappa, kp=2.0, ki=0.1, kd=0.0, ctrl_limit_deg=45.0):
+    def __init__(self, model, kappa, kp=2.0, ki=0.1, kd=0.0, ctrl_limit_deg=45.0,
+                 measure_after=0.0):
         self.kappa = float(kappa)
         self.kp, self.ki, self.kd = kp, ki, kd
         self.limit = math.radians(ctrl_limit_deg)
+        self.measure_after = measure_after   # only accumulate roll_rms/sat once t >= this
         self.tid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, TORSO_BODY)
         self.aid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, AXIS_BODY)
         self.jid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, "torso")
@@ -184,7 +186,8 @@ class TorsoKappaPID:
 
         if sat:                               # anti-windup
             self._int -= e * dt
-        self._roll_sq += t_roll * t_roll
-        self._roll_n += 1
-        self._sat_n += int(sat)
+        if t >= self.measure_after:           # gate stats to the measurement window
+            self._roll_sq += t_roll * t_roll
+            self._roll_n += 1
+            self._sat_n += int(sat)
         return cmd
