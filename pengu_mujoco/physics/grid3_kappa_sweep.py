@@ -54,7 +54,12 @@ else:
     HIP_OFFS = np.array([10.0, 20.0, 30.0, 40.0, 50.0])     # 5
 
 AXNAMES = ["freq", "hip_phi", "leg_amp", "hip_amp", "hip_off"]
-EXTRA = ["torso_roll_rms", "torso_sat_frac"]
+# torso benchmark readouts + (opt-out) whole-robot CoM vs stance-foot contact point.
+# COM_STANCE=1 (default) adds the 4 CoM columns for the Gait-2 cells; pass COM_STANCE=0 to
+# reproduce the original 22-column schema (needed to finish k0, whose rows predate this).
+TRACK_CS = os.environ.get("COM_STANCE", "1") == "1"
+gs.TRACK_COM_STANCE = TRACK_CS
+EXTRA = ["torso_roll_rms", "torso_sat_frac"] + (gs.COM_STANCE_FIELDS if TRACK_CS else [])
 KTAG = f"k{KAPPA:g}".replace(".", "p")
 TAG = f"grid3_{KTAG}" + ("_smoke" if SMOKE else "")
 

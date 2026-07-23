@@ -13,8 +13,8 @@ flock -n 9 || exit 0
 cd "$(dirname "$0")/.."          # repo root pengu_mujoco/
 export PENGU_MODEL=v3
 PY="${GRID3_PY:-/home/ben/miniconda3/envs/mujoco/bin/python}"
-N=16
-SHARDS="${GRID3_SHARDS:-$(seq 0 11)}"
+N="${GRID3_N:-16}"                       # shard count == N_SHARDS modulus; master .done
+SHARDS="${GRID3_SHARDS:-$(seq 0 11)}"    # needs ALL N shard sentinels, so run 0..N-1 here
 CSV="results/gait_sweep/sweep_v3_grid3_${KTAG}_freq_hip_phi_leg_amp_hip_amp_hip_off.csv"
 LOG="results/gait_sweep/grid3_${KTAG}_autoresume.log"
 

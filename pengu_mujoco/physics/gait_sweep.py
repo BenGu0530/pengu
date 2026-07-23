@@ -55,6 +55,15 @@ BASE = dict(leg_amp=90.0, hip_amp=12.0, hip_phi=250.0,
 CONDITION = dict(name="p25", torso_amp=0.0, torso_phi=0.0, hip_off=30.0)
 SWEEP_TAG = "fine3c"     # issue #2: LOW-FREQ band, TIER C = fine phase(10deg) + dense amps, sharded parallel
 FLOOR_MU = 0.7
+
+# --- opt-in: whole-robot CoM vs stance-foot contact point (Gait-2 benchmark) ----------
+# Off by default so every existing tool's run_trial output is bit-identical. When a caller
+# sets gs.TRACK_COM_STANCE=True it must ALSO append COM_STANCE_FIELDS to its CSV fieldnames
+# (csv.DictWriter would otherwise raise on the extra keys). During single support (exactly
+# one foot loaded) we log the whole-robot CoM (subtree_com[0], world frame) against the
+# force-weighted stance-foot contact point. Forward travel is +y, so x is the lateral axis.
+TRACK_COM_STANCE = False
+COM_STANCE_FIELDS = ["com_lat_mean", "com_lat_rms", "com_stance_dist", "com_ss_n"]
 gc.T_HOLD = 5.0          # wait longer to settle upright before pitching
 gc.T_TRANSITION = 4.0    # MODERATE pitch-in ramp (not a sudden change)
 
@@ -136,6 +145,7 @@ def run_trial(model, data, ids, p):
     n_steps = {"L": 0, "R": 0}
     td_time = {"L": -1e9, "R": -1e9}            # last counted touchdown time (refractory)
     mu_req = []
+    cs_lat = []; cs_dist = []                    # CoM-over-stance (opt-in, single support)
     n_single = 0; n_double = 0; n_air = 0; n_meas = 0   # support-pattern counters
     pos_ws = None; last = data.xpos[root][:2].copy(); fell = False
 
@@ -151,6 +161,7 @@ def run_trial(model, data, ids, p):
             pos_ws = data.xpos[root][:2].copy()
         # per-foot normal/tangential force
         Fn = {"L": 0.0, "R": 0.0}; Ft = {"L": 0.0, "R": 0.0}
+        cpos = {"L": np.zeros(2), "R": np.zeros(2)}  # force-weighted contact xy (opt-in)
         for c in range(data.ncon):
             ct = data.contact[c]
             ft = foot_geom.get(ct.geom2) if ct.geom1 == floor_id else (
@@ -158,11 +169,22 @@ def run_trial(model, data, ids, p):
             if ft:
                 mujoco.mj_contactForce(model, data, c, f6)
                 Fn[ft] += abs(f6[0]); Ft[ft] += math.hypot(f6[1], f6[2])
+                if TRACK_COM_STANCE:
+                    cpos[ft] += abs(f6[0]) * ct.pos[:2]
         for s in ("L", "R"):
             if Fn[s] > F_HI:                       # issue #5: stance-gated (real load only)
                 mu_req.append(Ft[s] / Fn[s])
         # support pattern: single (one foot down) is the conventional walking signature
         nc = sum(1 for s in ("L", "R") if Fn[s] > F_HI)
+        # CoM-over-stance benchmark: only meaningful in single support (one contact point)
+        if TRACK_COM_STANCE and nc == 1:
+            s = "L" if Fn["L"] > F_HI else "R"
+            if Fn[s] > 1e-6:
+                cxy = cpos[s] / Fn[s]              # ground contact point of the stance foot
+                com = data.subtree_com[0]          # whole-robot CoM, world frame
+                lx = float(com[0] - cxy[0])        # lateral (forward travel is +y)
+                ly = float(com[1] - cxy[1])        # fore-aft
+                cs_lat.append(lx); cs_dist.append(math.hypot(lx, ly))
         n_meas += 1
         if nc == 1: n_single += 1
         elif nc == 2: n_double += 1
@@ -220,6 +242,12 @@ def run_trial(model, data, ids, p):
                cadence=round((n_steps["L"] + n_steps["R"]) / wt, 3),
                n_steps=n_steps["L"] + n_steps["R"],
                mu_req_p95=round(float(np.percentile(mu_req, 95)) if mu_req else float("nan"), 3))
+    if TRACK_COM_STANCE:
+        lat = np.asarray(cs_lat); dist = np.asarray(cs_dist)
+        out["com_lat_mean"] = round(float(np.mean(np.abs(lat))), 5) if lat.size else float("nan")
+        out["com_lat_rms"] = round(float(np.sqrt(np.mean(lat * lat))), 5) if lat.size else float("nan")
+        out["com_stance_dist"] = round(float(np.mean(dist)), 5) if dist.size else float("nan")
+        out["com_ss_n"] = int(lat.size)
     return out
 
 

@@ -12,12 +12,16 @@ Linux runs shards 0-11 (started). Mac runs **12-15**. Disjoint by index % 16.
 
 ## Run (repo root pengu_mujoco/, branch fable/friction-experiments)
 Needs mujoco + numpy (no cma). KAPPA and PENGU_MODEL are set below.
+**COM_STANCE=0 is REQUIRED for k0.** The Linux k0 rows (340k) predate the CoM-over-stance
+readout and have the original 22-column schema. `COM_STANCE=0` reproduces exactly that
+schema so the Mac shards 12-15 merge cleanly. (For the later kappa cells the default
+COM_STANCE=1 adds 4 CoM columns — do NOT use 0 there.)
 ```bash
 git pull
-KAPPA=0 python physics/grid3_kappa_sweep.py count      # expect cells=454500
-KAPPA=0 python physics/grid3_kappa_sweep.py initcsv
+COM_STANCE=0 KAPPA=0 python physics/grid3_kappa_sweep.py count      # expect cells=454500
+COM_STANCE=0 KAPPA=0 python physics/grid3_kappa_sweep.py initcsv
 for s in 12 13 14 15; do
-  N_SHARDS=16 SHARD_ID=$s KAPPA=0 PENGU_MODEL=v3 \
+  N_SHARDS=16 SHARD_ID=$s KAPPA=0 COM_STANCE=0 PENGU_MODEL=v3 \
     nohup python physics/grid3_kappa_sweep.py \
     > results/gait_sweep/grid3_k0_mac_s$s.log 2>&1 &
 done
