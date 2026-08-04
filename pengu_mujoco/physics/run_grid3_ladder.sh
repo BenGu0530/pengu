@@ -12,7 +12,10 @@ cd "$(dirname "$0")/.."                       # repo root pengu_mujoco/
 exec 9>/tmp/pengu_grid3_ladder.lock
 flock -n 9 || exit 0                          # one ladder at a time; a live ladder wins
 
-LADDER="${GRID3_LADDER:-1.5 2 1 0.5}"
+# Ben's call: finish k2, then STOP here — next is the k0 DR re-sweep (run_k0dr.sh, gated on
+# k2.done), NOT k1/k0.5 (deferred). k0 & k1.5 already done. To resume the ladder for the
+# remaining kappa later, set GRID3_LADDER="1 0.5".
+LADDER="${GRID3_LADDER:-2}"
 # Self-contained here: N=12 shards cover the whole grid (modulo 12), master .done fires when
 # all 12 land, and 12 of 24 threads stay free for other work. Override GRID3_N/GRID3_SHARDS
 # to split across machines (then that machine must run 0..N-1 between them for master .done).

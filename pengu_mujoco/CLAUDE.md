@@ -25,6 +25,10 @@ schedule risk, and not a reason to scope anything down. Stop mentioning it.
 Do not re-frame the paper spine, retire a direction, or redefine the headline metric on
 my own. Surface facts + options; Ben chooses.
 
+**5. 用中文回答 Ben。**
+All responses to Ben are written in Chinese (代码、标识符、文件名、命令保持英文；技术术语
+可中英混用)。This is a standing preference, not a per-message request.
+
 ## Project frame (current, as of 2026-07-09)
 
 Robot: **penguV3** only (v2 retired — fundamental model problems). MuJoCo, 5 actuators.
@@ -109,3 +113,29 @@ design point.
 - `.gitignore` blocks `results/` and `*.csv` → data needs `git add -f`.
 - Sweeps: shard with `N_SHARDS`/`SHARD_ID`, `initcsv` before sharded workers, resume is
   by axis-tuple. Reboot-safe launchers: `physics/run_grid2.sh`, `physics/run_stageB.sh`.
+
+## 扫描的摩擦设定 & 有没有 domain randomization(记录，2026-07-24)
+
+**摩擦系数**：整个 GRID-3 k0 扫描都跑在**单一固定地面 μ = 0.7**（`gs.FLOOR_MU = 0.7`）。
+所以"最优步态"（`freq=2, hip_phi=250, leg_amp=125, hip_amp=28, hip_off=10`）是**只在
+μ=0.7 下**找到并打分的。它的摩擦需求读数：**`mu_req_p95 = 0.618`** —— stance 阶段
+切向/法向力比的 p95 约 0.62，所以在 μ=0.7 下只剩 **~0.08 余量**，再滑一点最坏的那些步
+就要打滑了。
+
+**Domain randomization：没有做。** 每个格子都是确定性的 —— 固定 μ=0.7、固定初始姿态，
+无质量/摩擦/传感器噪声、无扰动。替代的只有 `mu_req_p95` 这个**事后**摩擦需求指标（不是
+鲁棒性测试）。`friction_utils.SURFACES` 摩擦阶梯和旧的 Stage-B `min_mu` 扫描是独立工具，
+**没有**用到 GRID-3 上。所以当前 best 是**单 μ 点最优**，不是抗噪加固过的。后续两个自然
+选项：①把 top-N 步态沿 `SURFACES` μ-阶梯重跑，拿到各自的 `min_mu`（能走的最低摩擦）；
+②真正的 domain randomization（每次试验随机 μ/质量/姿态，重新打分）—— 改动大、会改指标
+定义，由 Ben 定。
+
+### 计划：下次重扫 k0 时加入鲁棒性 DR（Ben 定，2026-07-30）
+`physics/dr_filter.py` 跑了方案①（前向 top-N × 细 μ 阶梯 [0.70..0.30]）后发现：pass/fail
+在**单个 μ 点上是散点、非单调**的（同一步态 0.6 摔、0.5 又能走，22/40 "摔了又恢复"），所以
+**单次判定不可靠**。Ben 确认下次重扫 k0 时把这两个都加进去：
+- **每 μ 多次带扰动取通过率**：每个 μ 跑 K 次，随机初始姿态（yaw/pitch/lateral 小偏移）+
+  质量抖动（torso 砝码 ±X%），记 `pass_rate` 代替单次 valid/前向判定，压掉散点噪声。
+- **真·in-the-loop DR（方案 B）**：选步态时每次试验随机 μ（可叠加质量/姿态），按跨随机条件
+  的**平均/最差**表现打分，让"鲁棒"直接进入选择目标；会改 `run_trial` 指标定义、成本 ×K。
+两者都要改 `run_trial`（加扰动+重复）。**现在不做** —— 等 k2/k1/k0.5 这轮扫完再重扫 k0。

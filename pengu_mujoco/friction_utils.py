@@ -6,16 +6,24 @@ pengu_mujoco/ and import as:
     from friction_utils import set_floor_friction, SURFACES
 
 Physical model (see scene.xml floor geom + robot.xml foot geoms):
-  Foot collision geoms have a fixed sliding friction of 0.9 (rubbery plastic).
-  The FLOOR is the variable.
+  The foot rubber is very grippy -- real sliding-friction coefficient ~2.8
+  (underestimate; rubber on rough surfaces routinely mu>1). The FLOOR is the
+  variable, and each SURFACES value is the MEASURED foot-on-that-surface pair
+  coefficient, NOT a floor-only number.
 
-  IMPORTANT (fixed 2026-06): for two geoms of EQUAL priority MuJoCo combines
-  friction by the ELEMENTWISE MAXIMUM, not the minimum. So merely lowering the
-  floor's mu below 0.9 did NOTHING -- max(foot 0.9, floor) = 0.9 always, and the
-  floor setting was silently ignored (verified: identical trajectories at
-  mu=0.06/0.30/0.70). To make the floor actually dictate contact friction we
-  raise the floor geom's `priority` above the feet (default 0); the higher-
-  priority geom's friction then wins the contact, so effective mu = floor mu.
+  WHY THE FLOOR DICTATES CONTACT mu (and why that is physically right here):
+  Real friction is a property of the material PAIR, measured empirically -- it is
+  not foot_mu combined with floor_mu by any rule. MuJoCo forces a per-geom mu +
+  a combine rule, and its EQUAL-priority rule is the ELEMENTWISE MAXIMUM, which is
+  non-physical here: max(foot 2.8, ice 0.06) = 2.8 would mean the robot never
+  slips on ice (verified 2026-06: identical trajectories at mu=0.06/0.30/0.70).
+  We raise the floor geom's `priority` above the feet (default 0) so the floor's
+  mu wins the contact. Because the foot (~2.8) is far grippier than any floor
+  (<=0.7), the real interface mu is capped by the slipperier surface (the floor),
+  so "floor wins" ~= "the slippery member limits grip" -- the correct limit.
+  => effective contact mu = SURFACES[surface]. sim2real accuracy hinges ONLY on
+  those SURFACES numbers being real measured foot-on-surface coefficients; the
+  foot's 2.8 only matters to confirm foot >> floor (so this approximation holds).
   Only the sliding coefficient (friction[:,0]) is varied; torsional/rolling are
   left at MuJoCo defaults.
 """

@@ -64,6 +64,12 @@ FLOOR_MU = 0.7
 # force-weighted stance-foot contact point. Forward travel is +y, so x is the lateral axis.
 TRACK_COM_STANCE = False
 COM_STANCE_FIELDS = ["com_lat_mean", "com_lat_rms", "com_stance_dist", "com_ss_n"]
+
+# --- opt-in: initial-pose jitter for domain randomization -----------------------------
+# None = the fixed nominal stand pose (bit-identical default). A dict with keys
+# {"yaw","pitch"} in radians and "lat" in metres perturbs the initial base attitude/
+# position per trial (the DR sweep samples it fresh each repeat).
+POSE_JITTER = None
 gc.T_HOLD = 5.0          # wait longer to settle upright before pitching
 gc.T_TRANSITION = 4.0    # MODERATE pitch-in ramp (not a sudden change)
 
@@ -105,7 +111,17 @@ TD_REFRACTORY = 0.25  # s: min time between two same-foot touchdowns (issue #4: 
 
 METRIC_FIELDS = ["survived", "valid", "path_speed", "net_fwd_speed", "straightness",
                  "path", "single_frac", "stride_L", "stride_R", "stride_sym",
-                 "clear_L", "clear_R", "cadence", "n_steps", "mu_req_p95"]
+                 "clear_L", "clear_R", "cadence", "n_steps", "mu_req_p95",
+                 # slip = the planted (loaded) foot sliding on the ground. Appended at the
+                 # END so the position of every earlier column is unchanged. slip_ratio =
+                 # total sliding distance / total stride distance (avg fraction of each
+                 # step spent sliding); a gait "slips" if slip_ratio > 0.05 (Ben's 5%).
+                 "slip_dist", "slip_ratio",
+                 # heading_align = base-front axis (body +y) . net-travel direction, in
+                 # [-1,1]. +1 = robot FACES the way it travels (forward gait); ~-1 = it
+                 # moves backward-facing (moonwalk). net_fwd alone is facing-blind, so this
+                 # separates real forward gaits from retrograde ones. Filter: >0.5 = forward.
+                 "heading_align"]
 
 
 def _set_gait(p):
@@ -134,7 +150,20 @@ def run_trial(model, data, ids, p):
     _set_gait(p)
     act, jadr = build_ids(model)
     set_initial_pose(model, data, act, jadr)
-    f6 = np.zeros(6)
+    if POSE_JITTER is not None:                    # DR: perturb the initial base pose
+        j = POSE_JITTER
+        data.qpos[0] += j.get("lat", 0.0)
+        pp = math.radians(gc.INIT_PITCH_DEG) + j.get("pitch", 0.0)
+        yy = j.get("yaw", 0.0)
+        qpx = np.array([math.cos(pp / 2), math.sin(pp / 2), 0.0, 0.0])
+        qy = np.array([math.cos(yy / 2), 0.0, 0.0, math.sin(yy / 2)])
+        qj = np.zeros(4); mujoco.mju_mulQuat(qj, qy, qpx)
+        data.qpos[3:7] = qj
+        mujoco.mj_forward(model, data)
+    f6 = np.zeros(6); vf6 = np.zeros(6)
+    DT = float(model.opt.timestep)          # physics step == one measurement sample
+    slip_dist_tot = 0.0                     # integral of stance-foot slide distance [m]
+    face_sum = np.zeros(2)                   # sum of base-front (body +y) xy over the walk
 
     # per-foot footfall state machine (Schmitt + clearance gate)
     state = {"L": "stance", "R": "stance"}      # stance / swing
@@ -159,21 +188,33 @@ def run_trial(model, data, ids, p):
             continue
         if pos_ws is None:
             pos_ws = data.xpos[root][:2].copy()
+        face_sum += data.xmat[root].reshape(3, 3)[:2, 1]   # base +y (front) axis, xy
         # per-foot normal/tangential force
         Fn = {"L": 0.0, "R": 0.0}; Ft = {"L": 0.0, "R": 0.0}
         cpos = {"L": np.zeros(2), "R": np.zeros(2)}  # force-weighted contact xy (opt-in)
+        slipnum = {"L": 0.0, "R": 0.0}               # force-weighted slip-speed numerator
         for c in range(data.ncon):
             ct = data.contact[c]
-            ft = foot_geom.get(ct.geom2) if ct.geom1 == floor_id else (
-                 foot_geom.get(ct.geom1) if ct.geom2 == floor_id else None)
+            fg = ct.geom2 if ct.geom1 == floor_id else (
+                 ct.geom1 if ct.geom2 == floor_id else -1)
+            ft = foot_geom.get(fg)
             if ft:
                 mujoco.mj_contactForce(model, data, c, f6)
-                Fn[ft] += abs(f6[0]); Ft[ft] += math.hypot(f6[1], f6[2])
+                fn = abs(f6[0])
+                Fn[ft] += fn; Ft[ft] += math.hypot(f6[1], f6[2])
                 if TRACK_COM_STANCE:
-                    cpos[ft] += abs(f6[0]) * ct.pos[:2]
+                    cpos[ft] += fn * ct.pos[:2]
+                # slip speed = tangential velocity of the foot AT the contact point
+                # (floor is static). Pure rolling -> ~0 here even as the foot body moves.
+                mujoco.mj_objectVelocity(model, data, mujoco.mjtObj.mjOBJ_GEOM, fg, vf6, 0)
+                v_pt = vf6[3:6] + np.cross(vf6[0:3], ct.pos - data.geom_xpos[fg])
+                n = ct.frame[0:3]
+                v_tan = v_pt - np.dot(v_pt, n) * n
+                slipnum[ft] += fn * float(np.linalg.norm(v_tan))
         for s in ("L", "R"):
             if Fn[s] > F_HI:                       # issue #5: stance-gated (real load only)
                 mu_req.append(Ft[s] / Fn[s])
+                slip_dist_tot += (slipnum[s] / Fn[s]) * DT   # force-weighted slide, integrated
         # support pattern: single (one foot down) is the conventional walking signature
         nc = sum(1 for s in ("L", "R") if Fn[s] > F_HI)
         # CoM-over-stance benchmark: only meaningful in single support (one contact point)
@@ -241,7 +282,14 @@ def run_trial(model, data, ids, p):
                single_frac=round(single_frac, 3),
                cadence=round((n_steps["L"] + n_steps["R"]) / wt, 3),
                n_steps=n_steps["L"] + n_steps["R"],
-               mu_req_p95=round(float(np.percentile(mu_req, 95)) if mu_req else float("nan"), 3))
+               mu_req_p95=round(float(np.percentile(mu_req, 95)) if mu_req else float("nan"), 3),
+               slip_dist=round(slip_dist_tot, 5),
+               slip_ratio=round(slip_dist_tot / path, 5) if path > 1e-6 else float("nan"))
+    # heading: does the base front axis point the way the robot actually travelled?
+    disp_vec = (last - pos_ws) if pos_ws is not None else np.zeros(2)
+    nf, nd = np.linalg.norm(face_sum), np.linalg.norm(disp_vec)
+    out["heading_align"] = (round(float(np.dot(face_sum / nf, disp_vec / nd)), 4)
+                            if nf > 1e-9 and nd > 1e-9 else float("nan"))
     if TRACK_COM_STANCE:
         lat = np.asarray(cs_lat); dist = np.asarray(cs_dist)
         out["com_lat_mean"] = round(float(np.mean(np.abs(lat))), 5) if lat.size else float("nan")
