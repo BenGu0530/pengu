@@ -17,7 +17,8 @@ usage:
   python physics/grid3_dr_sweep.py count
   python physics/grid3_dr_sweep.py initcsv
   N_SHARDS=12 SHARD_ID=3 python physics/grid3_dr_sweep.py
-env: GRID3_SMOKE=1 -> tiny grid;  DR_K -> repeats per cell (default 5).
+env: GRID3_SMOKE=1 -> tiny grid;  DR_K -> repeats per cell (default 5);
+     KAPPA=2 -> Gait 2 re-sweep (default 0 = Gait 1); tag/filename follow KAPPA (k0dr/k2dr).
 """
 import os, sys, csv
 os.environ.setdefault("PENGU_MODEL", "v3")
@@ -38,6 +39,8 @@ MASS_JIT = 0.15                       # +-15% on easytorso mass/inertia
 YAW_DEG, PITCH_DEG, LAT_M = 5.0, 3.0, 0.01
 NET_MIN, HEAD_MIN, SLIP_OK = 0.05, 0.5, 0.15
 SMOKE = os.environ.get("GRID3_SMOKE", "") == "1"
+KAPPA = float(os.environ.get("KAPPA", "0"))            # 0 = Gait 1 (k0dr); 2 = Gait 2 (k2dr)
+_KTAG = ("%g" % KAPPA).replace("-", "m").replace(".", "p")   # 0->"0", 2->"2", 0.5->"0p5"
 
 if SMOKE:
     FREQS    = np.round(np.arange(1.60, 1.8001, 0.10), 3)
@@ -53,7 +56,7 @@ else:
 AXNAMES = ["freq", "hip_phi", "leg_amp", "hip_amp", "hip_off"]
 DR_FIELDS = ["pass_rate", "surv_rate", "net_fwd_mean", "net_fwd_min",
              "slip_mean", "head_mean"]
-TAG = "grid3_k0dr" + ("_smoke" if SMOKE else "")
+TAG = f"grid3_k{_KTAG}dr" + ("_smoke" if SMOKE else "")
 
 
 def cells():
@@ -85,12 +88,12 @@ def main():
 
     model = mujoco.MjModel.from_xml_path(gs.XML); data = mujoco.MjData(model)
     ids = gs.make_ids(model)
-    gc.TORSO_CONTROLLER = TorsoKappaPID(model, kappa=0.0, measure_after=gs.SETTLE)
+    gc.TORSO_CONTROLLER = TorsoKappaPID(model, kappa=KAPPA, measure_after=gs.SETTLE)
     tid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "easytorso")
     nom_m = float(model.body_mass[tid]); nom_I = model.body_inertia[tid].copy()
 
     done = gs._load_done(csv_path, AXNAMES)
-    print(f"# GRID3-DR k0  cells={len(combos)}  done={len(done)}  K={K}  "
+    print(f"# GRID3-DR k{_KTAG} (kappa={KAPPA})  cells={len(combos)}  done={len(done)}  K={K}  "
           f"shard={shard_id}/{n_shards}  mu~U({MU_LO},{MU_HI}) mass+-{MASS_JIT}")
     f = open(csv_path, "a", newline=""); w = csv.DictWriter(f, fieldnames=fields)
     n_mine = 0
