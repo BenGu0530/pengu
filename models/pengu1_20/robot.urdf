@@ -1,0 +1,597 @@
+<?xml version="1.0" ?>
+<!-- Generated using onshape-to-robot -->
+<!-- Onshape https://cad.onshape.com/documents/327456a96965c95eb8955d8e/w/b78e2a8bbbac7eed78ed3d08/e/b4782a5dd527cb884d54a5cc -->
+<robot name="pengu1_20">
+  <!-- Link leftthighmotor -->
+  <link name="leftthighmotor">
+    <inertial>
+      <origin xyz="-0.0738509 0.0105397 -0.0475118" rpy="0 0 0"/>
+      <mass value="0.207745"/>
+      <inertia ixx="0.000560286" ixy="-1.37754e-05" ixz="2.42754e-05" iyy="0.000484471" iyz="6.34348e-05" izz="0.000126076"/>
+    </inertial>
+    <!-- Part easymotor -->
+    <visual>
+      <origin xyz="-0.08825 0.03128 -0.0885124" rpy="0 -2.718e-09 -1.5708"/>
+      <geometry>
+        <mesh filename="package://assets/easymotor.stl"/>
+      </geometry>
+      <material name="easymotor_material">
+        <color rgba="0.796078 0.823529 0.937255 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.08825 0.03128 -0.0885124" rpy="0 -2.718e-09 -1.5708"/>
+      <geometry>
+        <mesh filename="package://assets/easymotor.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part left_thigh -->
+    <visual>
+      <origin xyz="-0.0799204 -0.0680094 -0.0260901" rpy="1.5708 0 -3.14159"/>
+      <geometry>
+        <mesh filename="package://assets/left_thigh.stl"/>
+      </geometry>
+      <material name="left_thigh_material">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0799204 -0.0680094 -0.0260901" rpy="1.5708 0 -3.14159"/>
+      <geometry>
+        <mesh filename="package://assets/left_thigh.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Link easyaxis -->
+  <link name="easyaxis">
+    <inertial>
+      <origin xyz="-0.0102715 0.000501152 -0.06925" rpy="0 0 0"/>
+      <mass value="0.345637"/>
+      <inertia ixx="0.000733205" ixy="6.32805e-07" ixz="-0" iyy="0.000773915" iyz="0" izz="0.000118176"/>
+    </inertial>
+    <!-- Part pengu2axis010 -->
+    <visual>
+      <origin xyz="0.0165 0.0195 -0.04875" rpy="1.5708 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://assets/pengu2axis010.stl"/>
+      </geometry>
+      <material name="pengu2axis010_material">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0165 0.0195 -0.04875" rpy="1.5708 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://assets/pengu2axis010.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part easymotorwithconnector -->
+    <visual>
+      <origin xyz="0.011 -0.01425 -0.0965" rpy="-1.5708 -0 1.5708"/>
+      <geometry>
+        <mesh filename="package://assets/easymotorwithconnector.stl"/>
+      </geometry>
+      <material name="easymotorwithconnector_material">
+        <color rgba="0.796078 0.823529 0.937255 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.011 -0.01425 -0.0965" rpy="-1.5708 -0 1.5708"/>
+      <geometry>
+        <mesh filename="package://assets/easymotorwithconnector.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part easymotorwithconnector_2 -->
+    <visual>
+      <origin xyz="0.011 0.01425 -0.042" rpy="1.5708 -0 -1.5708"/>
+      <geometry>
+        <mesh filename="package://assets/easymotorwithconnector.stl"/>
+      </geometry>
+      <material name="easymotorwithconnector_2_material">
+        <color rgba="0.796078 0.823529 0.937255 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.011 0.01425 -0.042" rpy="1.5708 -0 -1.5708"/>
+      <geometry>
+        <mesh filename="package://assets/easymotorwithconnector.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part easymotor_2 -->
+    <visual>
+      <origin xyz="0.011 -0.01478 -0.0835" rpy="-2.718e-09 -1.5708 0"/>
+      <geometry>
+        <mesh filename="package://assets/easymotor.stl"/>
+      </geometry>
+      <material name="easymotor_2_material">
+        <color rgba="0.796078 0.823529 0.937255 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.011 -0.01478 -0.0835" rpy="-2.718e-09 -1.5708 0"/>
+      <geometry>
+        <mesh filename="package://assets/easymotor.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Link rightthighmotor -->
+  <link name="rightthighmotor">
+    <inertial>
+      <origin xyz="0.0336636 -0.0475118 -0.000899096" rpy="0 0 0"/>
+      <mass value="0.207745"/>
+      <inertia ixx="0.000484471" ixy="6.30739e-05" ixz="1.37137e-05" iyy="0.00012582" iyz="-2.42754e-05" izz="0.00056003"/>
+    </inertial>
+    <!-- Part easymotor_3 -->
+    <visual>
+      <origin xyz="0.02575 -0.0885124 0.0135" rpy="-1.5708 -0 -4.905e-09"/>
+      <geometry>
+        <mesh filename="package://assets/easymotor.stl"/>
+      </geometry>
+      <material name="easymotor_3_material">
+        <color rgba="0.796078 0.823529 0.937255 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.02575 -0.0885124 0.0135" rpy="-1.5708 -0 -4.905e-09"/>
+      <geometry>
+        <mesh filename="package://assets/easymotor.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part right_thigh -->
+    <visual>
+      <origin xyz="-0 0 0.0155" rpy="4.905e-09 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://assets/right_thigh.stl"/>
+      </geometry>
+      <material name="right_thigh_material">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0 0 0.0155" rpy="4.905e-09 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://assets/right_thigh.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Link right_foot0080 -->
+  <link name="right_foot0080">
+    <inertial>
+      <origin xyz="0.00309728 -0.00816562 -0.0519937" rpy="0 0 0"/>
+      <mass value="0.149685"/>
+      <inertia ixx="0.000166324" ixy="1.24008e-06" ixz="2.46733e-06" iyy="0.000359285" iyz="-8.22166e-06" izz="0.000426047"/>
+    </inertial>
+    <!-- Part right_foot0080 -->
+    <visual>
+      <origin xyz="-0.000764396 0.032498 0.0472219" rpy="-1.5708 -1.5708 0"/>
+      <geometry>
+        <mesh filename="package://assets/right_foot0080.stl"/>
+      </geometry>
+      <material name="right_foot0080_material">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.000764396 0.032498 0.0472219" rpy="-1.5708 -1.5708 0"/>
+      <geometry>
+        <mesh filename="package://assets/right_foot0080.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Frame closing_crank3-R_2 (dummy link + fixed joint) -->
+  <link name="closing_crank3-R_2">
+    <origin xyz="0 0 0" rpy="0 -0 0"/>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1e-9"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <joint name="closing_crank3-R_2_frame" type="fixed">
+    <origin xyz="-0.000764396 0.0222 -0.01511" rpy="1.5708 -0 0"/>
+    <parent link="right_foot0080"/>
+    <child link="closing_crank3-R_2"/>
+    <axis xyz="0 0 0"/>
+  </joint>
+  <!-- Frame closing_crank3-R_2_z (dummy link + fixed joint) -->
+  <link name="closing_crank3-R_2_z">
+    <origin xyz="0 0 0" rpy="0 -0 0"/>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1e-9"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <joint name="closing_crank3-R_2_z_frame" type="fixed">
+    <origin xyz="-0.000764396 -0.0778 -0.01511" rpy="1.5708 -0 0"/>
+    <parent link="right_foot0080"/>
+    <child link="closing_crank3-R_2_z"/>
+    <axis xyz="0 0 0"/>
+  </joint>
+  <!-- Joint from rightthighmotor to right_foot0080 -->
+  <joint name="slider-R" type="prismatic">
+    <origin xyz="0.04054 -0.0916416 -0.000350003" rpy="-1.5708 -0 -4.905e-09"/>
+    <parent link="rightthighmotor"/>
+    <child link="right_foot0080"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-0.0498709" upper="0.000129139"/>
+  </joint>
+  <!-- Link crank_circle -->
+  <link name="crank_circle">
+    <inertial>
+      <origin xyz="8.03408e-05 0.010368 -0.0087438" rpy="0 0 0"/>
+      <mass value="0.0199581"/>
+      <inertia ixx="3.81655e-06" ixy="-1.8264e-08" ixz="5.55e-10" iyy="1.45975e-06" iyz="7.1615e-08" izz="4.66294e-06"/>
+    </inertial>
+    <!-- Part crank_circle -->
+    <visual>
+      <origin xyz="-0 0 -0.009" rpy="0.00774877 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://assets/crank_circle.stl"/>
+      </geometry>
+      <material name="crank_circle_material">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0 0 -0.009" rpy="0.00774877 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://assets/crank_circle.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Link crank_link -->
+  <link name="crank_link">
+    <inertial>
+      <origin xyz="-0.0398252 -1.59698e-06 -0.0065882" rpy="0 0 0"/>
+      <mass value="0.0249476"/>
+      <inertia ixx="2.34462e-06" ixy="-3.66e-10" ixz="1.45213e-06" iyy="1.14674e-05" iyz="5.8e-11" izz="1.17005e-05"/>
+    </inertial>
+    <!-- Part crank_link -->
+    <visual>
+      <origin xyz="0 0 -0.00705" rpy="1.57076 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://assets/crank_link.stl"/>
+      </geometry>
+      <material name="crank_link_material">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.00705" rpy="1.57076 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://assets/crank_link.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Frame closing_crank3-R_1 (dummy link + fixed joint) -->
+  <link name="closing_crank3-R_1">
+    <origin xyz="0 0 0" rpy="0 -0 0"/>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1e-9"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <joint name="closing_crank3-R_1_frame" type="fixed">
+    <origin xyz="-0.05424 -2.17501e-06 0.01095" rpy="0 0 4.00998e-05"/>
+    <parent link="crank_link"/>
+    <child link="closing_crank3-R_1"/>
+    <axis xyz="0 0 0"/>
+  </joint>
+  <!-- Frame closing_crank3-R_1_z (dummy link + fixed joint) -->
+  <link name="closing_crank3-R_1_z">
+    <origin xyz="0 0 0" rpy="0 -0 0"/>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1e-9"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <joint name="closing_crank3-R_1_z_frame" type="fixed">
+    <origin xyz="-0.05424 -2.17501e-06 0.11095" rpy="0 0 4.00998e-05"/>
+    <parent link="crank_link"/>
+    <child link="closing_crank3-R_1_z"/>
+    <axis xyz="0 0 0"/>
+  </joint>
+  <!-- Joint from crank_circle to crank_link -->
+  <joint name="crank1-R" type="revolute">
+    <origin xyz="0.000193717 0.0249992 -0.009" rpy="0 -0 1.56305"/>
+    <parent link="crank_circle"/>
+    <child link="crank_link"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-3.141592653589793" upper="3.141592653589793"/>
+  </joint>
+  <!-- Joint from rightthighmotor to crank_circle -->
+  <joint name="crank2_R" type="revolute">
+    <origin xyz="0.04 -0.0775124 -0.0245" rpy="0 -0 -4.905e-09"/>
+    <parent link="rightthighmotor"/>
+    <child link="crank_circle"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-3.141592653589793" upper="3.141592653589793"/>
+  </joint>
+  <!-- Joint from easyaxis to rightthighmotor -->
+  <joint name="hip-R" type="revolute">
+    <origin xyz="-0 0 -0.144" rpy="-3.14159 -0 1.5708"/>
+    <parent link="easyaxis"/>
+    <child link="rightthighmotor"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-3.141592653589793" upper="3.141592653589793"/>
+  </joint>
+  <!-- Link easytorso -->
+  <link name="easytorso">
+    <inertial>
+      <origin xyz="1.419e-09 -0.159272 0.0215029" rpy="0 0 0"/>
+      <mass value="0.872085"/>
+      <inertia ixx="0.00460327" ixy="-1.31e-10" ixz="1.4e-11" iyy="0.000279121" iyz="-2.84826e-05" izz="0.00458109"/>
+    </inertial>
+    <!-- Part part_1 -->
+    <visual>
+      <origin xyz="-0.0225 -0.17175 0.0412769" rpy="1.5708 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://assets/part_1.stl"/>
+      </geometry>
+      <material name="part_1_material">
+        <color rgba="0.615686 0.811765 0.929412 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0225 -0.17175 0.0412769" rpy="1.5708 0 1.5708"/>
+      <geometry>
+        <mesh filename="package://assets/part_1.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part part_1_2 -->
+    <visual>
+      <origin xyz="-0 -0.23675 0.0212769" rpy="1.5708 0 3.14159"/>
+      <geometry>
+        <mesh filename="package://assets/part_1__2.stl"/>
+      </geometry>
+      <material name="part_1_2_material">
+        <color rgba="0.615686 0.811765 0.929412 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0 -0.23675 0.0212769" rpy="1.5708 0 3.14159"/>
+      <geometry>
+        <mesh filename="package://assets/part_1__2.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part part_1_3 -->
+    <visual>
+      <origin xyz="0.0225 -0.10175 0.0412769" rpy="1.5708 -0 -1.5708"/>
+      <geometry>
+        <mesh filename="package://assets/part_1.stl"/>
+      </geometry>
+      <material name="part_1_3_material">
+        <color rgba="0.615686 0.811765 0.929412 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0225 -0.10175 0.0412769" rpy="1.5708 -0 -1.5708"/>
+      <geometry>
+        <mesh filename="package://assets/part_1.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part torso -->
+    <visual>
+      <origin xyz="-0.0225 -0.31675 -0.00122307" rpy="-1.5708 -0 0"/>
+      <geometry>
+        <mesh filename="package://assets/torso.stl"/>
+      </geometry>
+      <material name="torso_material">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.0225 -0.31675 -0.00122307" rpy="-1.5708 -0 0"/>
+      <geometry>
+        <mesh filename="package://assets/torso.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part bracketmotorside -->
+    <visual>
+      <origin xyz="0.0225 -0.02675 -0.01" rpy="-1.5708 0 3.14159"/>
+      <geometry>
+        <mesh filename="package://assets/bracketmotorside.stl"/>
+      </geometry>
+      <material name="bracketmotorside_material">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0225 -0.02675 -0.01" rpy="-1.5708 0 3.14159"/>
+      <geometry>
+        <mesh filename="package://assets/bracketmotorside.stl"/>
+      </geometry>
+    </collision>
+    <!-- Part bracketbearingside -->
+    <visual>
+      <origin xyz="0.0225 -0.0267252 -0.01" rpy="-1.5708 0 3.14159"/>
+      <geometry>
+        <mesh filename="package://assets/bracketbearingside.stl"/>
+      </geometry>
+      <material name="bracketbearingside_material">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0225 -0.0267252 -0.01" rpy="-1.5708 0 3.14159"/>
+      <geometry>
+        <mesh filename="package://assets/bracketbearingside.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint from easyaxis to easytorso -->
+  <joint name="torso" type="revolute">
+    <origin xyz="6.3e-11 0.02322 -0.06925" rpy="1.5708 -1.5708 0"/>
+    <parent link="easyaxis"/>
+    <child link="easytorso"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-3.141592653589793" upper="3.141592653589793"/>
+  </joint>
+  <!-- Joint from leftthighmotor to easyaxis -->
+  <joint name="hip-L" type="revolute">
+    <origin xyz="-0.06925 -0.02322 0" rpy="0 -1.5708 0"/>
+    <parent link="leftthighmotor"/>
+    <child link="easyaxis"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-3.141592653589793" upper="3.141592653589793"/>
+  </joint>
+  <!-- Link right_foot0080___fillet13 -->
+  <link name="right_foot0080___fillet13">
+    <inertial>
+      <origin xyz="0.00809087 -0.00363118 -0.0521227" rpy="0 0 0"/>
+      <mass value="0.149685"/>
+      <inertia ixx="0.000359248" ixy="1.24152e-06" ixz="8.21368e-06" iyy="0.000166321" iyz="-2.46625e-06" izz="0.000426014"/>
+    </inertial>
+    <!-- Part right_foot0080___fillet13 -->
+    <visual>
+      <origin xyz="-0.04257 0.00023 0.047094" rpy="3.14159 -1.5708 0"/>
+      <geometry>
+        <mesh filename="package://assets/right_foot0080___fillet13.stl"/>
+      </geometry>
+      <material name="right_foot0080___fillet13_material">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.04257 0.00023 0.047094" rpy="3.14159 -1.5708 0"/>
+      <geometry>
+        <mesh filename="package://assets/right_foot0080___fillet13.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Frame closing_crank3-L_2 (dummy link + fixed joint) -->
+  <link name="closing_crank3-L_2">
+    <origin xyz="0 0 0" rpy="0 -0 0"/>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1e-9"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <joint name="closing_crank3-L_2_frame" type="fixed">
+    <origin xyz="-0.0222673 0.00023 -0.0152379" rpy="3.14159 -1.5708 0"/>
+    <parent link="right_foot0080___fillet13"/>
+    <child link="closing_crank3-L_2"/>
+    <axis xyz="0 0 0"/>
+  </joint>
+  <!-- Frame closing_crank3-L_2_z (dummy link + fixed joint) -->
+  <link name="closing_crank3-L_2_z">
+    <origin xyz="0 0 0" rpy="0 -0 0"/>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1e-9"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <joint name="closing_crank3-L_2_z_frame" type="fixed">
+    <origin xyz="0.0777327 0.00023 -0.0152379" rpy="3.14159 -1.5708 0"/>
+    <parent link="right_foot0080___fillet13"/>
+    <child link="closing_crank3-L_2_z"/>
+    <axis xyz="0 0 0"/>
+  </joint>
+  <!-- Joint from leftthighmotor to right_foot0080___fillet13 -->
+  <joint name="slider-L" type="prismatic">
+    <origin xyz="-0.0744673 0.01678 -0.0915124" rpy="2.718e-09 0 -3.14159"/>
+    <parent link="leftthighmotor"/>
+    <child link="right_foot0080___fillet13"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-0.0498721" upper="0.000127876"/>
+  </joint>
+  <!-- Link crank_circle_2 -->
+  <link name="crank_circle_2">
+    <inertial>
+      <origin xyz="0.0103683 -0 -0.0087438" rpy="0 0 0"/>
+      <mass value="0.0199581"/>
+      <inertia ixx="1.45961e-06" ixy="0" ixz="7.1617e-08" iyy="3.81669e-06" iyz="-0" izz="4.66294e-06"/>
+    </inertial>
+    <!-- Part crank_circle_2 -->
+    <visual>
+      <origin xyz="0 -0 -0.009" rpy="1.5708 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://assets/crank_circle.stl"/>
+      </geometry>
+      <material name="crank_circle_2_material">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 -0 -0.009" rpy="1.5708 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://assets/crank_circle.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Link crank_link_2 -->
+  <link name="crank_link_2">
+    <inertial>
+      <origin xyz="-0.0398237 -0.000352435 -0.0065882" rpy="0 0 0"/>
+      <mass value="0.0249476"/>
+      <inertia ixx="2.34533e-06" ixy="-8.073e-08" ixz="1.45208e-06" iyy="1.14667e-05" iyz="1.2851e-08" izz="1.17005e-05"/>
+    </inertial>
+    <!-- Part crank_link_2 -->
+    <visual>
+      <origin xyz="-0 0 -0.00705" rpy="1.56195 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://assets/crank_link.stl"/>
+      </geometry>
+      <material name="crank_link_2_material">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0 0 -0.00705" rpy="1.56195 1.5708 0"/>
+      <geometry>
+        <mesh filename="package://assets/crank_link.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <!-- Frame closing_crank3-L_1 (dummy link + fixed joint) -->
+  <link name="closing_crank3-L_1">
+    <origin xyz="0 0 0" rpy="0 -0 0"/>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1e-9"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <joint name="closing_crank3-L_1_frame" type="fixed">
+    <origin xyz="-0.0542379 -0.00048 0.01095" rpy="0 0 0.00884967"/>
+    <parent link="crank_link_2"/>
+    <child link="closing_crank3-L_1"/>
+    <axis xyz="0 0 0"/>
+  </joint>
+  <!-- Frame closing_crank3-L_1_z (dummy link + fixed joint) -->
+  <link name="closing_crank3-L_1_z">
+    <origin xyz="0 0 0" rpy="0 -0 0"/>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1e-9"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <joint name="closing_crank3-L_1_z_frame" type="fixed">
+    <origin xyz="-0.0542379 -0.00048 0.11095" rpy="0 0 0.00884967"/>
+    <parent link="crank_link_2"/>
+    <child link="closing_crank3-L_1_z"/>
+    <axis xyz="0 0 0"/>
+  </joint>
+  <!-- Joint from crank_circle_2 to crank_link_2 -->
+  <joint name="crank2-L" type="revolute">
+    <origin xyz="0.025 0 -0.009" rpy="-0 0 -0"/>
+    <parent link="crank_circle_2"/>
+    <child link="crank_link_2"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-3.141592653589793" upper="3.141592653589793"/>
+  </joint>
+  <!-- Joint from leftthighmotor to crank_circle_2 -->
+  <joint name="crank1-L" type="revolute">
+    <origin xyz="-0.05025 0.01703 -0.0775124" rpy="0 -1.5708 0"/>
+    <parent link="leftthighmotor"/>
+    <child link="crank_circle_2"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-3.141592653589793" upper="3.141592653589793"/>
+  </joint>
+</robot>
