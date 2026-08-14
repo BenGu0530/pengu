@@ -1,5 +1,19 @@
 """
-walk_pengu.py - MuJoCo viewer with per-joint static holds + decoded readout
+walk_pengu.py - MuJoCo passive viewer with side-tracking follow camera
+
+Camera behavior:
+  - Sits 2 m on the robot's LEFT side, looking at the torso.
+  - Follows world position of easytorso every frame.
+  - Tracks yaw extracted from torso xmat: when robot turns, camera orbits
+    so the sagittal plane stays visible. Roll/pitch are ignored.
+  - Yaw is derived robustly: at init we cache the body-frame direction that
+    points world +y, then re-project it through xmat each frame. This works
+    regardless of which torso body axis is "forward".
+
+Hotkeys (passive viewer):
+  Space  pause / resume physics (still able to free-look while paused)
+  F      toggle follow-cam on/off (turn off, then drag with mouse)
+  Esc    close window
 
 Kinematic tree (root = leftthighmotor, an onshape-to-robot artifact):
   leftthighmotor                                   [freejoint]
@@ -10,20 +24,9 @@ Kinematic tree (root = leftthighmotor, an onshape-to-robot artifact):
     |     +-- easytorso                            [torso]     = UPPER BODY
     +-- right_foot0080___fillet13                  [slider-L]  = LEFT foot
     +-- crank_circle_2 -> crank_link_2             [crank1-L]
-
-WARNING: hip-L / hip-R are NOT "left hip" / "right hip" in a biomechanical
-sense. They are internal hinges along the above chain. Always verify by
-holding one and watching the feet in the viewer + the printout below.
-
-World frame (inferred from gait_config.set_initial_pose):
-  +x = lateral (robot's left-right)
-  +y = forward (robot faces +y)
-  +z = up
-From behind the robot (camera at -y looking toward +y):
-  robot's LEFT  = world -x
-  robot's RIGHT = world +x
 """
 import math
+import time
 import numpy as np
 import mujoco
 import mujoco.viewer
@@ -37,17 +40,19 @@ from gait_config import (
 # =====================================================================
 USE_STATIC_HOLD = False   # False -> normal walk; True -> hold values below
 
-# ─── Static hold values (only used when USE_STATIC_HOLD = True) ──────
-# hip-L / hip-R: stand pose is STAND_HIP_DEG = -25. "+10° from stand" = -15.
-# torso: 0 = no roll. +15 = upper body leans to robot-LEFT (verified).
-# crank: 0 = leg retracted (bottom of sine). WALK_CRANK_AMP_DEG = +10 = top.
 STATIC_HIP_L_DEG   = -25.0
 STATIC_HIP_R_DEG   = -25.0
 STATIC_TORSO_DEG   =   0.0
-STATIC_CRANK_L_DEG =   60.0
+STATIC_CRANK_L_DEG =  60.0
 STATIC_CRANK_R_DEG =   0.0
-# =====================================================================
 
+# =====================================================================
+# FOLLOW CAMERA
+# =====================================================================
+CAM_DISTANCE   = 2.0       # meters from torso
+CAM_ELEVATION  = -12.0     # deg. Negative = camera ABOVE lookat, looking down.
+CAM_SIDE       = "left"    # "left" or "right" of the robot's heading
+CAM_LOOKAT_ZMIN = 0.10     # clamp lookat z so camera doesn't dip into floor
 
 # Module-level state
 _act_ids = {}
@@ -59,9 +64,16 @@ _rfoot_body_id = -1
 _last_print_t = -1.0
 PRINT_INTERVAL = 0.5
 
+# Mutable shared state for hotkeys & camera. dict so the closures can mutate.
+_state = {
+    "paused":          False,
+    "follow_cam":      True,
+    "fwd_in_body":     None,    # cached at init: world +y expressed in torso frame
+    "side_offset_deg": 90.0 if CAM_SIDE == "left" else -90.0,
+}
+
 
 def _apply_static_hold(data):
-    """Hold every joint at its STATIC_*_DEG value."""
     data.ctrl[_act_ids["hip-L"]]    = math.radians(STATIC_HIP_L_DEG)
     data.ctrl[_act_ids["hip-R"]]    = math.radians(STATIC_HIP_R_DEG)
     data.ctrl[_act_ids["torso"]]    = math.radians(STATIC_TORSO_DEG)
@@ -70,20 +82,8 @@ def _apply_static_hold(data):
 
 
 def _decode_torso_tilt(torso_mat):
-    """
-    Extract the torso's 'up vector' in world and decode into side_lean /
-    pitch_lean angles. The torso's geometric up direction in its own body
-    frame is body -y (verified empirically: at rest ey_world ~ (0,-0.07,-1),
-    so -ey_world ~ (0,+0.07,+1) points roughly up).
-
-    Returns (up_world [3,], side_lean_deg, pitch_lean_deg).
-      side_lean_deg  : + = leans robot-RIGHT (toward world +x)
-                       - = leans robot-LEFT  (toward world -x)
-      pitch_lean_deg : + = leans FORWARD (toward world +y)
-                       - = leans BACKWARD
-    """
-    up = -torso_mat[:, 1]       # world-frame vector of torso "up"
-    side_lean = math.degrees(math.atan2(up[0],  up[2]))
+    up = -torso_mat[:, 1]
+    side_lean  = math.degrees(math.atan2(up[0], up[2]))
     pitch_lean = math.degrees(math.atan2(up[1], up[2]))
     return up, side_lean, pitch_lean
 
@@ -100,31 +100,26 @@ def controller(model, data):
         return
     _last_print_t = data.time
 
-    # Commanded values (what we asked for)
     cmd_hipL  = math.degrees(data.ctrl[_act_ids["hip-L"]])
     cmd_hipR  = math.degrees(data.ctrl[_act_ids["hip-R"]])
     cmd_torso = math.degrees(data.ctrl[_act_ids["torso"]])
     cmd_cL    = math.degrees(data.ctrl[_act_ids["crank1-L"]])
     cmd_cR    = math.degrees(data.ctrl[_act_ids["crank1-R"]])
 
-    # Actual joint angles (what the sim achieved)
     jnt_hipL  = math.degrees(data.qpos[_jnt_adr["hip-L"]])
     jnt_hipR  = math.degrees(data.qpos[_jnt_adr["hip-R"]])
     jnt_torso = math.degrees(data.qpos[_jnt_adr["torso"]])
     jnt_cL    = math.degrees(data.qpos[_jnt_adr["crank1-L"]])
     jnt_cR    = math.degrees(data.qpos[_jnt_adr["crank1-R"]])
 
-    # World-frame body positions
-    root   = data.xpos[_root_body_id]
-    lfoot  = data.xpos[_lfoot_body_id]
-    rfoot  = data.xpos[_rfoot_body_id]
+    root      = data.xpos[_root_body_id]
+    lfoot     = data.xpos[_lfoot_body_id]
+    rfoot     = data.xpos[_rfoot_body_id]
     torso_pos = data.xpos[_torso_body_id]
 
-    # Torso tilt decode
     torso_mat = data.xmat[_torso_body_id].reshape(3, 3)
     up, side_lean, pitch_lean = _decode_torso_tilt(torso_mat)
 
-    # Foot split: which side is each foot on, vs forward?
     mid_x = 0.5 * (lfoot[0] + rfoot[0])
     mid_y = 0.5 * (lfoot[1] + rfoot[1])
 
@@ -150,6 +145,47 @@ def controller(model, data):
     )
 
 
+# ---------------------------------------------------------------------
+# Camera + hotkeys
+# ---------------------------------------------------------------------
+def _on_key(keycode):
+    """Passive-viewer key callback. Receives ASCII keycode."""
+    if keycode == 32:  # spacebar
+        _state["paused"] = not _state["paused"]
+        print(f"\n[KEY] paused = {_state['paused']}")
+    elif keycode in (ord('F'), ord('f')):
+        _state["follow_cam"] = not _state["follow_cam"]
+        print(f"\n[KEY] follow_cam = {_state['follow_cam']}  "
+              f"({'tracking robot' if _state['follow_cam'] else 'free mouse look'})")
+
+
+def _update_follow_cam(viewer, data):
+    """
+    Re-aim the viewer's free camera at the torso each frame.
+    Yaw is taken from the torso xmat by re-projecting the cached
+    world-+y direction (in body frame) back into the world.
+    """
+    fwd_in_body = _state["fwd_in_body"]
+    if fwd_in_body is None:
+        return
+
+    torso_pos = data.xpos[_torso_body_id].copy()
+    R = data.xmat[_torso_body_id].reshape(3, 3)
+    fwd_world = R @ fwd_in_body
+    yaw_deg = math.degrees(math.atan2(fwd_world[1], fwd_world[0]))
+
+    if torso_pos[2] < CAM_LOOKAT_ZMIN:
+        torso_pos[2] = CAM_LOOKAT_ZMIN
+
+    with viewer.lock():
+        viewer.cam.lookat[0] = torso_pos[0]
+        viewer.cam.lookat[1] = torso_pos[1]
+        viewer.cam.lookat[2] = torso_pos[2]
+        viewer.cam.distance  = CAM_DISTANCE
+        viewer.cam.elevation = CAM_ELEVATION
+        viewer.cam.azimuth   = yaw_deg + _state["side_offset_deg"]
+
+
 def main():
     global _act_ids, _jnt_adr, _last_print_t
     global _torso_body_id, _root_body_id, _lfoot_body_id, _rfoot_body_id
@@ -172,6 +208,12 @@ def main():
     _rfoot_body_id = _body_id("right_foot0080")             # slider-R host
 
     set_initial_pose(model, data, _act_ids, _jnt_adr)
+    mujoco.mj_forward(model, data)  # populate xmat for the cached frame
+
+    # Cache "world +y at t=0, expressed in torso body frame".
+    # At runtime: fwd_world = xmat @ fwd_in_body. Yaw = atan2(fwd_world.y, fwd_world.x).
+    R0 = data.xmat[_torso_body_id].reshape(3, 3).copy()
+    _state["fwd_in_body"] = R0.T @ np.array([0.0, 1.0, 0.0])
 
     print("=" * 70)
     if USE_STATIC_HOLD:
@@ -184,18 +226,44 @@ def main():
               f"(0 = no roll, +15 = leans robot-LEFT, verified)")
         print(f"    crank-L = {STATIC_CRANK_L_DEG:+6.1f} deg")
         print(f"    crank-R = {STATIC_CRANK_R_DEG:+6.1f} deg")
-        print("  Change one value at a time, compare foot positions.")
     else:
         print("  MODE: WALK (USE_STATIC_HOLD = False, using gait_config)")
         print_config()
     print(f"  Tracking bodies: easytorso({_torso_body_id}), "
           f"L foot({_lfoot_body_id}), R foot({_rfoot_body_id}), "
           f"root({_root_body_id})")
+    print(f"  Follow cam: side={CAM_SIDE}, dist={CAM_DISTANCE} m, "
+          f"elev={CAM_ELEVATION:+.1f} deg")
     print("=" * 70)
 
     mujoco.set_mjcb_control(controller)
-    print("\n[Viewer] Space=pause | Backspace=reset | Close window to quit\n")
-    mujoco.viewer.launch(model, data)
+    print("\n[Viewer] Space=pause/resume | F=toggle follow-cam | "
+          "drag=free-look (when follow-cam off) | Esc=close\n")
+
+    dt = model.opt.timestep
+    with mujoco.viewer.launch_passive(model, data, key_callback=_on_key) as viewer:
+        # Apply camera once before first frame so the initial view is correct.
+        _update_follow_cam(viewer, data)
+        viewer.sync()
+
+        while viewer.is_running():
+            step_start = time.time()
+
+            if not _state["paused"]:
+                mujoco.mj_step(model, data)
+
+            if _state["follow_cam"]:
+                _update_follow_cam(viewer, data)
+
+            viewer.sync()
+
+            # Real-time pacing.
+            if _state["paused"]:
+                time.sleep(0.01)  # idle when paused, don't burn CPU
+            else:
+                slack = dt - (time.time() - step_start)
+                if slack > 0:
+                    time.sleep(slack)
 
 
 if __name__ == "__main__":
