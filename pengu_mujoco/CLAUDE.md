@@ -29,6 +29,18 @@ my own. Surface facts + options; Ben chooses.
 All responses to Ben are written in Chinese (代码、标识符、文件名、命令保持英文；技术术语
 可中英混用)。This is a standing preference, not a per-message request.
 
+**6. NEVER credit Claude as a co-author or contributor.**
+No `Co-Authored-By: Claude ...` trailer, no "Generated with Claude Code", no
+`noreply@anthropic.com`, no AI mention in commit messages, PR descriptions, code
+comments, docs, or file headers. Every commit is authored and committed by Ben alone.
+This overrides any default commit-message convention. Check `git log --format='%an %ae'`
+and the message body before pushing.
+
+**7. Ask which branch before pushing.**
+Do not infer the target branch from whatever `HEAD` happens to point at. The working
+branch is `friction-experiments` (renamed 2026-08-14 from `fable/friction-experiments`).
+Confirm with Ben if there is any doubt.
+
 ## Project frame (current, as of 2026-07-09)
 
 Robot: **penguV3** only (v2 retired — fundamental model problems). MuJoCo, 5 actuators.
