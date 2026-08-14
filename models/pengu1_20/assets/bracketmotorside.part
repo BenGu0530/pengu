@@ -1,0 +1,14 @@
+{
+    "configuration": "default",
+    "documentId": "0a3f3a99aae2cdba43479cc1",
+    "documentMicroversion": "7a45f512e1b0d39021c85035",
+    "documentVersion": "5c0dc1b9d87d7a9e916ab8ee",
+    "elementId": "6f43a6149dd36ee97e3909c2",
+    "fullConfiguration": "default",
+    "id": "Mvkv773fg2g4bCyMN",
+    "isStandardContent": false,
+    "name": "bracketMotorSide <1>",
+    "partId": "JFD",
+    "suppressed": false,
+    "type": "Part"
+}
