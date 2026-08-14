@@ -15,7 +15,16 @@ import mujoco
 import os as _os
 _MODEL = _os.environ.get("PENGU_MODEL", "v2")
 ACTUATORS = ["hip-L", "hip-R", "crank1-R", "torso", "crank1-L"]
-if _MODEL == "v3":
+# COM-ladder models (repo-root models/, hardened to the same 5-actuator convention
+# as penguV3; penguV3 == the 1.05 rung). Paths are relative to pengu_mujoco/.
+_COM_MODELS = {
+    "1.20": "../models/pengu1_20/scene.xml",
+    "1.31": "../models/pengu1_31/scene.xml",
+}
+if _MODEL in _COM_MODELS:
+    XML_PATH = _COM_MODELS[_MODEL]
+    JOINTS   = ["hip-L", "hip-R", "torso"]
+elif _MODEL == "v3":
     XML_PATH = "penguV3/scene.xml"
     JOINTS   = ["hip-L", "hip-R", "torso"]
 else:
@@ -25,7 +34,7 @@ else:
 # ═════════════════════════════════════════════════════════════════
 #  INIT POSE
 # ═════════════════════════════════════════════════════════════════
-if _MODEL == "v3":
+if _MODEL == "v3" or _MODEL in _COM_MODELS:
     INIT_Z         = 0.18    # [m]  upright re-export stands ~0.16-0.18
     INIT_PITCH_DEG = 0.0     # [deg] pitch fixed in CAD -> natively upright
     STAND_HIP_DEG  = 0.0     # [deg] stands with hips at neutral

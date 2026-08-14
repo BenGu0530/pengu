@@ -2,9 +2,10 @@
 # One-line, CPU-only launcher for the GRID-3 DR sweeps (k0dr / k2dr) on ANY fresh clone.
 # No GPU needed. After `git clone && cd pengu_mujoco`, just run one line:
 #
-#   bash physics/run_sweep.sh            # default: k0dr (Gait 1, kappa=0)
+#   bash physics/run_sweep.sh            # default: k0dr (Gait 1, kappa=0, COM 1.05 = penguV3)
 #   bash physics/run_sweep.sh k2dr       # Gait 2 re-sweep (kappa=2)
-#   bash physics/run_sweep.sh k2dr 8     # force 8 shards (default = cores-2)
+#   bash physics/run_sweep.sh k0dr-1.20  # COM-ladder model 1.20 (hardened models/pengu1_20)
+#   bash physics/run_sweep.sh k2dr-1.31 8   # model 1.31, force 8 shards (default = cores-2)
 #   GRID3_PY=/path/to/python bash physics/run_sweep.sh k2dr   # use a specific python
 #
 # It (1) finds a python that can import mujoco+numpy, or builds a local .sweep_venv and
@@ -16,10 +17,18 @@ cd "$(dirname "$0")/.."                                   # repo root pengu_mujo
 export PENGU_MODEL=v3
 
 JOB="${1:-k0dr}"
-case "$JOB" in
+# JOB = kNdr[-COM] : kappa rung + optional COM-ladder model (1.20 / 1.31; default penguV3 = 1.05)
+KJOB="${JOB%%-*}"                       # k0dr / k2dr
+COM="${JOB#*-}"; [ "$COM" = "$JOB" ] && COM=""   # 1.20 / 1.31 / ""
+case "$KJOB" in
   k0dr|K0DR|0) export KAPPA=0 ; TAGN=k0dr ;;
   k2dr|K2DR|2) export KAPPA=2 ; TAGN=k2dr ;;
-  *) echo "usage: bash physics/run_sweep.sh [k0dr|k2dr] [n_shards]"; exit 2 ;;
+  *) echo "usage: bash physics/run_sweep.sh [k0dr|k2dr][-1.20|-1.31] [n_shards]"; exit 2 ;;
+esac
+case "$COM" in
+  "")           ;;                                     # penguV3 (COM 1.05) — filenames unchanged
+  1.20|1.31)    export PENGU_MODEL="$COM" ; TAGN="com${COM/./}_${TAGN}" ;;
+  *) echo "unknown COM model '$COM' (want 1.20 or 1.31)"; exit 2 ;;
 esac
 
 # ---- pick a python that can import mujoco, else build a local venv ----

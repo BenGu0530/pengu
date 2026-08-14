@@ -18,7 +18,9 @@ usage:
   python physics/grid3_dr_sweep.py initcsv
   N_SHARDS=12 SHARD_ID=3 python physics/grid3_dr_sweep.py
 env: GRID3_SMOKE=1 -> tiny grid;  DR_K -> repeats per cell (default 5);
-     KAPPA=2 -> Gait 2 re-sweep (default 0 = Gait 1); tag/filename follow KAPPA (k0dr/k2dr).
+     KAPPA=2 -> Gait 2 re-sweep (default 0 = Gait 1); tag/filename follow KAPPA (k0dr/k2dr);
+     PENGU_MODEL=1.20|1.31 -> COM-ladder model (default v3 == the 1.05 rung); the COM tag
+     is baked into the filename (grid3_com120_k0dr etc.; v3 filenames unchanged).
 """
 import os, sys, csv
 os.environ.setdefault("PENGU_MODEL", "v3")
@@ -31,7 +33,9 @@ import gait_config as gc
 import gait_sweep as gs
 from torso_control import TorsoKappaPID
 
-assert gc.XML_PATH.endswith("penguV3/scene.xml"), gc.XML_PATH
+# penguV3 == the 1.05 COM rung; 1.20/1.31 are the hardened COM-ladder exports
+assert gc.XML_PATH.endswith(("penguV3/scene.xml", "pengu1_20/scene.xml",
+                             "pengu1_31/scene.xml")), gc.XML_PATH
 
 K = int(os.environ.get("DR_K", "5"))
 MU_LO, MU_HI = 0.45, 0.90
@@ -41,6 +45,8 @@ NET_MIN, HEAD_MIN, SLIP_OK = 0.05, 0.5, 0.15
 SMOKE = os.environ.get("GRID3_SMOKE", "") == "1"
 KAPPA = float(os.environ.get("KAPPA", "0"))            # 0 = Gait 1 (k0dr); 2 = Gait 2 (k2dr)
 _KTAG = ("%g" % KAPPA).replace("-", "m").replace(".", "p")   # 0->"0", 2->"2", 0.5->"0p5"
+_PM = os.environ.get("PENGU_MODEL", "v3")
+_CTAG = "" if _PM == "v3" else "com" + _PM.replace(".", "") + "_"   # 1.20 -> "com120_"
 
 if SMOKE:
     FREQS    = np.round(np.arange(1.60, 1.8001, 0.10), 3)
@@ -56,7 +62,7 @@ else:
 AXNAMES = ["freq", "hip_phi", "leg_amp", "hip_amp", "hip_off"]
 DR_FIELDS = ["pass_rate", "surv_rate", "net_fwd_mean", "net_fwd_min",
              "slip_mean", "head_mean"]
-TAG = f"grid3_k{_KTAG}dr" + ("_smoke" if SMOKE else "")
+TAG = f"grid3_{_CTAG}k{_KTAG}dr" + ("_smoke" if SMOKE else "")
 
 
 def cells():
@@ -93,7 +99,7 @@ def main():
     nom_m = float(model.body_mass[tid]); nom_I = model.body_inertia[tid].copy()
 
     done = gs._load_done(csv_path, AXNAMES)
-    print(f"# GRID3-DR k{_KTAG} (kappa={KAPPA})  cells={len(combos)}  done={len(done)}  K={K}  "
+    print(f"# GRID3-DR {_CTAG}k{_KTAG} (model={_PM} kappa={KAPPA})  cells={len(combos)}  done={len(done)}  K={K}  "
           f"shard={shard_id}/{n_shards}  mu~U({MU_LO},{MU_HI}) mass+-{MASS_JIT}")
     f = open(csv_path, "a", newline=""); w = csv.DictWriter(f, fieldnames=fields)
     n_mine = 0

@@ -1,28 +1,23 @@
 <?xml version="1.0" ?>
 <!-- Generated using onshape-to-robot -->
-<!-- Onshape https://cad.onshape.com/documents/327456a96965c95eb8955d8e/w/b78e2a8bbbac7eed78ed3d08/e/b4782a5dd527cb884d54a5cc -->
-<mujoco model="pengu1_20">
+<!-- Onshape https://cad.onshape.com/documents/92ba184c0b15865297849245/w/789dbcff3171ede58dbe8577/e/33c14d568273b6f514d751c2 -->
+<mujoco model="pengu1_31">
   <compiler angle="radian" meshdir="assets" autolimits="true"/>
-  <!-- HARDENING (added on top of raw onshape export; raw kept as robot_raw_export.xml):
-       explicit small timestep + implicitfast integrator for the closed crank-slider
-       loop; XM430 stall torque +/-4.1 N.m as the hard actuator limit (sustained
-       torque > 0.82 N.m continuous is measured/flagged separately, not clamped). -->
-  <option timestep="0.001" integrator="implicitfast"/>
   <default>
-    <default class="pengu1_20">
+    <default class="pengu1_31">
       <joint frictionloss="0.1" armature="0.005"/>
-      <position kp="50" dampratio="1" forcerange="-4.1 4.1"/>
+      <position kp="50" dampratio="1"/>
       <default class="visual">
         <geom type="mesh" contype="0" conaffinity="0" group="2"/>
       </default>
       <default class="collision">
-        <geom group="3" contype="0" conaffinity="0"/>
+        <geom group="3"/>
       </default>
     </default>
   </default>
   <worldbody>
     <!-- Link leftthighmotor -->
-    <body name="leftthighmotor" pos="0 0 0" quat="1 0 0 0" childclass="pengu1_20">
+    <body name="leftthighmotor" pos="0 0 0" quat="1 0 0 0" childclass="pengu1_31">
       <freejoint name="leftthighmotor_freejoint"/>
       <inertial pos="-0.0738509 0.0105397 -0.0475118" mass="0.207745" fullinertia="0.000560286 0.000484471 0.000126076 -1.37754e-05 2.42754e-05 6.34348e-05"/>
       <!-- Part easymotor -->
@@ -66,7 +61,7 @@
             <inertial pos="0.00309728 -0.00816562 -0.0519937" mass="0.149685" fullinertia="0.000166324 0.000359285 0.000426047 1.24008e-06 2.46733e-06 -8.22166e-06"/>
             <!-- Part right_foot0080 -->
             <geom type="mesh" class="visual" pos="-0.000764396 0.032498 0.0472219" quat="0.5 -0.5 -0.5 -0.5" mesh="right_foot0080" material="right_foot0080_material"/>
-            <geom type="mesh" class="collision" pos="-0.000764396 0.032498 0.0472219" quat="0.5 -0.5 -0.5 -0.5" mesh="right_foot0080" material="right_foot0080_material" contype="1" conaffinity="1" friction="0.9 0.005 0.0001"/>
+            <geom type="mesh" class="collision" pos="-0.000764396 0.032498 0.0472219" quat="0.5 -0.5 -0.5 -0.5" mesh="right_foot0080" material="right_foot0080_material"/>
             <!-- Frame closing_crank3-R_2 -->
             <site group="3" name="closing_crank3-R_2" pos="-0.000764396 0.0222 -0.01511" quat="0.707107 0.707107 -0 0"/>
             <!-- Frame closing_crank3-R_2_z -->
@@ -99,7 +94,7 @@
         <body name="easytorso" pos="6.3e-11 0.02322 -0.06925" quat="0.5 0.5 -0.5 0.5">
           <!-- Joint from easyaxis to easytorso -->
           <joint axis="0 0 1" name="torso" type="hinge"/>
-          <inertial pos="1.419e-09 -0.159272 0.0215029" mass="0.872085" fullinertia="0.00460327 0.000279121 0.00458109 -1.31e-10 1.4e-11 -2.84826e-05"/>
+          <inertial pos="1.103e-09 -0.16985 0.0214526" mass="1.12208" fullinertia="0.00513329 0.000313163 0.00511109 -1.45e-10 1.4e-11 -3.05676e-05"/>
           <!-- Part part_1 -->
           <geom type="mesh" class="visual" pos="-0.0225 -0.17175 0.0412769" quat="0.5 0.5 0.5 0.5" mesh="part_1" material="part_1_material"/>
           <geom type="mesh" class="collision" pos="-0.0225 -0.17175 0.0412769" quat="0.5 0.5 0.5 0.5" mesh="part_1" material="part_1_material"/>
@@ -127,7 +122,7 @@
         <inertial pos="0.00809087 -0.00363118 -0.0521227" mass="0.149685" fullinertia="0.000359248 0.000166321 0.000426014 1.24152e-06 8.21368e-06 -2.46625e-06"/>
         <!-- Part right_foot0080___fillet13 -->
         <geom type="mesh" class="visual" pos="-0.04257 0.00023 0.047094" quat="0 -0.707107 -0 -0.707107" mesh="right_foot0080___fillet13" material="right_foot0080___fillet13_material"/>
-        <geom type="mesh" class="collision" pos="-0.04257 0.00023 0.047094" quat="0 -0.707107 -0 -0.707107" mesh="right_foot0080___fillet13" material="right_foot0080___fillet13_material" contype="1" conaffinity="1" friction="0.9 0.005 0.0001"/>
+        <geom type="mesh" class="collision" pos="-0.04257 0.00023 0.047094" quat="0 -0.707107 -0 -0.707107" mesh="right_foot0080___fillet13" material="right_foot0080___fillet13_material"/>
         <!-- Frame closing_crank3-L_2 -->
         <site group="3" name="closing_crank3-L_2" pos="-0.0222673 0.00023 -0.0152379" quat="0 -0.707107 0 -0.707107"/>
         <!-- Frame closing_crank3-L_2_z -->
@@ -158,20 +153,20 @@
     </body>
   </worldbody>
   <asset>
-    <mesh file="crank_circle.stl"/>
-    <mesh file="right_foot0080.stl"/>
-    <mesh file="torso.stl"/>
-    <mesh file="easymotorwithconnector.stl"/>
-    <mesh file="pengu2axis010.stl"/>
-    <mesh file="left_thigh.stl"/>
-    <mesh file="bracketmotorside.stl"/>
-    <mesh file="bracketbearingside.stl"/>
-    <mesh file="right_thigh.stl"/>
-    <mesh file="part_1__2.stl"/>
-    <mesh file="easymotor.stl"/>
-    <mesh file="right_foot0080___fillet13.stl"/>
     <mesh file="crank_link.stl"/>
+    <mesh file="left_thigh.stl"/>
+    <mesh file="right_thigh.stl"/>
+    <mesh file="easymotor.stl"/>
+    <mesh file="pengu2axis010.stl"/>
+    <mesh file="right_foot0080.stl"/>
+    <mesh file="crank_circle.stl"/>
+    <mesh file="part_1__2.stl"/>
+    <mesh file="torso.stl"/>
     <mesh file="part_1.stl"/>
+    <mesh file="right_foot0080___fillet13.stl"/>
+    <mesh file="easymotorwithconnector.stl"/>
+    <mesh file="bracketbearingside.stl"/>
+    <mesh file="bracketmotorside.stl"/>
     <material name="easymotor_material" rgba="0.796078 0.823529 0.937255 1"/>
     <material name="left_thigh_material" rgba="1 1 1 1"/>
     <material name="pengu2axis010_material" rgba="1 1 1 1"/>
@@ -188,16 +183,15 @@
     <material name="right_foot0080___fillet13_material" rgba="1 1 1 1"/>
   </asset>
   <actuator>
-    <!-- Driven set = V2 convention: hip x2 + ONE rotary crank disk per leg + torso.
-         The closed crank-slider loop is 1-DOF/leg, so driving the disk sets leg
-         extension; the rod (crank1-R / crank2-L) and slider follow via the connect
-         equality and are left PASSIVE. forcerange on the disk = real motor torque.
-         NOTE asymmetric onshape naming: right disk = crank2_R, left disk = crank1-L. -->
-    <position class="pengu1_20" name="hip-L" joint="hip-L" ctrlrange="-1.5708 1.5708"/>
-    <position class="pengu1_20" name="hip-R" joint="hip-R" ctrlrange="-1.5708 1.5708"/>
-    <position class="pengu1_20" name="crank1-R" joint="crank2_R" ctrlrange="-3.14 3.14"/>
-    <position class="pengu1_20" name="crank1-L" joint="crank1-L" ctrlrange="-3.14 3.14"/>
-    <position class="pengu1_20" name="torso" joint="torso" ctrlrange="-0.7854 0.7854"/>
+    <position class="pengu1_31" name="hip-L" joint="hip-L"/>
+    <position class="pengu1_31" name="hip-R" joint="hip-R"/>
+    <position class="pengu1_31" name="slider-R" joint="slider-R" inheritrange="1"/>
+    <position class="pengu1_31" name="crank2_R" joint="crank2_R"/>
+    <position class="pengu1_31" name="crank1-R" joint="crank1-R"/>
+    <position class="pengu1_31" name="torso" joint="torso"/>
+    <position class="pengu1_31" name="slider-L" joint="slider-L" inheritrange="1"/>
+    <position class="pengu1_31" name="crank1-L" joint="crank1-L"/>
+    <position class="pengu1_31" name="crank2-L" joint="crank2-L"/>
   </actuator>
   <equality>
     <connect site1="closing_crank3-L_1" site2="closing_crank3-L_2"/>
