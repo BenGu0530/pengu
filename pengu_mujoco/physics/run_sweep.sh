@@ -1,34 +1,29 @@
 #!/usr/bin/env bash
-# One-line, CPU-only launcher for the GRID-3 DR sweeps (k0dr / k2dr) on ANY fresh clone.
+# One-line, CPU-only launcher for the GRID-4 co-design sweeps (docs/grid4_guide.md).
 # No GPU needed. After `git clone && cd pengu_mujoco`, just run one line:
 #
-#   bash physics/run_sweep.sh            # default: k0dr (Gait 1, kappa=0, COM 1.05 = penguV3)
-#   bash physics/run_sweep.sh k2dr       # Gait 2 re-sweep (kappa=2)
-#   bash physics/run_sweep.sh k0dr-1.20  # COM-ladder model 1.20 (hardened models/pengu1_20)
-#   bash physics/run_sweep.sh k2dr-1.31 8   # model 1.31, force 8 shards (default = cores-2)
-#   GRID3_PY=/path/to/python bash physics/run_sweep.sh k2dr   # use a specific python
+#   bash physics/run_sweep.sh c1         # config c1 (kappa=0, COM 1.05) ... c2..c6
+#   bash physics/run_sweep.sh c4 8       # config c4, force 8 shards (default = cores-2)
+#   GRID3_PY=/path/to/python bash physics/run_sweep.sh c1   # use a specific python
 #
 # It (1) finds a python that can import mujoco+numpy, or builds a local .sweep_venv and
 # pip-installs mujoco/numpy/cma; (2) recovers any committed .csv.gz snapshot; (3) initcsv;
-# (4) launches N shards. Resume is automatic by axis-tuple (already-done cells are skipped),
-# and DR randomization is seeded by cell index, so any machine reproduces a cell exactly.
+# (4) launches N shards. Resume is automatic by axis-tuple (already-done rows are skipped),
+# and randomization is seeded by (cell,mu,rep), so any machine reproduces a row exactly.
 set -u
 cd "$(dirname "$0")/.."                                   # repo root pengu_mujoco/
-export PENGU_MODEL=v3
 
-JOB="${1:-k0dr}"
-# JOB = kNdr[-COM] : kappa rung + optional COM-ladder model (1.20 / 1.31; default penguV3 = 1.05)
-KJOB="${JOB%%-*}"                       # k0dr / k2dr
-COM="${JOB#*-}"; [ "$COM" = "$JOB" ] && COM=""   # 1.20 / 1.31 / ""
-case "$KJOB" in
-  k0dr|K0DR|0) export KAPPA=0 ; TAGN=k0dr ;;
-  k2dr|K2DR|2) export KAPPA=2 ; TAGN=k2dr ;;
-  *) echo "usage: bash physics/run_sweep.sh [k0dr|k2dr][-1.20|-1.31] [n_shards]"; exit 2 ;;
-esac
-case "$COM" in
-  "")           ;;                                     # penguV3 (COM 1.05) — filenames unchanged
-  1.20|1.31)    export PENGU_MODEL="$COM" ; TAGN="com${COM/./}_${TAGN}" ;;
-  *) echo "unknown COM model '$COM' (want 1.20 or 1.31)"; exit 2 ;;
+JOB="${1:-c1}"
+case "$JOB" in
+  # GRID-4 (docs/grid4_guide.md): c1..c6 = {kappa 0,2} x {COM 1.05, 1.20, 1.31}
+  c[1-6])      export CONFIG="$JOB" ; TAGN="$JOB" ; SCRIPT=physics/grid4_sweep.py
+               CSV="results/gait_sweep/sweep_grid4_${JOB}_freq_hip_phi_leg_amp_hip_amp_hip_off_mu.csv" ;;
+  # legacy GRID-3 DR jobs (superseded by GRID-4; kept for resuming old data only)
+  k0dr|K0DR)   export KAPPA=0 ; TAGN=k0dr ; SCRIPT=physics/grid3_dr_sweep.py
+               CSV="results/gait_sweep/sweep_v3_grid3_k0dr_freq_hip_phi_leg_amp_hip_amp_hip_off.csv" ;;
+  k2dr|K2DR)   export KAPPA=2 ; TAGN=k2dr ; SCRIPT=physics/grid3_dr_sweep.py
+               CSV="results/gait_sweep/sweep_v3_grid3_k2dr_freq_hip_phi_leg_amp_hip_amp_hip_off.csv" ;;
+  *) echo "usage: bash physics/run_sweep.sh [c1..c6|k0dr|k2dr] [n_shards]"; exit 2 ;;
 esac
 
 # ---- pick a python that can import mujoco, else build a local venv ----
@@ -54,7 +49,6 @@ echo "using python: $PY  ($("$PY" -c 'import mujoco;print("mujoco",mujoco.__vers
 CORES="$( { getconf _NPROCESSORS_ONLN 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4; } )"
 N="${2:-$(( CORES > 3 ? CORES - 2 : 1 ))}"
 
-CSV="results/gait_sweep/sweep_v3_grid3_${TAGN}_freq_hip_phi_leg_amp_hip_amp_hip_off.csv"
 LOG="results/gait_sweep/${TAGN}_run.log"
 mkdir -p results/gait_sweep
 
@@ -63,16 +57,16 @@ if [ ! -f "$CSV" ] && [ -f "$CSV.gz" ]; then
   gunzip -kf "$CSV.gz"; echo "recovered $CSV from committed .gz"
 fi
 
-"$PY" physics/grid3_dr_sweep.py initcsv >> "$LOG" 2>&1
-CNT="$("$PY" physics/grid3_dr_sweep.py count 2>/dev/null)"
+"$PY" "$SCRIPT" initcsv >> "$LOG" 2>&1
+CNT="$("$PY" "$SCRIPT" count 2>/dev/null)"
 done0=0; [ -f "$CSV" ] && done0=$(($(wc -l < "$CSV") - 1))
 
 for s in $(seq 0 $((N - 1))); do
-  N_SHARDS=$N SHARD_ID=$s nohup "$PY" physics/grid3_dr_sweep.py >> "$LOG" 2>&1 &
+  N_SHARDS=$N SHARD_ID=$s nohup "$PY" "$SCRIPT" >> "$LOG" 2>&1 &
 done
 
-echo "launched $TAGN (kappa=$KAPPA): $N shards, resuming from $done0 done cells"
+echo "launched $TAGN: $N shards, resuming from $done0 done rows"
 echo "  $CNT"
-echo "watch:  wc -l $CSV        # target 454500 (+1 header)"
+echo "watch:  wc -l $CSV"
 echo "log:    tail -f $LOG"
-echo "when done (454500 rows): gzip -kf \"$CSV\" && git add -f \"$CSV.gz\" && git commit -m \"$TAGN DR sweep complete\" && git push"
+echo "when done: awk 'NF' \"$CSV\" > t && mv t \"$CSV\" && gzip -kf \"$CSV\" && git add -f \"$CSV.gz\" && git commit -m \"GRID-4 $TAGN complete\" && git push"
