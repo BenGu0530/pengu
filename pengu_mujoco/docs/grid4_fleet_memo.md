@@ -8,13 +8,21 @@ Do NOT change any parameter mid-fleet — one changed value = a different sweep.
 
 ## Assignment (one machine = one config = one CSV; no cross-machine merging)
 
-| batch | Mac (Ben's, running) | machine B | machine C |
-|---|---|---|---|
-| **1 (now)** | **c1** (κ=0, COM 1.05) | **c2** (κ=0, 1.20) | **c3** (κ=0, 1.31) |
-| **2 (next)** | c4 (κ=2, 1.05) | c5 (κ=2, 1.20) | c6 (κ=2, 1.31) |
+| machine | now | after that |
+|---|---|---|
+| **Mac** (Ben's) | **c1** (κ=0, 1.05) — running | c5 (κ=2, 1.20) |
+| **B** (Ryzen/WSL2, `grid4_machineB_memo.md`) | **c2** (κ=0, 1.20) — running, slowest box (~60 d) | — (gets help, see below) |
+| **C** (XPS/WSL2, `grid4_xps_memo.md`) | **c3** (κ=0, 1.31) — running | c6 (κ=2, 1.31) |
+| **D** (Linux, `grid4_machineD_memo.md`) | **c4** (κ=2, 1.05) | help finish c2 |
 
-Each config = 1,818,000 rows (+1 header), ~2 weeks/machine at ~10 shards — slower
-machines just take longer; resume is automatic, restarts are safe.
+When a machine frees up and c2 is still far from done, it joins c2 with a DISJOINT
+shard split (e.g. B keeps `N_SHARDS=11 SHARD_ID 0..10` as-is; helper runs
+`N_SHARDS=33 SHARD_ID 11..32`-style non-overlapping params into its own copy, then
+concat + dedupe on the 6 axis cols). Coordinate in this file before starting.
+
+Each config = 1,818,000 rows (+1 header). Measured rates: Mac ~4.3k rows/h,
+B ~1.24k, C ~3.96k — ETA ~17/60/19 days respectively; resume is automatic,
+restarts are safe.
 
 ## New machine setup (Linux / Mac; Windows → use WSL2; Linux VM fine)
 
@@ -74,6 +82,27 @@ git commit -m "GRID-4 cN complete" && git push
 ```
 Then start the machine's batch-2 config (`run_sweep.sh c4/c5/c6`).
 No AI attribution in commit messages. Branch: `friction-experiments`.
+
+## Per-machine routine (compiled from the machine memos)
+
+**B (WSL2, c2)** — details `grid4_machineB_memo.md`:
+1. After every Windows reboot/logoff: re-arm the WSL anchor (command above), THEN
+   relaunch: `GRID3_PY=$HOME/pengu/pengu_mujoco/.sweep_venv/bin/python bash physics/run_sweep.sh c2`.
+2. Check-in: `pgrep -fc grid4_sweep.py` = 11; `wc -l` on the c2 CSV grows.
+3. Ship-back at 1,818,000 rows per the block below.
+
+**C (WSL2, c3)** — details `grid4_xps_memo.md`:
+1. Same anchor + relaunch rule as B (`... run_sweep.sh c3`; expect 14 shards).
+2. Check-in additionally watches for the shard-death incident: if `pgrep -fc` < 14,
+   relaunch (safe), and note it in the memo — twice means it needs diagnosis.
+3. Keep on AC; Modern-Standby power settings already applied (see memo).
+4. After c3 ships: start c6.
+
+**D (Linux, c4)** — details `grid4_machineD_memo.md`: no WSL anchor needed; disable
+suspend once; daily `pgrep`/`wc -l`; after c4 ships, help c2 per the split above.
+
+**Mac (c1)** — Claude-managed on Ben's machine (caffeinate + completion monitor armed);
+after c1 ships: c5.
 
 ## Open items (Ben)
 
