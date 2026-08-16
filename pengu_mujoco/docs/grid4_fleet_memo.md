@@ -28,7 +28,14 @@ No mujoco python found → the launcher builds `.sweep_venv` and pip-installs
 mujoco/numpy/cma automatically.
 
 - Windows: install WSL2 (`wsl --install`), work inside `~/` (NOT `/mnt/c` — slow I/O),
-  set Windows power to never sleep.
+  set Windows power to never sleep. **Native Windows does NOT work** (mujoco 3.8.x DLL
+  fails to load — measured on machine C; WSL2 is mandatory).
+- **WSL2 keepalive is REQUIRED**: with no terminal attached the distro shuts down within
+  ~45 s and kills every shard (measured on machine B). Arm an anchor from Windows before
+  walking away, and re-arm after every reboot/logoff:
+  ```
+  powershell -c "Start-Process wsl.exe -ArgumentList '-d','Ubuntu','-e','sleep','infinity' -WindowStyle Hidden"
+  ```
 - VM: give it all cores, local virtual disk (no shared folders), host must not sleep.
 - Mac: `caffeinate -dimsu &` to prevent sleep. Linux: disable suspend.
 
@@ -37,8 +44,17 @@ mujoco/numpy/cma automatically.
 1. `git rev-parse --short HEAD` matches the other machines.
 2. `CONFIG=cN python physics/grid4_sweep.py count` prints
    `cells=454500 mus=[0.1, 0.3, 0.5, 0.7] rows=1818000 K=5` (and the right config/kappa/com).
+   (numpy ≥2.3 prints `np.float64(0.1)` — cosmetic, values identical.)
 3. After launch: `wc -l` on the CSV grows; startup line in
    `results/gait_sweep/cN_run.log` shows `com=<target> ... mass=2.2724kg`.
+   To verify COM/mass without waiting for the (buffered) log, run a zero-row probe:
+   ```bash
+   CONFIG=cN N_SHARDS=999999 SHARD_ID=999998 .sweep_venv/bin/python -u physics/grid4_sweep.py
+   ```
+   Expected slides: 1.05→−86.05 mm, 1.20→−31.37 mm, 1.31→+8.73 mm, always `mass=2.2724kg`.
+
+Gotcha: pass `GRID3_PY` as an ABSOLUTE path (e.g. `$HOME/...`), not `$PWD/...` — it
+expands before the script's `cd` (machine-C finding).
 
 ## Watching
 

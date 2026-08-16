@@ -62,7 +62,7 @@ CNT="$("$PY" "$SCRIPT" count 2>/dev/null)"
 done0=0; [ -f "$CSV" ] && done0=$(($(wc -l < "$CSV") - 1))
 
 for s in $(seq 0 $((N - 1))); do
-  N_SHARDS=$N SHARD_ID=$s nohup "$PY" "$SCRIPT" >> "$LOG" 2>&1 &
+  N_SHARDS=$N SHARD_ID=$s nohup "$PY" -u "$SCRIPT" >> "$LOG" 2>&1 &   # -u: unbuffered, startup line reaches the log
 done
 
 echo "launched $TAGN: $N shards, resuming from $done0 done rows"

@@ -19,8 +19,9 @@ not feed the paper. This spec matches the Overleaf draft (Sim Methods, 2026-08-1
 **2.2724 kg** — matches the physical build; no scaling). COM variants are
 **mass-conserving**: `easytorso` inertial COM slid along the counterweight axis
 (world-up at neutral stand) by load-time bisection; total/per-link masses, geometry,
-actuation, contact untouched. Measured base ratio 1.286; slides: 1.31→+1.4 mm,
-1.20→−31.5 mm (approx), 1.05→−86.1 mm (script solves exactly; see its startup line).
+actuation, contact untouched. Measured base ratio 1.286; slides as solved by the
+script at load (fleet-verified startup lines): 1.31→+8.73 mm, 1.20→−31.37 mm,
+1.05→−86.05 mm.
 Rung labels 1.05/1.20/1.31 are Ben's model naming. penguV3 (1.77 kg) and the
 `grid3` k0dr/k2dr data are fully superseded.
 
