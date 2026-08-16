@@ -77,6 +77,20 @@ wc -l results/gait_sweep/sweep_grid4_c4_freq_hip_phi_leg_amp_hip_amp_hip_off_mu.
 After the first hour, note the rows/h in this file for fleet planning (B measured
 ~112 rows/h/shard, C ~283 — expect this box in between depending on CPU).
 
+**Measured (2026-08-16, first hour after the header repair):**
+
+```
+t=3601s  rows 451 -> 5458  delta=5007  ->  5,005 rows/h  (358 rows/h/shard, 14 shards)
+```
+
+Fastest box in the fleet (B ~112, C ~283 rows/h/shard). ETA for the full 1,818,000 rows
+≈ **362 h ≈ 15.1 days**, i.e. ~2026-08-31; ±10% on the rate spans 8/29–9/01.
+
+Two caveats on that number: it was measured **with** the shards at nice 19 **and** an
+Isaac Lab training job holding ~1.5 cores, so it is the realistic shared-box rate, not a
+best case; and trial cost varies by gait region, so the rate will drift as the sweep
+walks the `freq`/`leg_amp` axes. Re-measure occasionally rather than trusting the ETA.
+
 ## Restart (after reboot, or if shards died)
 
 ```bash

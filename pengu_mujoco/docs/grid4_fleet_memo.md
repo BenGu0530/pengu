@@ -21,7 +21,7 @@ shard split (e.g. B keeps `N_SHARDS=11 SHARD_ID 0..10` as-is; helper runs
 concat + dedupe on the 6 axis cols). Coordinate in this file before starting.
 
 Each config = 1,818,000 rows (+1 header). Measured rates: Mac ~4.3k rows/h,
-B ~1.24k, C ~3.96k — ETA ~17/60/19 days respectively; resume is automatic,
+B ~1.24k, C ~3.96k, D ~5.0k — ETA ~17/60/19/15 days respectively; resume is automatic,
 restarts are safe.
 
 ## New machine setup (Linux / Mac; Windows → use WSL2; Linux VM fine)
@@ -122,6 +122,9 @@ No AI attribution in commit messages. Branch: `friction-experiments`.
 
 **D (Linux, c4)** — details `grid4_machineD_memo.md`: no WSL anchor needed; disable
 suspend once; daily `pgrep`/`wc -l`; after c4 ships, help c2 per the split above.
+Two D-specific rules: the clone is at `~/Documents/ben_gu/ben_pengu/pengu/pengu_mujoco`,
+not `~/pengu`; and the box is SHARED with Isaac Lab GPU training, so always launch under
+`nice -n 19` (see the memo) — 14 shards at nice 0 starve the trainer's CPU-side stepping.
 
 **Mac (c1)** — Claude-managed on Ben's machine (caffeinate + completion monitor armed);
 after c1 ships: c5.
