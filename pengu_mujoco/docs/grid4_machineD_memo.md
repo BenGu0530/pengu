@@ -85,9 +85,29 @@ cd $REPO
 CSV=results/gait_sweep/sweep_grid4_c4_freq_hip_phi_leg_amp_hip_amp_hip_off_mu.csv
 head -1 "$CSV"      # MUST be the freq,hip_phi,... header — if not, repair it FIRST
                     # (fleet memo pre-flight 4); relaunching headerless duplicates work
-GRID3_PY=$REPO/.sweep_venv/bin/python bash physics/run_sweep.sh c4
+GRID3_PY=$REPO/.sweep_venv/bin/python nice -n 19 bash physics/run_sweep.sh c4
 # confirm: "resuming from <N> done rows", N = wc -l minus 1 (not -1, not 0)
 ```
+
+**`nice -n 19` is not optional on this box — it is SHARED.** Children inherit the nice
+value, so launching the script under `nice` is enough. This machine also runs Isaac Lab
+GPU training (`~/anaconda3/envs/isaaclab`, e.g. `scripts/mbrl/train.py --headless
+--task Flat-Unitree-Go2-train-v0`) under the same `rml2` account, sometimes over RustDesk,
+and 14 shards at nice 0 saturate all 16 cores and starve that job's CPU-side env stepping
+(GPU util drops because it can't be fed). At nice 19 the trainer takes whatever CPU it
+wants and the sweep still gets the idle ~14 cores, so throughput barely changes.
+
+If you forget the `nice`, fix the running shards without restarting:
+```bash
+ps -eo pid,args | awk '$4=="physics/grid4_sweep.py"{print $1}' | xargs -r renice -n 19 -p
+```
+Before starting anything, check who else is on the box:
+```bash
+nvidia-smi; free -h; ps -eo user,pcpu,pmem,rss,etimes,args --sort=-rss | head
+```
+Memory is the one thing `nice` cannot fix: 14 shards hold ~4.1 GB of the 30 GB, and the
+box already sits near 21 GB used with swap partly in use. If someone needs the RAM, cut
+the shard count (`nice -n 19 bash physics/run_sweep.sh c4 8`) rather than renicing harder.
 To stop shards cleanly, kill by exact argv — a bare `pkill -f grid4_sweep.py` also
 matches (and kills) the shell issuing it:
 ```bash
