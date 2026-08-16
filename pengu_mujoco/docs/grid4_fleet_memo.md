@@ -5,17 +5,20 @@
 > Hot regions get topped up to K=5 afterwards with `physics/topup_k.py`, which runs
 > r=1..4 and merges — validated bit-identical to a native K=5 sweep on the smoke grid.
 > Everything else (grid, μ levels, jitters, pass rule, schema, filenames) unchanged.
-> **Switch procedure on B and C** (Mac already switched; D starts at K=1 directly):
+> **Switch procedure on B, C and D** (Mac already switched 2026-08-16; D launched c4
+> at K=5 before this amendment, so it switches too):
 > ```bash
-> cd ~/pengu/pengu_mujoco && git pull
-> pkill -f 'grid4_sweep[.]py'                      # stop the K=5 shards
+> cd ~/pengu/pengu_mujoco && git pull              # D: cd $HOME/Documents/ben_gu/ben_pengu/pengu/pengu_mujoco
+> pkill -f 'grid4_sweep[.]py'                      # D: use the argv-exact kill from its memo instead
 > CSV=results/gait_sweep/sweep_grid4_cN_freq_hip_phi_leg_amp_hip_amp_hip_off_mu.csv
 > mv "$CSV" "$CSV.k5partial"                       # archive; NEVER mix K values in one CSV
-> # WSL: re-arm the anchor if the distro restarted, then:
+> head -1 "$CSV.k5partial"                         # sanity: header line present
+> # WSL (B/C): re-arm the anchor if the distro restarted. Then relaunch:
 > DR_K=1 GRID3_PY=$HOME/pengu/pengu_mujoco/.sweep_venv/bin/python bash physics/run_sweep.sh cN
+> # D (shared box): DR_K=1 GRID3_PY=$REPO/.sweep_venv/bin/python nice -n 19 bash physics/run_sweep.sh c4
 > tail -2 results/gait_sweep/cN_run.log            # startup line must say K=1
 > ```
-> K=1 ETA: Mac ~3.4 d, B ~12 d, C ~3.8 d per config.
+> K=1 ETA: Mac ~3.4 d, B ~12 d, C ~3.8 d, D ~3 d per config.
 
 Full spec: `docs/grid4_guide.md`. Protocol is FROZEN (commit `a22f80b`): base = hardened
 `models/pengu1_31` (2.2724 kg), COM rungs {1.05, 1.20, 1.31} built in-memory at load,
