@@ -13,7 +13,7 @@ Do NOT change any parameter mid-fleet — one changed value = a different sweep.
 | **Mac** (Ben's) | **c1** (κ=0, 1.05) — running | c5 (κ=2, 1.20) |
 | **B** (Ryzen/WSL2, `grid4_machineB_memo.md`) | **c2** (κ=0, 1.20) — running, slowest box (~60 d) | — (gets help, see below) |
 | **C** (XPS/WSL2, `grid4_xps_memo.md`) | **c3** (κ=0, 1.31) — running | c6 (κ=2, 1.31) |
-| **D** (Linux, `grid4_machineD_memo.md`) | **c4** (κ=2, 1.05) | help finish c2 |
+| **D** (Linux, `grid4_machineD_memo.md`) | **c4** (κ=2, 1.05) — running since 2026-08-16, 14 shards | help finish c2 |
 
 When a machine frees up and c2 is still far from done, it joins c2 with a DISJOINT
 shard split (e.g. B keeps `N_SHARDS=11 SHARD_ID 0..10` as-is; helper runs
@@ -55,11 +55,33 @@ mujoco/numpy/cma automatically.
    (numpy ≥2.3 prints `np.float64(0.1)` — cosmetic, values identical.)
 3. After launch: `wc -l` on the CSV grows; startup line in
    `results/gait_sweep/cN_run.log` shows `com=<target> ... mass=2.2724kg`.
-   To verify COM/mass without waiting for the (buffered) log, run a zero-row probe:
+   To verify COM/mass without waiting for the (buffered) log, run a zero-row probe
+   — **AFTER the launcher, never before it** (see step 4):
    ```bash
    CONFIG=cN N_SHARDS=999999 SHARD_ID=999998 .sweep_venv/bin/python -u physics/grid4_sweep.py
    ```
    Expected slides: 1.05→−86.05 mm, 1.20→−31.37 mm, 1.31→+8.73 mm, always `mass=2.2724kg`.
+4. **Header check — do this on every machine, and before every relaunch** (machine-D
+   finding, 2026-08-16):
+   ```bash
+   CSV=results/gait_sweep/sweep_grid4_cN_freq_hip_phi_leg_amp_hip_amp_hip_off_mu.csv
+   head -1 "$CSV"          # MUST be: freq,hip_phi,leg_amp,hip_amp,hip_off,mu,...
+   ```
+   If line 1 is a data row, the CSV has **no header** and resume is dead: `_load_done`
+   reads via `csv.DictReader`, treats row 1 as the field names, and recovers 0 rows — so
+   every restart re-runs from scratch and appends duplicates. Cause: the zero-row probe
+   opens the CSV with `"a"` and creates a 0-byte file, after which `initcsv`'s
+   `if not os.path.exists(...)` guard skips the header. The launcher also tells you:
+   `launched cN: … resuming from -1 done rows` means the file exists but is empty/headerless.
+   Repair (**only while no shard is running** — shards hold the fd in append mode, so
+   swapping the inode under them loses rows):
+   ```bash
+   # stop shards first, then:
+   printf 'freq,hip_phi,leg_amp,hip_amp,hip_off,mu,pass_rate,surv_rate,net_fwd_mean,net_fwd_min,slip_mean,head_mean\r\n' > "$CSV.new"
+   cat "$CSV" >> "$CSV.new" && mv "$CSV.new" "$CSV"     # CRLF: DictWriter's terminator
+   ```
+   Then relaunch and confirm the log says `resuming from <N> done rows` with N = data rows.
+   Existing data rows are unaffected — this only restores resume.
 
 Gotcha: pass `GRID3_PY` as an ABSOLUTE path (e.g. `$HOME/...`), not `$PWD/...` — it
 expands before the script's `cd` (machine-C finding).

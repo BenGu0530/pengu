@@ -67,6 +67,15 @@ bash physics/run_sweep.sh c1        # …c2..c6; optional 2nd arg = shard count
 - Script: `physics/grid4_sweep.py` (env `CONFIG=c1..c6`).
 - Output `results/gait_sweep/sweep_grid4_c1_freq_hip_phi_leg_amp_hip_amp_hip_off_mu.csv`
 - Resume is by 6-axis tuple; `initcsv` writes the header once; shards append lock-free.
+- ⚠️ **The header is load-bearing for resume.** `_load_done` (`gait_sweep.py:310`) reads
+  the CSV with `csv.DictReader`; with no header it takes row 1 as the field names, every
+  lookup raises `KeyError`, and resume silently recovers **0** rows — so a restart re-runs
+  everything and appends duplicates. `initcsv` only writes the header `if not
+  os.path.exists(csv_path)` (`grid4_sweep.py:130`), and the worker path opens the CSV with
+  `open(..., "a")` (`grid4_sweep.py:147`), which **creates a 0-byte file**. So running the
+  zero-row probe BEFORE the launcher makes `initcsv` a no-op and the CSV never gets a
+  header. Run the probe **after** `run_sweep.sh`, or check and repair before relaunching
+  (see the fleet memo's pre-flight).
 - Two machines on DIFFERENT configs, never the same CSV. Merge = concat + dedupe on 6 axis cols.
 - ~20–24 h/config on a 10-shard machine; 6 configs ≈ 3 days on 2 machines.
 
