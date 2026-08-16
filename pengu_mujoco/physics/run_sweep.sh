@@ -41,7 +41,7 @@ if [ -z "${PY:-}" ]; then
   "$BASE" -m venv .sweep_venv
   PY="$PWD/.sweep_venv/bin/python"
   "$PY" -m pip install -q --upgrade pip
-  "$PY" -m pip install -q "mujoco>=3.8,<3.9" numpy cma
+  "$PY" -m pip install -q "mujoco>=3.8,<3.9" numpy cma matplotlib
 fi
 echo "using python: $PY  ($("$PY" -c 'import mujoco;print("mujoco",mujoco.__version__)'))"
 
