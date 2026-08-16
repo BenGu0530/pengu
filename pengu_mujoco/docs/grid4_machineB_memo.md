@@ -1,138 +1,154 @@
 # GRID-4 machine B — c2 status
 
 Spec: `docs/grid4_guide.md`. Fleet assignment: `docs/grid4_fleet_memo.md`.
-Machine B = **c2** (kappa=0, COM 1.20). Launched 2026-08-15, running.
+Machine B = **c2** (kappa=0, COM 1.20). Launched 2026-08-15 at K=5; switched to the
+**staged-K amendment (`DR_K=1`) on 2026-08-16** per the fleet memo. Running.
 
 ## Machine
 
 Windows 11 Home laptop, Ryzen 7 5800H (8 physical / 16 logical), 15.4 GB RAM.
 Sweep runs in WSL2 / Ubuntu 22.04, repo at `~/pengu` (Linux fs, not `/mnt/c`).
 
-`~/.wslconfig`: `memory=8GB`, `processors=13`, `swap=4GB` -> WSL sees 13 cores,
-launcher default gives **11 shards**, 3 logical cores left to Windows.
+`~/.wslconfig`: `memory=8GB`, `processors=16`, `swap=4GB` -> WSL sees all 16 logical
+cores, launcher default gives **14 shards**, nothing reserved for Windows (Ben,
+2026-08-16). Earlier settings this box ran at: `processors=12` (10 shards) and
+`processors=13` (11 shards) — see throughput, the shard count made no measurable
+difference.
 
-Env built by the launcher's auto-venv path: mujoco 3.8.1, numpy 2.2.6, cma 4.4.4,
-matplotlib 3.10.9.
+Env from the launcher's auto-venv path: mujoco 3.8.1, numpy 2.2.6, cma 4.4.4,
+matplotlib 3.10.9. Python 3.10.12.
 
-## Pre-flight (all three pass)
+## Pre-flight
 
-1. `HEAD = ccf088a` on `friction-experiments`.
+1. HEAD on `friction-experiments`, matching the fleet.
 2. `CONFIG=c2 ... count` ->
-   `config=c2 kappa=0.0 com=1.2 cells=454500 rows=1818000 K=5 trials=9090000`
-3. Startup line (see "stdout buffering" below for how it was obtained):
+   `config=c2 kappa=0.0 com=1.2 cells=454500 rows=1818000 K=1 trials=1818000`
+   (`K=5 trials=9090000` before the staged-K switch).
+3. Startup line, now visible in the log within seconds thanks to the `-u` fix:
    ```
    # GRID4 c2 (kappa=0.0 com=1.2000 slide=-31.37mm mass=2.2724kg)  cells=454500
+     done=628/1818000  K=1  shard=4/14
    ```
-   `mass=2.2724kg` matches the guide's native total mass; `slide=-31.37mm` against the
-   guide's approximate `1.20 -> -31.5 mm`.
+   `mass=2.2724kg` and `slide=-31.37mm` both match the fleet memo's expected values
+   for the 1.20 rung.
+4. Header check passes on every relaunch (machine-D trap); the CSV has never been
+   headerless on this box.
 
 ## Measured throughput
 
-Two samples, both with all shards alive and no I/O wait (`wa=0`):
+All samples with every shard alive and `wa=0`.
 
-| shards | window | rows | rate | implied remaining |
+| K | shards | window | rate | implied remaining |
 |---|---|---|---|---|
-| 10 | 900 s | +322 | 1,288 rows/h | 58.8 d |
-| 11 | 900 s | +309 | 1,236 rows/h | 61.3 d |
+| 5 | 10 | 900 s | 1,288 rows/h | 58.8 d |
+| 5 | 11 | 900 s | 1,236 rows/h | 61.3 d |
+| 5 | 11 | **13.9 h** | **1,511 rows/h** | 49.5 d |
+| 1 | 14 | 900 s | **7,492 rows/h** | **10.1 d** |
 
-Going 10 -> 11 shards produced no gain (-4%): 8 physical cores are already saturated at
-10 shards, and the extra process lands on an SMT sibling. CPU at 11 shards: 84.7% user,
-14.8% idle, `wa=0`, loadavg 11.1 against 13 allocated cores.
-Caveat: the two samples cover different regions of the grid, so this is not a controlled
-A/B.
+The 13.9 h figure supersedes the two 15-minute K=5 samples, which ran ~18% low. Working
+back from it, the rate was near-flat at ~1,520 rows/h for the whole run — the early
+samples were not a slow region, just short windows.
 
-Independent cross-check from the sweep parameters, which lands on the same number:
-`SIM_DURATION=24.0` s x `K=5` = 120 s of simulated time per row; 1,818,000 rows =
-2,525 simulated days per config. Measured aggregate is ~43x realtime -> ~58.7 days.
+**Shard count makes no difference on this box.** K=1 divides the per-row trial count by 5,
+so the expected speedup from the switch alone is 5.00x. Measured 7,492 / 1,511 = **4.96x**,
+with shards raised 11 -> 14 at the same time. The three extra shards therefore contributed
+nothing measurable (if anything, slightly negative). Consistent with the earlier
+10 -> 11 comparison, which was also flat: 8 physical cores saturate at ~10 processes and
+further shards land on SMT siblings. CPU at 14 shards: 87.3% user, 12.0% idle,
+loadavg 14.06 against 16 allocated.
 
-For comparison with the existing estimates:
+Independent cross-check of the K=5 rate from the sweep parameters: `SIM_DURATION=24.0` s
+x `K=5` = 120 s simulated per row; 1,818,000 rows = 2,525 simulated days per config; the
+measured aggregate ~43x realtime -> ~58.7 days. Matches the short-sample K=5 figures.
 
-| source | stated | rate that would require |
+### Against the other machines
+
+| | B (this) | C (XPS) | D (Linux) |
+|---|---|---|---|
+| CPU | Ryzen 7 5800H, 8C/16T | i7-13700H, 6P+8E | — |
+| shards | 14 | 14 | 14 |
+| rate (K=5) | 1,511 rows/h | ~3,960 rows/h | ~5,005 rows/h |
+
+At K=1 this box measures 10.1 d for c2, against the fleet memo's ~12 d prediction for B.
+Recorded as measured, no adjustment.
+
+## Staged-K switch (2026-08-16)
+
+Followed the fleet memo procedure exactly. The K=5 partial was **archived, never mixed**:
+
+- 22,496 data rows + header, all lines `NF==12`, unique 6-tuples = 22,496 (zero duplicates)
+- `mv` to `...csv.k5partial`, gzipped to 325 KB, committed `725f34a`
+- fresh CSV created by `initcsv` with header intact; relaunched at `DR_K=1`
+
+## Environment notes
+
+Items 1-3 were reported from this box and have since been fixed upstream
+(`612617f`); kept here as the record of what was measured.
+
+1. **`matplotlib` missing from the launcher deps** — `gait_sweep.py:30` imports it at
+   module level via `grid4_sweep.py:33`, but `run_sweep.sh` installed only
+   `mujoco numpy cma`. Clean machines died at `initcsv`. **Fixed** (`98c0535`).
+2. **Shard stdout was block-buffered**, so the `# GRID4 cN (...)` startup line never
+   reached the log while shards ran normally — it only flushed when a process exited.
+   **Fixed** by `-u` in `run_sweep.sh:65`; verified working here (startup line appears
+   within seconds of launch).
+3. **WSL2 terminates the distro when no session is attached, killing every shard.**
+   Measured on this box: distro gone within 45 s, `nohup`ed process killed with it.
+   **Now a REQUIRED fleet step.** Anchor, re-armed after every reboot/logoff:
+   ```
+   powershell -c "Start-Process wsl.exe -ArgumentList '-d','Ubuntu','-e','sleep','infinity' -WindowStyle Hidden"
+   ```
+   Held for 13.9 h unattended with 11 shards, zero losses.
+4. **No shard deaths observed on this box** across the K=5 run (13.9 h, 11 shards) and
+   since the K=1 relaunch (14 shards). Machine C's shard-10 incident has not reproduced
+   here. One box is not a diagnosis, but the launcher path itself looks sound.
+5. **Push auth**: this box uses Windows Git Credential Manager from WSL —
+   `credential.helper = /mnt/c/Program\ Files/Git/mingw64/bin/git-credential-manager.exe`,
+   OAuth in the browser, token in Windows Credential Manager. HTTPS remote.
+
+## Power
+
+| setting | AC | battery |
 |---|---|---|
-| `grid4_guide.md` | ~20-24 h/config @ 10 shards | 75,750 rows/h (59x measured) |
-| `grid4_fleet_memo.md` | ~2 weeks/machine @ ~10 shards | 5,410 rows/h (4.2x measured) |
+| system sleep | never (was already) | 5 min (unchanged) |
+| hibernate | never (was already) | 3 h (unchanged) |
+| lid close | **do nothing** (changed) | sleep (deliberately unchanged) |
 
-Both samples were taken in a survival-heavy region (`surv_rate=1.0` on early rows).
-Failed trials exit before `SIM_DURATION` (`gait_sweep.py:254`), so cells that fall early
-are cheaper; throughput may change as the sweep moves through the grid. Numbers above are
-first-hours measurements, not a converged estimate.
+Battery-side settings were left alone on purpose: if the machine is unplugged and the lid
+is closed, it should still sleep rather than run 14 saturated threads in a bag.
 
-### Against machine C (`docs/grid4_xps_memo.md`)
-
-| | machine B (this) | machine C |
-|---|---|---|
-| CPU | Ryzen 7 5800H, 8C/16T | i7-13700H, 6P+8E, 14C/20T |
-| RAM (to WSL) | 15.4 GB (8 GB) | 64 GB (24 GB) |
-| distro / Python | Ubuntu 22.04 / 3.10.12 | Ubuntu 24.04 / 3.12.3 |
-| numpy | 2.2.6 | 2.5.2 |
-| shards | 11 | 14 |
-| rate | 1,236 rows/h | ~3,960 rows/h |
-| per shard | 112 rows/h | 283 rows/h |
-| implied remaining | ~61 d | ~19 d |
-
-Aggregate 3.2x, per-shard 2.5x; both on mujoco 3.8.1. Neither machine's measurement is
-near the guide's 20-24 h figure. Machine C's ~19 d sits within ~40% of the fleet memo's
-~2 weeks. Both sets are first-hours samples. Recorded as measured, no adjustment.
-
-## Issues found on a clean machine
-
-**1. `matplotlib` missing from the launcher's dependency list.**
-`physics/gait_sweep.py:30` imports matplotlib at module level and `grid4_sweep.py:33`
-imports `gait_sweep`, but `run_sweep.sh` installed only `mujoco numpy cma`. A clean
-machine following the fleet memo's one-liner fails at `initcsv` with
-`ModuleNotFoundError: No module named 'matplotlib'`. Fixed in `run_sweep.sh`.
-
-**2. Shard stdout is block-buffered, so the startup line never reaches the log.**
-`run_sweep.sh` launches shards as `nohup "$PY" "$SCRIPT" >> "$LOG" 2>&1 &`. With stdout
-redirected to a file, Python block-buffers (8 KB), and a shard writes nothing else to
-stdout during the run, so the `# GRID4 cN (...)` line stays in the buffer until the
-process exits. Pre-flight step 3 cannot be satisfied while the shards are running
-normally; the line only surfaces when a process exits and flushes — which is how machine
-C saw it (`grid4_xps_memo.md`: a shard that died and was relaunched, plus a separate
-verification process). `nohup "$PY" -u "$SCRIPT"` would fix it. NOT changed yet.
-
-Workaround used here to verify COM/mass without touching the data: run one probe with a
-shard id outside the range, which builds the model, prints the startup line, and writes
-zero rows (`i % 999999` never equals `999998` for `i < 454500`):
-```bash
-CONFIG=c2 N_SHARDS=999999 SHARD_ID=999998 .sweep_venv/bin/python -u physics/grid4_sweep.py
-```
-
-**3. WSL2 terminates the distro when no session is attached, killing the shards.**
-Measured: with no terminal attached, the distro was gone within 45 s and a `nohup`ed
-background process was killed with it. A sweep started per the memo and left unattended
-stops almost immediately. Anchor process required on the Windows side:
-```
-powershell -c "Start-Process wsl.exe -ArgumentList '-d','Ubuntu','-e','sleep','infinity' -WindowStyle Hidden"
-```
-The anchor does not survive reboot or logoff; it must be re-armed before relaunching.
-
-`grid4_xps_memo.md` does not mention a keepalive, so it is unknown whether machine C's
-WSL build behaves the same way. Worth checking there before its terminal is closed — the
-failure is silent, and the shards are simply gone on the next visit.
-
-**4. `.sweep_venv/` is not in `.gitignore`.** The launcher creates it on every machine;
-a `git add -A` on a fleet machine would stage the whole virtualenv. Not changed yet.
-
-## Restart procedure on this machine
-
-Interrupting is safe (resume is by axis-tuple). Verified once: SIGTERM to all shards left
-the CSV with every line at 12 fields and no torn row; relaunch resumed from the exact
-row count.
+## Monitor
 
 ```bash
-# 1. re-arm the anchor from Windows (after any reboot)
+cd ~/pengu/pengu_mujoco
+wc -l results/gait_sweep/sweep_grid4_c2_freq_hip_phi_leg_amp_hip_amp_hip_off_mu.csv
+pgrep -c -f 'grid4_sweep[.]py'        # expect 14
+```
+
+## Restart after a reboot or a stop
+
+Interrupting is safe. Verified twice here: SIGTERM to all shards left every line at 12
+fields with the header intact, and the relaunch resumed from the exact row count.
+
+```bash
+# 1. re-arm the WSL anchor from Windows FIRST (command above)
 # 2. then:
 cd ~/pengu/pengu_mujoco
-GRID3_PY=$HOME/pengu/pengu_mujoco/.sweep_venv/bin/python bash physics/run_sweep.sh c2
+DR_K=1 GRID3_PY=$HOME/pengu/pengu_mujoco/.sweep_venv/bin/python bash physics/run_sweep.sh c2
 ```
-Absolute path deliberately: `GRID3_PY=$PWD/...` on the command line expands against the
-shell's starting directory, not the repo root (machine C, `grid4_xps_memo.md` item 4).
+
+`GRID3_PY` absolute on purpose: `$PWD/...` expands before the script's `cd`
+(machine-C finding). `DR_K=1` must be present on every relaunch, or the box silently
+reverts to K=5 and starts mixing K values into the same CSV.
 
 ## Open items
 
-- Whether to apply the `-u` fix (issue 2) and the `.gitignore` entry (issue 4).
-- numpy version skew across the fleet: this machine runs numpy 2.2.6, which prints
-  `mus=[np.float64(0.1), ...]` where the fleet memo shows `mus=[0.1, ...]`. Values are
-  identical; flagging only because the guide states any machine reproduces a row exactly.
-- Machine C (c3) will hit issues 1-3 as well.
+- `docs/grid4_fleet_memo.md` still describes B from the first-hour samples: line 34
+  `slowest box (~60 d)` and line 44 `B ~1.24k`. Current measurements are 1,511 rows/h at
+  K=5 and 7,492 rows/h at K=1 (10.1 d for c2). The line-36 plan for D to help finish c2
+  was sized against the old figure — Ben's call whether it still applies.
+- Whether to return `processors` to 13 (11 shards): measurements say throughput is
+  unchanged and it gives Windows back 3 logical cores. Currently at 16 per Ben's
+  instruction.
+- numpy skew across the fleet (B 2.2.6, C 2.5.2, D unrecorded). Values identical; noted
+  only because the guide states any machine reproduces a row exactly.
