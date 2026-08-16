@@ -1,5 +1,22 @@
 # GRID-4 fleet memo — who runs what
 
+> **STAGED-K AMENDMENT (Ben, 2026-08-16).** The map is now swept at **K=1**
+> (`DR_K=1`: one jittered trial per (cell,μ) = trial r=0 of the seeded sequence).
+> Hot regions get topped up to K=5 afterwards with `physics/topup_k.py`, which runs
+> r=1..4 and merges — validated bit-identical to a native K=5 sweep on the smoke grid.
+> Everything else (grid, μ levels, jitters, pass rule, schema, filenames) unchanged.
+> **Switch procedure on B and C** (Mac already switched; D starts at K=1 directly):
+> ```bash
+> cd ~/pengu/pengu_mujoco && git pull
+> pkill -f 'grid4_sweep[.]py'                      # stop the K=5 shards
+> CSV=results/gait_sweep/sweep_grid4_cN_freq_hip_phi_leg_amp_hip_amp_hip_off_mu.csv
+> mv "$CSV" "$CSV.k5partial"                       # archive; NEVER mix K values in one CSV
+> # WSL: re-arm the anchor if the distro restarted, then:
+> DR_K=1 GRID3_PY=$HOME/pengu/pengu_mujoco/.sweep_venv/bin/python bash physics/run_sweep.sh cN
+> tail -2 results/gait_sweep/cN_run.log            # startup line must say K=1
+> ```
+> K=1 ETA: Mac ~3.4 d, B ~12 d, C ~3.8 d per config.
+
 Full spec: `docs/grid4_guide.md`. Protocol is FROZEN (commit `a22f80b`): base = hardened
 `models/pengu1_31` (2.2724 kg), COM rungs {1.05, 1.20, 1.31} built in-memory at load,
 μ axis {0.1, 0.3, 0.5, 0.7} ±5% rel., K=5, pose jitter, no mass jitter,
