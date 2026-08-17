@@ -176,6 +176,9 @@ def run_trial(model, data, ids, p):
     mu_req = []
     cs_lat = []; cs_dist = []                    # CoM-over-stance (opt-in, single support)
     n_single = 0; n_double = 0; n_air = 0; n_meas = 0   # support-pattern counters
+    # displacement-weighted support split (Ben, 2026-08-17): how much of the base's travel
+    # happens while BOTH feet are loaded (shuffle signature) vs single support.
+    move_tot = 0.0; ds_move = 0.0; ss_move = 0.0; meas_prev = None
     pos_ws = None; last = data.xpos[root][:2].copy(); fell = False
 
     while data.time < SIM_DURATION:
@@ -230,6 +233,14 @@ def run_trial(model, data, ids, p):
         if nc == 1: n_single += 1
         elif nc == 2: n_double += 1
         else: n_air += 1
+        # displacement-weighted split: attribute this step's base travel to the support state
+        cur_xy = data.xpos[root][:2]
+        if meas_prev is not None:
+            d_step = float(math.hypot(cur_xy[0] - meas_prev[0], cur_xy[1] - meas_prev[1]))
+            move_tot += d_step
+            if nc == 2: ds_move += d_step
+            elif nc == 1: ss_move += d_step
+        meas_prev = cur_xy.copy()
         # footfall state machine per foot
         for bid, s in foot_bid.items():
             fz = float(data.xpos[bid][2])
@@ -284,7 +295,12 @@ def run_trial(model, data, ids, p):
                n_steps=n_steps["L"] + n_steps["R"],
                mu_req_p95=round(float(np.percentile(mu_req, 95)) if mu_req else float("nan"), 3),
                slip_dist=round(slip_dist_tot, 5),
-               slip_ratio=round(slip_dist_tot / path, 5) if path > 1e-6 else float("nan"))
+               slip_ratio=round(slip_dist_tot / path, 5) if path > 1e-6 else float("nan"),
+               # displacement-weighted support split (NOT in any sweep CSV schema; returned
+               # for evaluation/topup/demo tools). ds_move_frac low = travel happens in
+               # single support (conventional stepping); high = double-support shuffle.
+               ds_move_frac=round(ds_move / move_tot, 4) if move_tot > 1e-6 else float("nan"),
+               ss_move_frac=round(ss_move / move_tot, 4) if move_tot > 1e-6 else float("nan"))
     # heading: does the base front axis point the way the robot actually travelled?
     disp_vec = (last - pos_ws) if pos_ws is not None else np.zeros(2)
     nf, nd = np.linalg.norm(face_sum), np.linalg.norm(disp_vec)
