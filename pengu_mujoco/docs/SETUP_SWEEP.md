@@ -7,7 +7,9 @@
 sudo apt install -y git python3-venv
 git clone https://github.com/robomechanics/pengu.git && cd pengu/pengu_mujoco
 git checkout friction-experiments
-bash physics/run_sweep.sh c5
+nproc                                        # how many cores you have
+bash physics/run_sweep.sh c5                 # workers = cores-2 (e.g. 32 cores -> 30); or: c5 28
+bash physics/sweep_watchdog.sh install c5    # auto-revive + reboot-survival + 6h snapshots
 sudo systemctl mask sleep.target suspend.target hibernate.target   # no sleep
 ```
 
@@ -15,7 +17,9 @@ sudo systemctl mask sleep.target suspend.target hibernate.target   # no sleep
 ```bash
 git clone https://github.com/robomechanics/pengu.git && cd pengu/pengu_mujoco
 git checkout friction-experiments
-bash physics/run_sweep.sh c5
+sysctl -n hw.ncpu                            # how many cores you have
+bash physics/run_sweep.sh c5                 # workers = cores-2; or force: c5 28
+bash physics/sweep_watchdog.sh install c5    # auto-revive + reboot-survival + 6h snapshots
 caffeinate -dimsu &                                                # no sleep
 ```
 
@@ -28,7 +32,9 @@ powershell -c "Start-Process wsl.exe -ArgumentList '-d','Ubuntu','-e','sleep','i
 sudo apt install -y git python3-venv
 git clone https://github.com/robomechanics/pengu.git && cd ~/pengu/pengu_mujoco   # inside ~, NOT /mnt/c
 git checkout friction-experiments
-bash physics/run_sweep.sh c5
+nproc                                        # cores WSL can see (raise via ~/.wslconfig if low)
+bash physics/run_sweep.sh c5                 # workers = cores-2; or force: c5 28
+bash physics/sweep_watchdog.sh install c5    # needs cron: enable systemd in /etc/wsl.conf (see §4.5)
 ```
 …and set Windows power/sleep/lid-close (on AC) to **Never**.
 
@@ -144,6 +150,33 @@ The sweep dies if the machine sleeps. Plug into AC power and:
 - **Linux**: `sudo systemctl mask sleep.target suspend.target hibernate.target`
 
 Closing the laptop lid is the #1 way these runs die. Leave it open on AC.
+
+---
+
+## 4.5 Watchdog: auto-revive, reboot survival, snapshots (recommended)
+
+One command arms all three:
+
+```bash
+bash physics/sweep_watchdog.sh install c5        # add your shard count as 3rd arg if you forced one
+```
+
+This puts two entries in your crontab: **on reboot** and **every 10 minutes** it
+checks whether all workers are alive; if any died, it cleanly relaunches (resume
+means nothing is lost or redone). It also rotates a local `*.snap.gz` backup of
+your CSV every 6 hours, and refuses to relaunch onto a corrupted (header-less)
+CSV.
+
+- **Stopping on purpose?** First `touch results/gait_sweep/WATCHDOG_OFF`
+  (else the watchdog restarts what you killed). Delete the file to re-enable.
+- **WSL only**: cron needs systemd — add to `/etc/wsl.conf`:
+  ```ini
+  [boot]
+  systemd=true
+  ```
+  then from PowerShell `wsl --shutdown`, reopen Ubuntu, re-arm the anchor.
+  (Alternative: Windows Task Scheduler, see `docs/grid4_xps_memo.md`.)
+- Watchdog activity log: `results/gait_sweep/watchdog.log`.
 
 ---
 

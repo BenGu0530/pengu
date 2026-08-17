@@ -29,7 +29,7 @@ esac
 
 # ---- pick a python that can import mujoco, else build a local venv ----
 pick_py() {
-  for c in "${GRID3_PY:-}" python3 python; do
+  for c in "${GRID3_PY:-}" "$PWD/.sweep_venv/bin/python" python3 python; do
     [ -z "$c" ] && continue
     if "$c" -c "import mujoco, numpy" >/dev/null 2>&1; then echo "$c"; return 0; fi
   done
