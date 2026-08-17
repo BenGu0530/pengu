@@ -1,5 +1,41 @@
 # Run a Pengu GRID-4 sweep on your laptop (from `git clone`)
 
+## TL;DR — copy-paste and go (replace `c5` with YOUR config from Ben)
+
+**Linux:**
+```bash
+sudo apt install -y git python3-venv
+git clone https://github.com/robomechanics/pengu.git && cd pengu/pengu_mujoco
+git checkout friction-experiments
+bash physics/run_sweep.sh c5
+sudo systemctl mask sleep.target suspend.target hibernate.target   # no sleep
+```
+
+**macOS:**
+```bash
+git clone https://github.com/robomechanics/pengu.git && cd pengu/pengu_mujoco
+git checkout friction-experiments
+bash physics/run_sweep.sh c5
+caffeinate -dimsu &                                                # no sleep
+```
+
+**Windows** (admin PowerShell first, reboot once, then in the Ubuntu terminal):
+```powershell
+wsl --install
+powershell -c "Start-Process wsl.exe -ArgumentList '-d','Ubuntu','-e','sleep','infinity' -WindowStyle Hidden"
+```
+```bash
+sudo apt install -y git python3-venv
+git clone https://github.com/robomechanics/pengu.git && cd ~/pengu/pengu_mujoco   # inside ~, NOT /mnt/c
+git checkout friction-experiments
+bash physics/run_sweep.sh c5
+```
+…and set Windows power/sleep/lid-close (on AC) to **Never**.
+
+Then do the 2-minute verification in §3. Details and troubleshooting below.
+
+---
+
 We are sweeping 6 robot configurations (gait × center-of-mass) over ~1.8M
 gait/friction combinations each, in MuJoCo. It's **CPU-only** (no GPU), runs
 unattended for a few days, and is safe to interrupt — progress resumes
