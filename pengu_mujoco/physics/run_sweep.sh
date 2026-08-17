@@ -17,6 +17,7 @@ JOB="${1:-c1}"
 case "$JOB" in
   # GRID-4 (docs/grid4_guide.md): c1..c6 = {kappa 0,2} x {COM 1.05, 1.20, 1.31}
   c[1-6])      export CONFIG="$JOB" ; TAGN="$JOB" ; SCRIPT=physics/grid4_sweep.py
+               export DR_K="${DR_K:-1}"   # staged-K amendment: map at K=1 (override only for topup experiments)
                CSV="results/gait_sweep/sweep_grid4_${JOB}_freq_hip_phi_leg_amp_hip_amp_hip_off_mu.csv" ;;
   # legacy GRID-3 DR jobs (superseded by GRID-4; kept for resuming old data only)
   k0dr|K0DR)   export KAPPA=0 ; TAGN=k0dr ; SCRIPT=physics/grid3_dr_sweep.py

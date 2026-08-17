@@ -30,10 +30,15 @@ Do NOT change any parameter mid-fleet — one changed value = a different sweep.
 
 | machine | now | after that |
 |---|---|---|
-| **Mac** (Ben's) | **c1** (κ=0, 1.05) — running | c5 (κ=2, 1.20) |
-| **B** (Ryzen/WSL2, `grid4_machineB_memo.md`) | **c2** (κ=0, 1.20) — running, slowest box (~60 d) | — (gets help, see below) |
-| **C** (XPS/WSL2, `grid4_xps_memo.md`) | **c3** (κ=0, 1.31) — running | c6 (κ=2, 1.31) |
-| **D** (Linux, `grid4_machineD_memo.md`) | **c4** (κ=2, 1.05) — running since 2026-08-16, 14 shards | help finish c2 |
+| **Mac** (Ben's) | **c1** (κ=0, 1.05) — running | help c2, then topup |
+| **B** (Ryzen/WSL2, `grid4_machineB_memo.md`) | **c2** (κ=0, 1.20) — running, slowest box | — (gets help, see below) |
+| **C** (XPS/WSL2, `grid4_xps_memo.md`) | **c3** (κ=0, 1.31) — running, 20 shards + watchdogs | help c2, then topup |
+| **D** (Linux, `grid4_machineD_memo.md`) | **c4** (κ=2, 1.05) — running since 2026-08-16 | help c2 |
+| **E** (new desktop, 2026-08-17) | **c5** (κ=2, 1.20) | topup |
+| **F** (new desktop, 2026-08-17) | **c6** (κ=2, 1.31) | topup |
+
+With E/F online every config has a dedicated machine. `run_sweep.sh` now defaults GRID-4
+jobs to `DR_K=1` (staged-K), so the plain one-liner is correct on a fresh clone.
 
 When a machine frees up and c2 is still far from done, it joins c2 with a DISJOINT
 shard split (e.g. B keeps `N_SHARDS=11 SHARD_ID 0..10` as-is; helper runs
