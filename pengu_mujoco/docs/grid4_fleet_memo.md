@@ -35,7 +35,7 @@ Do NOT change any parameter mid-fleet — one changed value = a different sweep.
 | **C** (XPS/WSL2, `grid4_xps_memo.md`) | **c3** (κ=0, 1.31) — running, 20 shards + watchdogs | help c2, then topup |
 | **D** (Linux, `grid4_machineD_memo.md`) | **c4** (κ=2, 1.05) — running since 2026-08-16 | help c2 |
 | **E** (new desktop, 2026-08-17) | **c5** (κ=2, 1.20) | topup |
-| **F** (new desktop, 2026-08-17) | **c6** (κ=2, 1.31) | topup |
+| **F** (`rml3` Linux desktop, repo at `~/Documents/ben/pengu`) | **c6** (κ=2, 1.31) — running since 2026-08-17 | topup |
 
 With E/F online every config has a dedicated machine. `run_sweep.sh` now defaults GRID-4
 jobs to `DR_K=1` (staged-K), so the plain one-liner is correct on a fresh clone.
