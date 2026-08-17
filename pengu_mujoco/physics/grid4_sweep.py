@@ -146,6 +146,7 @@ def main():
           f"done={len(done)}/{n_rows}  K={K}  shard={shard_id}/{n_shards}")
     f = open(csv_path, "a", newline=""); w = csv.DictWriter(f, fieldnames=fields)
     n_mine = 0
+    row = None      # progress print below must survive resume (all-done cells skip the mu loop)
     for i, combo in enumerate(combos):
         if i % n_shards != shard_id:
             continue
@@ -181,7 +182,7 @@ def main():
             row["slip_mean"] = round(float(np.mean(slp)), 4) if slp else float("nan")
             row["head_mean"] = round(float(np.mean(hd)), 4) if hd else float("nan")
             w.writerow(row); f.flush()
-        if n_mine % 25 == 0:
+        if n_mine % 25 == 0 and row is not None:
             print(f"  [shard{shard_id} cell {i+1}/{len(combos)}] "
                   + " ".join(f"{n}={row[n]}" for n in AXNAMES)
                   + f" | pass={row['pass_rate']} netfwd={row['net_fwd_mean']}")

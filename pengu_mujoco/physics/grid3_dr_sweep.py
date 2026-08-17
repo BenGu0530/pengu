@@ -103,6 +103,7 @@ def main():
           f"shard={shard_id}/{n_shards}  mu~U({MU_LO},{MU_HI}) mass+-{MASS_JIT}")
     f = open(csv_path, "a", newline=""); w = csv.DictWriter(f, fieldnames=fields)
     n_mine = 0
+    row = None      # resume-safe progress print
     for i, combo in enumerate(combos):
         if i % n_shards != shard_id:
             continue
@@ -142,7 +143,7 @@ def main():
         row["slip_mean"] = round(float(np.mean(slp)), 4) if slp else float("nan")
         row["head_mean"] = round(float(np.mean(hd)), 4) if hd else float("nan")
         w.writerow(row); f.flush()
-        if n_mine % 25 == 0:
+        if n_mine % 25 == 0 and row is not None:
             print(f"  [shard{shard_id} {i+1}/{len(combos)}] "
                   + " ".join(f"{n}={row[n]}" for n in AXNAMES)
                   + f" | pass={row['pass_rate']} netfwd_mean={row['net_fwd_mean']}")
