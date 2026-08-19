@@ -34,8 +34,8 @@ Do NOT change any parameter mid-fleet — one changed value = a different sweep.
 | **B** (Ryzen/WSL2, `grid4_machineB_memo.md`) | **c2** — STOP after snapshot push (`grid4_c2_takeover_memo.md`) | done |
 | **C** (XPS/WSL2, `grid4_xps_memo.md`) | **c3** — ✅ COMPLETE 2026-08-19 | idle / backup analysis box |
 | **D** (Linux, `grid4_machineD_memo.md`) | **c4** — ✅ COMPLETE 2026-08-19 | idle (shared box, leave to Isaac Lab) |
-| **E** (friend's 32-core desktop) | **c5** ✅ → **takes over c2** per `grid4_c2_takeover_memo.md` | topup |
-| **F** (`rml3` Linux desktop, repo at `~/Documents/ben/pengu`) | **c6** ✅ → **runs the analysis package** per `grid4_analysis_memo.md` | topup |
+| **E** (friend's 32-core desktop) | **c5** ✅ | idle / topup |
+| **F** (`rml3` Linux desktop, repo at `~/Documents/ben/pengu`) | **c6** ✅, analysis ✅ → **continues c2**: `bash physics/resume_c2.sh` (one-shot, self-contained) | rerun analysis when c1/c2 land |
 
 With E/F online every config has a dedicated machine. `run_sweep.sh` now defaults GRID-4
 jobs to `DR_K=1` (staged-K), so the plain one-liner is correct on a fresh clone.
