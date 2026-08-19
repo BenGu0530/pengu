@@ -17,6 +17,9 @@ git pull --ff-only || { echo "git pull failed — resolve manually"; exit 1; }
 
 CSV=results/gait_sweep/sweep_grid4_c2_freq_hip_phi_leg_amp_hip_amp_hip_off_mu.csv
 mkdir -p results/gait_sweep
+# the .gz is a TRACKED file: restore it to the committed version so a locally
+# overwritten gz can never smuggle rows past provenance (2026-08-19 incident)
+git checkout -- "$CSV.gz" 2>/dev/null || true
 
 # use whichever has MORE rows: local live CSV vs committed snapshot
 snap_rows=0; loc_rows=0
