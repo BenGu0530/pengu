@@ -30,12 +30,12 @@ Do NOT change any parameter mid-fleet — one changed value = a different sweep.
 
 | machine | now | after that |
 |---|---|---|
-| **Mac** (Ben's) | **c1** (κ=0, 1.05) — running | help c2, then topup |
-| **B** (Ryzen/WSL2, `grid4_machineB_memo.md`) | **c2** (κ=0, 1.20) — running, slowest box | — (gets help, see below) |
-| **C** (XPS/WSL2, `grid4_xps_memo.md`) | **c3** (κ=0, 1.31) — running, 20 shards + watchdogs | help c2, then topup |
-| **D** (Linux, `grid4_machineD_memo.md`) | **c4** (κ=2, 1.05) — running since 2026-08-16 | help c2 |
-| **E** (friend's 32-core desktop) | **c5** — ✅ COMPLETE 2026-08-19 (1,818,000 rows, verified) | next task TBD (help c2 / topup) |
-| **F** (`rml3` Linux desktop, repo at `~/Documents/ben/pengu`) | **c6** (κ=2, 1.31) — running since 2026-08-17 | topup |
+| **Mac** (Ben's) | **c1** (κ=0, 1.05) — running, dedicated (no side jobs) | topup |
+| **B** (Ryzen/WSL2, `grid4_machineB_memo.md`) | **c2** — STOP after snapshot push (`grid4_c2_takeover_memo.md`) | done |
+| **C** (XPS/WSL2, `grid4_xps_memo.md`) | **c3** — ✅ COMPLETE 2026-08-19 | idle / backup analysis box |
+| **D** (Linux, `grid4_machineD_memo.md`) | **c4** — ✅ COMPLETE 2026-08-19 | idle (shared box, leave to Isaac Lab) |
+| **E** (friend's 32-core desktop) | **c5** ✅ → **takes over c2** per `grid4_c2_takeover_memo.md` | topup |
+| **F** (`rml3` Linux desktop, repo at `~/Documents/ben/pengu`) | **c6** ✅ → **runs the analysis package** per `grid4_analysis_memo.md` | topup |
 
 With E/F online every config has a dedicated machine. `run_sweep.sh` now defaults GRID-4
 jobs to `DR_K=1` (staged-K), so the plain one-liner is correct on a fresh clone.
