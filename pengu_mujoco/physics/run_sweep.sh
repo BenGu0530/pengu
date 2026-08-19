@@ -31,7 +31,7 @@ esac
 pick_py() {
   for c in "${GRID3_PY:-}" "$PWD/.sweep_venv/bin/python" python3 python; do
     [ -z "$c" ] && continue
-    if "$c" -c "import mujoco, numpy" >/dev/null 2>&1; then echo "$c"; return 0; fi
+    if "$c" -c "import mujoco, numpy; assert mujoco.__version__.startswith('3.8')" >/dev/null 2>&1; then echo "$c"; return 0; fi
   done
   return 1
 }
