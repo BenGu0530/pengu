@@ -2,7 +2,9 @@
 
 Spec: `docs/grid4_guide.md`. Fleet assignment: `docs/grid4_fleet_memo.md`.
 Machine B = **c2** (kappa=0, COM 1.20). Launched 2026-08-15 at K=5; switched to the
-**staged-K amendment (`DR_K=1`) on 2026-08-16** per the fleet memo. Running.
+**staged-K amendment (`DR_K=1`) on 2026-08-16** per the fleet memo.
+**RETIRED 2026-08-19 — this box is out of the fleet (Ben: CPU too slow).** c2 stopped
+at 264949 of 1,818,000 rows (14.57%). See Handoff below.
 
 ## Machine
 
@@ -80,6 +82,115 @@ Followed the fleet memo procedure exactly. The K=5 partial was **archived, never
 - `mv` to `...csv.k5partial`, gzipped to 325 KB, committed `725f34a`
 - fresh CSV created by `initcsv` with header intact; relaunched at `DR_K=1`
 
+## RETIRED 2026-08-19 — handoff
+
+Ben retired this box from the fleet: the Ryzen 7 5800H is the slowest machine in the
+group by a wide margin (see the cross-machine table below), so c2 is better restarted
+elsewhere than finished here.
+
+**State at shutdown**
+
+| | |
+|---|---|
+| rows | 264,949 of 1,818,000 (14.57%) |
+| protocol | staged-K, `DR_K=1` |
+| shards | 14, stopped with SIGTERM |
+| integrity | every line 12 fields, header present, **0 duplicate 6-tuples** |
+
+**To continue c2 on another machine** — the data is committed in the launcher's own
+recovery format, so no manual steps are needed:
+
+```bash
+git clone https://github.com/robomechanics/pengu.git && cd pengu/pengu_mujoco
+git checkout friction-experiments
+DR_K=1 bash physics/run_sweep.sh c2
+```
+
+`run_sweep.sh` finds `...csv.gz`, gunzips it, and resumes from row 264,949 by axis-tuple.
+The `...INCOMPLETE_264949_of_1818000_rows.zip` next to it is a labelled human-readable copy
+of the same data with a README — it is not the resume path.
+
+**Left running on this box: nothing.** Shards stopped, WSL keepalive anchor stopped.
+
+## WSL interop broke after the 2026-08-17 package update (fleet-relevant)
+
+Separate from the outage below, and it silently broke `git push` for hours.
+
+```
+/mnt/c/Program Files/Git/mingw64/bin/git-credential-manager.exe: Exec format error
+error: git-remote-https died of signal 15
+```
+
+`WSLInterop` was **not registered in binfmt_misc**, so WSL could not execute *any*
+Windows `.exe` — including `cmd.exe` and the Git Credential Manager this box uses for
+push auth. Git therefore had no credential helper and sat waiting instead of failing
+cleanly, which reads exactly like a slow network.
+
+This box runs `[boot] systemd=true` in `/etc/wsl.conf`; under systemd the interop
+registration is done by a unit that did not come back after the WSL package was updated
+to 2.7.12.0. Repair (root, non-destructive, survives until the next distro restart):
+
+```bash
+echo ':WSLInterop:M::MZ::/init:PF' > /proc/sys/fs/binfmt_misc/register
+```
+
+Check on any WSL box whose `git push` hangs, or that uses GCM for auth:
+
+```bash
+cat /proc/sys/fs/binfmt_misc/WSLInterop   # should print: enabled / interpreter /init
+/mnt/c/Windows/System32/cmd.exe /c "echo interop_ok"
+```
+
+Machine C is also WSL2 and may be exposed to the same failure.
+
+## Outage 2026-08-17 -> 2026-08-19: Microsoft Store updated the WSL package
+
+**40.7 h of compute lost (~330,000 rows at the measured rate).** No data was damaged.
+
+```
+2026-08-17 20:55:16  Store installed MicrosoftCorporationII.WindowsSubsystemforLinux
+2026-08-17 20:55:39  last CSV write -- 23 s later
+2026-08-17 20:57:52  Store installed CanonicalGroupLimited.Ubuntu
+2026-08-18 05:07 / 05:10 / 05:37  three Windows Update reboots (later, not the cause)
+2026-08-19 13:40     found dead, relaunched from 249,767 rows
+```
+
+Ruled out from the event log: no sleep (the last Kernel-Power 42/107 pair on this box is
+from 2025 -- it has not slept once in 2026), no power-source change, no OOM, no traceback
+in the run log. On AC at 100% throughout.
+
+**Updating the WSL MSIX package force-terminates the WSL VM.** Neither existing
+protection covers this, and it applies to every WSL machine in the fleet:
+
+- **The keepalive anchor cannot help** -- it is a process *inside* the VM being torn
+  down, so it dies with the shards.
+- **`sweep_watchdog.sh` installed via WSL crontab cannot help either.** Its `@reboot`
+  entry fires when the *distro* boots, but after a package update the VM is simply down
+  and nothing on the Windows side ever starts it. The script's own header says as much
+  (use Windows Task Scheduler on WSL).
+
+Mitigations that would actually cover it (not yet applied here, Ben's call):
+
+1. A **Windows Task Scheduler** job, at logon and every ~15 min, running
+   `wsl.exe -d Ubuntu -e bash -lc "cd ~/pengu/pengu_mujoco && bash physics/sweep_watchdog.sh c2 14"`.
+   `wsl.exe` boots the distro and the watchdog revives shards, so one mechanism covers
+   package updates, reboots, and individual shard deaths.
+2. Turn off **Microsoft Store -> Settings -> App updates**, and pause Windows Update for
+   the duration of the run.
+
+### Shard 12/13 loss on the recovery relaunch (self-inflicted)
+
+Recorded so it is not mistaken for machine C's incident. The recovery launch was run as
+`bash physics/run_sweep.sh c2 2>&1 | head -3`. `head` exits after three lines and closes
+the pipe; the launcher's trailing `echo`s then take SIGPIPE and the parent dies. The 14
+shards are spawned in the loop *before* those echoes, but the last two spawned (12 and
+13) had not fully detached and went with the parent -- shards 0-11 survived. The
+signature looks identical to machine C's silent shard death (no traceback, no OOM), but
+the cause here was the pipe, not the launcher. **Do not pipe `run_sweep.sh` output
+through `head`.** Recovered by launching the two missing SHARD_IDs directly; IDs 0-13
+verified unique afterwards.
+
+
 ## Environment notes
 
 Items 1-3 were reported from this box and have since been fixed upstream
@@ -98,7 +209,8 @@ Items 1-3 were reported from this box and have since been fixed upstream
    ```
    powershell -c "Start-Process wsl.exe -ArgumentList '-d','Ubuntu','-e','sleep','infinity' -WindowStyle Hidden"
    ```
-   Held for 13.9 h unattended with 11 shards, zero losses.
+   Held for 13.9 h unattended with 11 shards, zero losses. **Does not protect against
+   a WSL package update** -- see Outage above.
 4. **No shard deaths observed on this box** across the K=5 run (13.9 h, 11 shards) and
    since the K=1 relaunch (14 shards). Machine C's shard-10 incident has not reproduced
    here. One box is not a diagnosis, but the launcher path itself looks sound.
@@ -141,12 +253,28 @@ DR_K=1 GRID3_PY=$HOME/pengu/pengu_mujoco/.sweep_venv/bin/python bash physics/run
 (machine-C finding). `DR_K=1` must be present on every relaunch, or the box silently
 reverts to K=5 and starts mixing K values into the same CSV.
 
+## Data shipped so far
+
+c2 is **NOT complete**. Two partials are committed, and K values are never mixed:
+
+| file | protocol | rows | commit |
+|---|---|---|---|
+| `...csv.k5partial.gz` | K=5 | 22,496 | `725f34a` |
+| `...csv.gz` (launcher resume path) | K=1 | 264,949 | this commit |
+| `...c2_INCOMPLETE_264949_of_1818000_rows.zip` | K=1 | 264,949 | this commit |
+
+The zip carries a `README_INCOMPLETE.txt` saying the same. The snapshot was taken from
+the live CSV without stopping the sweep, and verified before packing: every line 12
+fields, header present, **0 duplicate 6-tuples** across all the restarts so far.
+
 ## Open items
 
 - `docs/grid4_fleet_memo.md` still describes B from the first-hour samples: line 34
   `slowest box (~60 d)` and line 44 `B ~1.24k`. Current measurements are 1,511 rows/h at
   K=5 and 7,492 rows/h at K=1 (10.1 d for c2). The line-36 plan for D to help finish c2
   was sized against the old figure — Ben's call whether it still applies.
+- **Watchdog via Windows Task Scheduler + Store auto-update off** (see Outage). Until
+  one of these is in place this box will keep dying to Store updates, silently.
 - Whether to return `processors` to 13 (11 shards): measurements say throughput is
   unchanged and it gives Windows back 3 logical cores. Currently at 16 per Ben's
   instruction.
