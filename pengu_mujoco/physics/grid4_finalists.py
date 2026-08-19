@@ -117,6 +117,9 @@ for cfg in CONF:
     r = eval_config(cfg)
     if r:
         all_rows[cfg] = r
+if not all_rows:
+    sys.exit("FATAL: no <config>/top_gaits.csv found under results/grid4_report/ — "
+             "run physics/grid4_report.py first (this is a hard failure, not a no-op).")
 
 # ---- cross figures ----
 os.makedirs(os.path.join(OUT, "cross"), exist_ok=True)

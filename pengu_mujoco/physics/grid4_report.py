@@ -98,7 +98,8 @@ for c, (P, NF) in data.items():
     cand = np.argwhere(ok)
     rows = sorted(((data[c][1][m][tuple(x)], N[c][m][tuple(x)], x) for x in cand),
                   key=lambda t: -t[0])[:50]
-    with open(os.path.join(OUT, f"top_gaits_{c}.csv"), "w", newline="") as f:
+    os.makedirs(os.path.join(OUT, c), exist_ok=True)
+    with open(os.path.join(OUT, c, "top_gaits.csv"), "w", newline="") as f:
         w = csv.writer(f); w.writerow(["freq", "hip_phi", "leg_amp", "hip_amp", "hip_off",
                                        "mu", "net_fwd_mean", "nbhd_pass"])
         for nf_, nb_, x in rows:
@@ -121,7 +122,8 @@ for fname, title, fn in [
     plt.xlabel("floor friction $\\mu$"); plt.title(title)
     plt.grid(alpha=0.3); plt.legend(fontsize=8)
     if "volume" in fname: plt.yscale("symlog", linthresh=10)
-    plt.tight_layout(); plt.savefig(os.path.join(OUT, fname), dpi=130); plt.close()
+    os.makedirs(os.path.join(OUT, "cross"), exist_ok=True)
+    plt.tight_layout(); plt.savefig(os.path.join(OUT, "cross", fname), dpi=130); plt.close()
 
 # ---- freq-edge pressure ----
 md.write("\n## freq-edge pressure (share of nbhd>=0.8 cells at freq >= 1.9, mu=0.1)\n\n")
@@ -150,7 +152,7 @@ for a in range(len(cs)):
                  color="w" if Mx[a, b] < 0.6 else "k", fontsize=9)
 plt.title("Jaccard overlap of passing gait cells @ $\\mu$=0.1")
 plt.colorbar(); plt.tight_layout()
-plt.savefig(os.path.join(OUT, "overlap_mu01.png"), dpi=130); plt.close()
+plt.savefig(os.path.join(OUT, "cross", "overlap_mu01.png"), dpi=130); plt.close()
 md.write("\n## overlap\n\nsee overlap_mu01.png — Jaccard of pass>0 cell sets at mu=0.1.\n")
 
 # ---- per-config heatmap wall ----
@@ -167,7 +169,8 @@ for c in data:
     fig.suptitle(f"{c} ({CONF[c][0]}, COM {CONF[c][1]}) — nbhd-mean pass, "
                  f"slice leg={LEGS[a]} hip={HIPS[b]} off={OFFS[o]}")
     fig.colorbar(im, ax=axes, shrink=0.85)
-    plt.savefig(os.path.join(OUT, f"heatmap_{c}.png"), dpi=130, bbox_inches="tight")
+    os.makedirs(os.path.join(OUT, c), exist_ok=True)
+    plt.savefig(os.path.join(OUT, c, "heatmap.png"), dpi=130, bbox_inches="tight")
     plt.close()
 
 open(os.path.join(OUT, "REPORT.md"), "w").write(md.getvalue())
