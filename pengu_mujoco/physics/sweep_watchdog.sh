@@ -20,8 +20,9 @@ REPO="$PWD"
 
 if [ "${1:-}" = "install" ]; then
   shift; CFG="${1:?usage: sweep_watchdog.sh install cN [n_shards]}"; N="${2:-}"
-  L1="@reboot sleep 90 && cd '$REPO' && bash physics/sweep_watchdog.sh $CFG $N >> results/gait_sweep/watchdog.log 2>&1"
-  L2="*/10 * * * * cd '$REPO' && bash physics/sweep_watchdog.sh $CFG $N >> results/gait_sweep/watchdog.log 2>&1"
+  NPFX=""; [ "${SWEEP_NICE:-0}" != "0" ] && NPFX="SWEEP_NICE=${SWEEP_NICE} "
+  L1="@reboot sleep 90 && cd '$REPO' && ${NPFX}bash physics/sweep_watchdog.sh $CFG $N >> results/gait_sweep/watchdog.log 2>&1"
+  L2="*/10 * * * * cd '$REPO' && ${NPFX}bash physics/sweep_watchdog.sh $CFG $N >> results/gait_sweep/watchdog.log 2>&1"
   ( crontab -l 2>/dev/null | grep -v sweep_watchdog ; echo "$L1"; echo "$L2" ) | crontab -
   echo "watchdog installed for $CFG:"; crontab -l | grep sweep_watchdog
   exit 0
@@ -42,7 +43,7 @@ if [ "$LIVE" -lt "$N" ]; then
     exit 1
   fi
   pkill -f 'grid4_sweep[.]py' 2>/dev/null; sleep 2
-  GRID3_PY="${GRID3_PY:-$REPO/.sweep_venv/bin/python}" bash physics/run_sweep.sh "$CFG" "$N"
+  GRID3_PY="${GRID3_PY:-$REPO/.sweep_venv/bin/python}" nice -n "${SWEEP_NICE:-0}" bash physics/run_sweep.sh "$CFG" "$N"
 else
   echo "$(date '+%F %T') $CFG: ok ($LIVE/$N shards)"
 fi

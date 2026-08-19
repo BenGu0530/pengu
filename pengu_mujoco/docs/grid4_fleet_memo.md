@@ -30,10 +30,10 @@ Do NOT change any parameter mid-fleet — one changed value = a different sweep.
 
 | machine | now | after that |
 |---|---|---|
-| **Mac** (Ben's) | **c1** (κ=0, 1.05) — running, dedicated (no side jobs) | topup |
+| **Mac** (Ben's) | c1 handed off at 1,524,017 rows (2026-08-19) | idle |
 | **B** (Ryzen/WSL2, `grid4_machineB_memo.md`) | **c2** — STOP after snapshot push (`grid4_c2_takeover_memo.md`) | done |
 | **C** (XPS/WSL2, `grid4_xps_memo.md`) | **c3** — ✅ COMPLETE 2026-08-19 | idle / backup analysis box |
-| **D** (Linux, `grid4_machineD_memo.md`) | **c4** — ✅ COMPLETE 2026-08-19 | idle (shared box, leave to Isaac Lab) |
+| **D** (Linux, `grid4_machineD_memo.md`) | **c1** takeover from Mac snapshot: `SWEEP_NICE=19 bash physics/resume_config.sh c1` | topup |
 | **E** (friend's 32-core desktop) | **c5** ✅ | idle / topup |
 | **F** (`rml3` Linux desktop, repo at `~/Documents/ben/pengu`) | **c6** ✅, analysis ✅ → **continues c2**: `bash physics/resume_c2.sh` (one-shot, self-contained) | rerun analysis when c1/c2 land |
 
