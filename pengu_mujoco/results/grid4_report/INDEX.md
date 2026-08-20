@@ -39,20 +39,67 @@ cN/                  per-config
 
 ## Finalist transfer across mu (top-20 mean, nominal conditions)
 
-`valid` = fraction of the 20 finalists that pass at that mu. Finalists are chosen at mu=0.1.
+**Two different gates — do not confuse them.** The map and the finalist eval do not
+measure the same thing:
+
+```
+MAP   pass  = survived AND heading_align>0.5 AND net_fwd>0.05
+FINAL valid = survived AND n_steps[L]>=2 AND n_steps[R]>=2 AND ...
+```
+
+`valid` is a STEPPING gate (at least 2 discrete steps per leg), NOT the pass criterion.
+A robot that slides forward without stepping scores pass=1, valid=0.
+
+### PASS proxy (survived AND net_fwd>0.05) — comparable to the map
+
+`heading_align` is not carried in finalists.csv, so this is pass minus the heading term.
 
 | config | kappa, COM | mu=0.1 | mu=0.3 | mu=0.5 | mu=0.7 |
 |---|---|---|---|---|---|
-| c1 | 0, 1.05 | 0.00 | 0.10 | **1.00** | **1.00** |
-| c3 | 0, 1.31 | 1.00 | 1.00 | 0.00 | 0.00 |
-| c4 | 2, 1.05 | 1.00 | 0.55 | 0.00 | 0.00 |
-| c5 | 2, 1.20 | 1.00 | 0.80 | 0.00 | 0.00 |
-| c6 | 2, 1.31 | 1.00 | 0.30 | 0.00 | 0.00 |
+| c1 | 0, 1.05 | 1.00 | 1.00 | 0.45 | 0.00 |
+| c3 | 0, 1.31 | 1.00 | 0.40 | 0.00 | 0.00 |
+| c4 | 2, 1.05 | 1.00 | 0.50 | 0.00 | 0.00 |
+| c5 | 2, 1.20 | 1.00 | 0.40 | 0.00 | 0.00 |
+| c6 | 2, 1.31 | 1.00 | 0.10 | 0.00 | 0.00 |
 
-c1 runs opposite to the other four: its mu=0.1-selected finalists fail at mu=0.1
-nominal but pass at mu=0.5 and 0.7. Reported as measured, not interpreted. Note the
-map is K=1 WITH pose jitter while finalists are nominal (exact mu, no jitter), so the
-two are not the same test.
+All five pass at mu=0.1. c1 holds furthest up the mu axis.
+
+### valid = STEPPING gate, with ds_move_frac (shuffle fraction)
+
+| config | mu=0.1 | mu=0.3 | mu=0.5 | mu=0.7 |
+|---|---|---|---|---|
+| c1 | 0.00 / ds 0.766 | 0.10 / ds 0.566 | 1.00 / ds 0.432 | 1.00 / ds 0.409 |
+| c3 | 1.00 / ds 0.591 | 1.00 / ds 0.119 | 0.00 | 0.00 |
+| c4 | 1.00 / ds 0.323 | 0.55 / ds 0.085 | 0.00 | 0.00 |
+| c5 | 1.00 / ds 0.240 | 0.80 | 0.00 | 0.00 |
+| c6 | 1.00 / ds 0.126 | 0.30 | 0.00 | 0.00 |
+
+c1 at mu=0.1 makes the best forward progress of any config while taking fewer than two
+steps per leg, with the highest shuffle fraction (0.766) — it advances without stepping.
+
+## Region thickness — width, not just peak
+
+With K=1 the map is binary (pass_rate is 0 or 1), so width comes from neighborhood
+structure. thickness = robust cells (nbhd>=0.8) / raw passing cells. High = broad
+plateau; low = thin scattered spikes.
+
+| config | mu=0.1 | mu=0.3 | mu=0.5 | mu=0.7 |
+|---|---|---|---|---|
+| c1 | 0.613 | 0.698 | 0.436 | 0.305 |
+| c3 | 0.156 | 0.080 | 0.028 | 0.027 |
+| c4 | 0.677 | 0.704 | 0.381 | 0.316 |
+| c5 | 0.565 | 0.392 | 0.079 | 0.065 |
+| c6 | 0.146 | 0.013 | 0.009 | 0.013 |
+
+Peak speed and thickness rank almost oppositely at mu=0.1:
+
+| config | best net_fwd | raw pass | robust | thickness |
+|---|---|---|---|---|
+| c6 | **0.602** (fastest) | 25,376 | 3,697 | **0.146** (thinnest) |
+| c5 | 0.574 | 107,243 | 60,625 | 0.565 |
+| c4 | 0.370 | 144,043 | 97,468 | 0.677 |
+| c3 | 0.171 | 18,952 | 2,948 | 0.156 |
+| c1 | **0.170** (slowest) | 57,327 | 35,135 | **0.613** |
 
 ## Measured torso roll RMS [deg] / PID saturation fraction
 
