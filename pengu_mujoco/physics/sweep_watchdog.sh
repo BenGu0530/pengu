@@ -34,6 +34,7 @@ N="${2:-$(( CORES > 3 ? CORES - 2 : 1 ))}"
 CSV="results/gait_sweep/sweep_grid4_${CFG}_freq_hip_phi_leg_amp_hip_amp_hip_off_mu.csv"
 
 [ -f results/gait_sweep/WATCHDOG_OFF ] && { echo "$(date '+%F %T') $CFG: WATCHDOG_OFF present, skipping"; exit 0; }
+[ -f "$CSV.done" ] && { echo "$(date '+%F %T') $CFG: config complete (.done), skipping"; exit 0; }
 
 LIVE=$(pgrep -f 'grid4_sweep[.]py' | wc -l | tr -d ' ')
 if [ "$LIVE" -lt "$N" ]; then
