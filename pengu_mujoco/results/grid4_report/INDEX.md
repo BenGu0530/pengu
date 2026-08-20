@@ -54,6 +54,11 @@ A robot that slides forward without stepping scores pass=1, valid=0.
 
 `heading_align` is not carried in finalists.csv, so this is pass minus the heading term.
 
+> **These finalists were all selected at mu=0.1.** The zeros at mu=0.5 and 0.7 below
+> therefore mean "gaits chosen for ice do not transfer to grippy floors", NOT "the robot
+> cannot walk on grippy floors". Re-selecting at mu=0.7 with the same rule gives pass
+> 0.85-1.00 for all five configs -- see "Selected at mu=0.7" below.
+
 | config | kappa, COM | mu=0.1 | mu=0.3 | mu=0.5 | mu=0.7 |
 |---|---|---|---|---|---|
 | c1 | 0, 1.05 | 1.00 | 1.00 | 0.45 | 0.00 |
@@ -62,7 +67,27 @@ A robot that slides forward without stepping scores pass=1, valid=0.
 | c5 | 2, 1.20 | 1.00 | 0.40 | 0.00 | 0.00 |
 | c6 | 2, 1.31 | 1.00 | 0.10 | 0.00 | 0.00 |
 
-All five pass at mu=0.1. c1 holds furthest up the mu axis.
+### Selected at mu=0.7 (top_gaits_mu07.csv / finalists_mu07.csv)
+
+Same selection rule, applied at mu=0.7. Eligible cells: c4 13,595 | c1 11,061 |
+c5 551 | c3 110 | c6 39.
+
+| config | pass @mu=0.7 | net_fwd | single_frac | ds_move | clearance |
+|---|---|---|---|---|---|
+| c4 | 1.00 | **0.2447** | 0.930 | 0.049 | 0.0253 |
+| c3 | 1.00 | 0.0836 | 0.800 | 0.158 | 0.0251 |
+| c6 | 0.95 | 0.0852 | 0.972 | 0.022 | 0.0302 |
+| c5 | 0.90 | 0.1319 | 0.945 | 0.042 | 0.0261 |
+| c1 | 0.85 | 0.1253 | 0.798 | 0.170 | 0.0253 |
+
+All five walk on mu=0.7. The mu=0.7 selection is also markedly more step-like than the
+mu=0.1 selection: single_frac 0.798-0.972 (vs 0.229-0.536), ds_move_frac 0.022-0.170
+(vs 0.409-0.766), clearance 0.025-0.030 m (vs 0.004-0.011 m).
+
+Note on "no forward progress at mu=0.7": the mu=0.1-selected gaits were not standing
+still, they were walking in circles. c1's rank-1 takes 70 steps over 5.74 m of path but
+ends 0.61 m from the start (straightness 0.107). High friction turns the open-loop yaw
+bias into real turning; low friction lets the feet slip so the path stays straighter.
 
 ### valid = STEPPING gate, with ds_move_frac (shuffle fraction)
 
