@@ -78,7 +78,7 @@ def main():
     LOG_STD_INIT = -1.0
     EXPLORATION_VERSION = "e1"
     tag = (f"{a.mode}_{REWARD_VERSION}{ACTION_VERSION}{EXPLORATION_VERSION}"
-           + ("c1" if a.curriculum else "") + f"_s{a.seed}"
+           + ("c2" if a.curriculum else "") + f"_s{a.seed}"
            + ("_smoke" if a.smoke else "") + ("_t2" if a.tier2 else ""))
     outdir = os.path.join(a.out, tag)
     ckptdir = os.path.join(outdir, "ckpts")
@@ -140,9 +140,13 @@ def main():
                   f"sigma_torso={row['sigma_torso']:.3f}", flush=True)
 
     class Curriculum(BaseCallback):
-        """vx_cmd ramp c1: performance-gated, checked every CHECK steps over the
-        last WINDOW finished episodes. Starts at CMD0; +STEP when mean ep vx >=
-        0.6*cmd and fall_rate <= 0.5; capped at 0.47 (the experiment command)."""
+        """vx_cmd ramp c2: performance-gated, checked every CHECK steps over the
+        last WINDOW finished episodes. Starts at CMD0; +STEP when fall<=0.5 and
+        (mean ep vx >= 0.6*cmd  OR  survival is solved: mean ep_len>=400 and
+        fall<=0.3). The second clause breaks the stand-still deadlock seen in
+        c1: at low cmd the kernel tail pays ~0.4/step at vx=0, so standing is
+        profitable and the vx gate never fires; raising cmd moves the kernel
+        away from zero (receding carrot). Cap 0.47 (the experiment command)."""
         CHECK, WINDOW, CMD0, STEP, CAP = 25_000, 100, 0.12, 0.05, 0.47
 
         def __init__(self):
@@ -158,7 +162,8 @@ def main():
         def _on_step(self):
             for info in self.locals.get("infos", []):
                 if "ep" in info:
-                    self._eps.append((info["ep"]["vx"], info["ep"]["fell"]))
+                    self._eps.append((info["ep"]["vx"], info["ep"]["fell"],
+                                      info["ep"]["len"]))
                     if len(self._eps) > self.WINDOW:
                         self._eps.pop(0)
             if self.num_timesteps >= self._next:
@@ -166,12 +171,17 @@ def main():
                 if len(self._eps) >= 30 and self.cmd < self.CAP:
                     vx = float(np.mean([e[0] for e in self._eps]))
                     fall = float(np.mean([e[1] for e in self._eps]))
-                    if vx >= 0.6 * self.cmd and fall <= 0.5:
+                    elen = float(np.mean([e[2] for e in self._eps]))
+                    speed_ok = vx >= 0.6 * self.cmd
+                    survival_ok = elen >= 400 and fall <= 0.3
+                    if fall <= 0.5 and (speed_ok or survival_ok):
                         self.cmd = min(self.CAP, self.cmd + self.STEP)
                         self.training_env.env_method("set_vx_cmd", self.cmd)
                         self._eps = []
                         print(f"[curriculum] {self.num_timesteps} steps -> "
-                              f"vx_cmd {self.cmd:.2f}", flush=True)
+                              f"vx_cmd {self.cmd:.2f} "
+                              f"({'speed' if speed_ok else 'survival'} gate)",
+                              flush=True)
             return True
 
     callbacks = [Diag()] + ([Curriculum()] if a.curriculum else [])
