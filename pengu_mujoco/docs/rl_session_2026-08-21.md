@@ -49,35 +49,43 @@ Gate 0 record (mu=0.7, 24 s, deterministic, 5 reps): gate0_r2a1e1c2_w_s1
 pass 3/5, net_fwd 0.047-0.246 (mean 0.146), heading 0.82-0.96, torso roll
 RMS 44-50 deg, eff_kappa 2.2-5.3. s0: pass 2/5, net_fwd mean 0.043.
 
-## 3. Arm results so far (frozen eval: 24 s, mu +-5%, 5 reps, deterministic)
+## 3. Arm results — FINAL, all 4 seeds (frozen eval: 24 s, mu +-5%, 5 reps, deterministic)
 
-net_fwd mean (pass count/5) per mu; designed K=5 baselines at mu 0.1/0.3
-from c3|c6 topupK5.csv for reference:
+net_fwd mean (pass/5) | median torso roll RMS deg | median eff_kappa, per mu.
+Designed K=5 baselines (c3|c6 topupK5): mu0.1 kappa0=0.164 kappa2=0.469;
+mu0.3 kappa0=0.490 kappa2=0.242.
 
-| mu | seed 0 | seed 1 | kappa0 | kappa2 |
+| mu | seed 0 | seed 1 | seed 2 | seed 3 |
 |---|---|---|---|---|
-| 0.1 | 0.041 (1) | 0.044 (2) | 0.164 | 0.469 |
-| 0.2 | 0.034 (1) | 0.018 (0) | — | — |
-| 0.3 | 0.114 (5) | 0.025 (1) | 0.490 | 0.242 |
-| 0.4 | 0.138 (5) | 0.017 (0) | — | — |
+| 0.1 | 0.041 (1) 26.3 k2.3 | 0.044 (2) 30.0 k3.0 | **0.180 (4) 38.9 k2.7** | 0.053 (2) 52.7 k4.1 |
+| 0.2 | 0.034 (1) 26.5 k2.4 | 0.018 (0) 33.2 k3.2 | 0.253 (5) 34.7 k2.2 | 0.083 (5) 59.9 k4.8 |
+| 0.3 | 0.114 (5) 25.8 k2.4 | 0.025 (1) 38.2 k3.2 | **0.344 (5) 30.7 k1.1** | 0.170 (5) 57.3 k4.6 |
+| 0.4 | 0.138 (5) 25.7 k1.7 | 0.017 (0) 42.6 k3.2 | 0.095 (4) 29.0 k2.2 | 0.092 (3) k4.2 |
 
-- torso roll RMS: s0 ~26 deg at all mu; s1 30-43 deg. eff_kappa columns in
-  each run's eval_frozen.csv.
-- Seed variance is large (s0 walks mu 0.3/0.4 5/5; s1 passes nowhere but is
-  best at mu 0.1). Strict all-mu tier rule puts both in tier 1; per-mu rows
-  above are the informative readout.
-- Both seeds sit well below the designed envelope everywhere measured.
-- Behavior note (Ben, from demo): high-frequency stepping with clearance but
-  near-stationary — swing income is collected without translation; the
-  marginal translation income (1*vx + kernel tail) is small at creep speeds.
-  Candidate lever (NOT applied; would unfreeze the reward): gate swing on
-  forward body velocity or rebalance progress/swing. Decision: Ben.
+Three-tier (strict all-mu pass>=0.6; tiers 1 and 2 never merged):
+- seed 0: tier 1 (walks mu 0.3/0.4 at 5/5; fails 0.1/0.2). hip_corr -0.32..-0.41
+  (alternating gait).
+- seed 1: tier 1 (passes nowhere; best at mu 0.1).
+- **seed 2: tier 3 — walk, torso ACTIVE** (median RMS of passing trials
+  33.7 deg). At mu=0.1 its 0.180 exceeds the kappa0 designed-family ceiling
+  0.164; at mu=0.3 its 0.344 exceeds the kappa2 baseline 0.242 and sits
+  below kappa0's 0.490.
+- seed 3: tier 1 by the mu=0.1 cell only (0.4 pass); passes 0.2/0.3/0.4.
+  Largest torso use (RMS 53-60 deg, eff_kappa 4.1-4.8).
 
-## 4. Status / pending
+Readouts, stated without interpretation:
+- 0/4 seeds landed in tier 2 (walk + torso silent). Every seed that walks
+  anywhere does so with torso roll RMS >= 26 deg and eff_kappa 1.1-4.8.
+- 1/4 seeds (s2) covers the full ice range; 3/4 walk at mu>=0.2 or 0.3.
+- RL vs designed envelope: below it everywhere except s2@mu0.1 vs kappa0
+  (0.180 > 0.164) and s2/s3@mu0.3 vs kappa2 (0.344/0.170 vs 0.242 — s2 only).
+- Behavior note from demos: high-cadence short-stride stepping; swing income
+  collects without much translation (candidate reward lever left to Ben).
 
-- Running: seed 2 stage B; then seed 3 (A+B). Auto: frozen eval per seed.
-- Pending after seeds land: seed x mu table + three-tier + eff-kappa
-  summary, mu=0.1/0.3 baseline comparison, demo mp4 per seed, this memo's
-  results section update.
-- Committed artifacts: final.zip per completed run (not intermediate ckpts),
-  diag.csv, eval CSVs, demos for the gate passer and e2 s0.
+## 4. Deliverables / archive
+
+- Per seed: eval_frozen.csv, diag.csv (A and B stages), ckpts every 250k +
+  final, demo mp4 at mu=0.1 (s2 also has the mu=0.1 headline demo; s0 also
+  mu=0.4). Gate runs likewise.
+- All under rl_grid4/runs/, committed. Dead-end rounds kept.
+- Compute note: entire arm ran on the Mac alongside the c4 topup (nice 10).
