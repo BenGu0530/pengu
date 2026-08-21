@@ -63,9 +63,25 @@ REWARD_VERSION = "r2"
 W_PROGRESS = 1.0
 FALL_PENALTY = 10.0
 
+# Action-mapping version (capability knob, Gate 0 period, logged in memo):
+# a0: full ctrlrange on all 5 actuators. Outcome: with policy sigma ~0.9 the
+#     crank +-180deg mapping turns exploration noise into huge joint excursions
+#     -- even "stand still" dies in <1 s under noise, so the dash stays optimal
+#     regardless of reward pricing (observed on r1 and r2).
+# a1: cranks narrowed toward the measured effective region (the
+#     train_penguin_crank_fix finding, [-1.9,-1.1]). Probe 2026-08-20: crank
+#     held anywhere in [-1.9,-1.0] stands; stance-angle scan over 8 jitter
+#     seeds picked -1.2 as the most topple-robust neutral (7/8 vs 6/8 at
+#     -1.5). Band [-1.8,-0.6]: neutral action = settle stance = -1.2.
+#     Hips/torso untouched.
+ACTION_VERSION = "a1"
+CRANK_MID = -1.2
+CRANK_HALF = 0.6
+
 ACT_NAMES = list(gc.ACTUATORS)            # ["hip-L","hip-R","crank1-R","torso","crank1-L"]
 TORSO_IDX = ACT_NAMES.index("torso")
 LEG_IDX = [i for i in range(len(ACT_NAMES)) if i != TORSO_IDX]
+CRANK_IDX = [ACT_NAMES.index("crank1-R"), ACT_NAMES.index("crank1-L")]
 
 _WORLD_Z = np.array([0.0, 0.0, 1.0])
 _WORLD_FWD = np.array([0.0, 1.0, 0.0])    # spawn faces world +y (sweep convention)
@@ -132,6 +148,8 @@ class Grid4RLEnv(gym.Env):
         cr = self.model.actuator_ctrlrange[self.aid]
         self.ctrl_mid = cr.mean(axis=1)
         self.ctrl_half = (cr[:, 1] - cr[:, 0]) / 2.0
+        self.ctrl_mid[CRANK_IDX] = CRANK_MID          # action version a1
+        self.ctrl_half[CRANK_IDX] = CRANK_HALF
 
         jids = self.model.actuator_trnid[self.aid, 0]
         self.jqadr = self.model.jnt_qposadr[jids]
@@ -271,7 +289,8 @@ class Grid4RLEnv(gym.Env):
             ctrl0 = d.ctrl[self.aid].copy()
             if not np.any(ctrl0):
                 ctrl0 = d.qpos[self.jqadr].copy()
-                d.ctrl[self.aid] = ctrl0
+            ctrl0[CRANK_IDX] = CRANK_MID                # settle at working stance
+            d.ctrl[self.aid] = ctrl0
             if self._settle():                          # quiet stand reached
                 break
             # else: this jitter draw topples on its own -> resample
