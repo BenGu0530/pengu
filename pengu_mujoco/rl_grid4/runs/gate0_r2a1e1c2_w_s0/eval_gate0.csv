@@ -1,0 +1,6 @@
+ckpt,rep,mu,survived,pass,net_fwd,heading_align,torso_roll_rms_deg,root_roll_rms_deg,eff_kappa,single_frac,hip_diff_rms_deg,hip_corr
+runs/gate0_r2a1e1c2_w_s0/ckpts/final.zip,0,0.7,0,0,0.0,0.0,nan,nan,,0.0,17.63,0.753
+runs/gate0_r2a1e1c2_w_s0/ckpts/final.zip,1,0.7,1,1,0.0756,0.8899,36.29,8.14,3.534,0.337,8.56,0.183
+runs/gate0_r2a1e1c2_w_s0/ckpts/final.zip,2,0.7,1,1,0.0639,0.9077,33.89,7.7,3.299,0.345,8.88,0.118
+runs/gate0_r2a1e1c2_w_s0/ckpts/final.zip,3,0.7,1,0,0.0335,0.8984,32.66,6.65,3.512,0.324,8.57,0.167
+runs/gate0_r2a1e1c2_w_s0/ckpts/final.zip,4,0.7,1,0,0.0407,0.9743,37.47,9.17,3.456,0.325,8.76,0.188
