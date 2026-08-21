@@ -319,6 +319,14 @@ class Grid4RLEnv(gym.Env):
                      "r_scrub", "r_smooth", "r_fall", "vx")}
         self._torso_roll_sq = 0.0
         self._torso_roll_sum = 0.0   # DC component: separates a steady lean from a waddle
+        self._torso_roll_prev = self.torso_roll()
+        self._torso_rate_sq = 0.0    # RMS(d roll/dt): a steady lean has ~0, a waddle does not
+        # stride bookkeeping: touchdown-to-touchdown distance per foot. A robot
+        # walking straight takes equal strides left and right; a turning one does
+        # not. Measures the LEGS, so it stays clear of the torso variable.
+        self._con_prev = {b: True for b in self.foot_bids}
+        self._td_xy = {b: None for b in self.foot_bids}
+        self._stride = {b: [] for b in self.foot_bids}
         self._single = 0
         self._sub = 0
         # left-right alternation stats: running sums of hip-L/hip-R angles
@@ -378,6 +386,12 @@ class Grid4RLEnv(gym.Env):
                     n_contact += 1
                 else:
                     swing_fwd += rf - rel_fwd[b]
+                if con[b] and not self._con_prev[b]:          # touchdown edge
+                    if self._td_xy[b] is not None:
+                        self._stride[b].append(
+                            float(np.linalg.norm(xy - self._td_xy[b])))
+                    self._td_xy[b] = xy.copy()
+                self._con_prev[b] = con[b]
                 foot_abs[b] = xy.copy()
                 rel_fwd[b] = rf
         energy /= self.decim
@@ -410,6 +424,8 @@ class Grid4RLEnv(gym.Env):
         _tr = self.torso_roll()
         self._torso_roll_sq += _tr ** 2
         self._torso_roll_sum += _tr
+        self._torso_rate_sq += ((_tr - self._torso_roll_prev) / self.control_dt) ** 2
+        self._torso_roll_prev = _tr
         hl = float(d.qpos[self.jqadr[0]])
         hr = float(d.qpos[self.jqadr[1]])
         self._hip += (1.0, hl, hr, hl * hl, hr * hr, hl * hr)
@@ -433,11 +449,38 @@ class Grid4RLEnv(gym.Env):
                 # from a steady 30 deg lean. Log the mean so they separate:
                 # |mean| << RMS -> waddling; |mean| ~ RMS -> leaning and holding.
                 "torso_roll_mean_deg": math.degrees(self._torso_roll_sum / n),
+                # RMS of d(roll)/dt. diff(RMS) cannot separate a lean from a
+                # waddle (both are flat), but RMS(diff) can: a held lean has
+                # roll rate ~0 while a waddle does not.
+                "torso_roll_rate_rms_dps":
+                    math.degrees(math.sqrt(self._torso_rate_sq / n)),
+                **self.stride_symmetry(),
                 "single_frac": self._single / max(1, self._sub),
                 "fell": float(fell),
                 **self.hip_alternation(),
             }
         return self._obs(), float(reward), terminated, truncated, info
+
+    def stride_symmetry(self):
+        """Touchdown-to-touchdown distance per foot, and their asymmetry.
+
+        Equal left and right strides = walking straight; a persistent
+        difference = curving. asym = (L-R)/(L+R) in [-1,1], 0 = symmetric.
+        Leg-only measure, so it does not touch the torso variable.
+        """
+        out = {}
+        vals = {}
+        for b, s_ in self._stride.items():
+            side = self.foot_bids[b]
+            vals[side] = float(np.mean(s_)) if s_ else float("nan")
+            out[f"stride_{side}_m"] = vals[side]
+            out[f"n_stride_{side}"] = len(s_)
+        L, R = vals.get("L", float("nan")), vals.get("R", float("nan"))
+        if L == L and R == R and (L + R) > 1e-9:
+            out["stride_asym"] = float((L - R) / (L + R))
+        else:
+            out["stride_asym"] = float("nan")
+        return out
 
     def hip_alternation(self):
         """Walk indicator without rendering: RMS of the (hip_L - hip_R) swing

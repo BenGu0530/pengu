@@ -136,6 +136,15 @@ def main():
                        np.mean([e.get("torso_roll_mean_deg", float("nan")) for e in eps])
                        if eps else float("nan"),
                    "vx_cmd": float(getattr(curric, "cmd", float("nan"))),
+                   "torso_roll_rate_rms_dps":
+                       np.mean([e.get("torso_roll_rate_rms_dps", float("nan")) for e in eps])
+                       if eps else float("nan"),
+                   "stride_L_m": np.nanmean([e.get("stride_L_m", float("nan")) for e in eps])
+                       if eps else float("nan"),
+                   "stride_R_m": np.nanmean([e.get("stride_R_m", float("nan")) for e in eps])
+                       if eps else float("nan"),
+                   "stride_asym": np.nanmean([e.get("stride_asym", float("nan")) for e in eps])
+                       if eps else float("nan"),
                    "single_frac": np.mean([e["single_frac"] for e in eps]) if eps else float("nan"),
                    "hip_diff_rms_deg":
                        np.mean([e.get("hip_diff_rms_deg", 0.0) for e in eps]) if eps else float("nan"),
@@ -156,7 +165,9 @@ def main():
                   f"fall={row['fall_rate']:.2f}  vx={row['vx']:.3f}  "
                   f"hip_diff={row['hip_diff_rms_deg']:.1f}deg "
                   f"hip_corr={row['hip_corr']:+.2f}  "
-                  f"torso_rms={row['torso_roll_rms_deg']:.1f}deg  "
+                  f"torso_rms={row['torso_roll_rms_deg']:.1f}deg "
+                  f"roll_rate={row['torso_roll_rate_rms_dps']:.0f}dps "
+                  f"stride_asym={row['stride_asym']:+.3f}  "
                   f"sigma_torso={row['sigma_torso']:.3f}", flush=True)
 
     class Curriculum(BaseCallback):
