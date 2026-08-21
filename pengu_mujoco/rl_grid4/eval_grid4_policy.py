@@ -149,7 +149,10 @@ def main():
                     f"2 walk, torso silent (med RMS {med:.1f}deg < {a.torso_thresh})")
         print(f"[{os.path.basename(os.path.dirname(ckpt))}] tier {tier}", flush=True)
 
-    out = a.out or os.path.join(os.path.dirname(a.ckpts[0]), "eval_frozen.csv")
+    base = os.path.dirname(os.path.abspath(a.ckpts[0]))
+    if os.path.basename(base) == "ckpts":               # run/ckpts/x.zip -> run root
+        base = os.path.dirname(base)
+    out = a.out or os.path.join(base, "eval_frozen.csv")
     fields = ["ckpt", "rep", "mu", "survived", "pass", "net_fwd", "heading_align",
               "torso_roll_rms_deg", "root_roll_rms_deg", "eff_kappa", "single_frac"]
     with open(out, "w", newline="") as f:

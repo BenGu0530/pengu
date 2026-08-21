@@ -47,7 +47,7 @@ def main():
     ap.add_argument("--smoke", action="store_true", help="50k steps, 4 envs")
     ap.add_argument("--tier2", action="store_true", help="enable tier-2 DR (gains+push)")
     ap.add_argument("--ent", type=float, default=0.005)
-    ap.add_argument("--out", default=os.path.join(_HERE, "runs", "grid4"))
+    ap.add_argument("--out", default=os.path.join(_HERE, "runs"))
     a = ap.parse_args()
     if a.smoke:
         a.steps, a.n_envs = 50_000, 4
@@ -66,7 +66,9 @@ def main():
 
     tag = f"{a.mode}_s{a.seed}" + ("_smoke" if a.smoke else "") + ("_t2" if a.tier2 else "")
     outdir = os.path.join(a.out, tag)
-    os.makedirs(outdir, exist_ok=True)
+    ckptdir = os.path.join(outdir, "ckpts")
+    os.makedirs(ckptdir, exist_ok=True)
+    os.makedirs(os.path.join(outdir, "videos"), exist_ok=True)
 
     venv = SubprocVecEnv([make_env(i, a.seed, env_kwargs) for i in range(a.n_envs)])
 
@@ -120,7 +122,7 @@ def main():
     callbacks = [Diag()]
     if not a.smoke:
         callbacks.append(CheckpointCallback(
-            save_freq=max(250_000 // a.n_envs, 1), save_path=outdir, name_prefix="ckpt"))
+            save_freq=max(250_000 // a.n_envs, 1), save_path=ckptdir, name_prefix="ckpt"))
 
     model = PPO("MlpPolicy", venv, device="cpu", seed=a.seed,
                 n_steps=1024, batch_size=4096, n_epochs=5,
@@ -129,9 +131,9 @@ def main():
                 policy_kwargs=dict(net_arch=[256, 256]), verbose=0)
     print(f"[train_grid4] {tag}: {a.steps} steps x {a.n_envs} envs -> {outdir}", flush=True)
     model.learn(total_timesteps=a.steps, callback=callbacks, progress_bar=False)
-    model.save(os.path.join(outdir, "final"))
+    model.save(os.path.join(ckptdir, "final"))
     venv.close()
-    print(f"[train_grid4] done -> {outdir}/final.zip", flush=True)
+    print(f"[train_grid4] done -> {ckptdir}/final.zip", flush=True)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,9 @@
 # RL ice arm — experiment definition & frozen configuration (2026-08-20)
 
-Companion to `rl/grid4_rl_env.py`, `rl/train_grid4.py`, `rl/eval_grid4_policy.py`.
+Companion to `rl_grid4/` (grid4_rl_env.py, train_grid4.py, eval_grid4_policy.py,
+render_grid4_policy.py). Run outputs: `rl_grid4/runs/<tag>/` with `ckpts/` and
+`videos/` subdirs, `diag.csv` and eval CSVs at the run root. The old `rl/`
+directory is the legacy CPG stack — do not mix.
 Working agreement: `pengu_mujoco/CLAUDE.md` (measurement only, Ben draws
 conclusions, no species labels, no AI attribution, branch `friction-experiments`).
 
@@ -46,7 +49,10 @@ shelved pending this arm's results. The 1.05 body (same 2.2724 kg, via
 - Episode: 10 s @ 50 Hz. Fall = root z<0.08 or |roll|>60deg or |pitch|>60deg;
   fall reward -5 and terminate.
 - Reset: mu via `friction_utils.set_floor_friction` (floor priority hack);
-  stand pose + jitter yaw +-5deg / pitch +-3deg / lateral +-1 cm.
+  stand pose + jitter yaw +-5deg / pitch +-3deg / lateral +-1 cm; then SETTLE:
+  hold stand targets until rocking decays (max|qvel|<0.3, 0.3-1.0 s), resample
+  the jitter draw if the robot topples during the hold (staged-start analog;
+  applies to training AND eval episodes).
 
 ## Reward (frozen)
 
@@ -88,7 +94,13 @@ a minimal amendment only if circling shows up, uniformly across arms).
 - Preference (never): anything touching torso / weight transfer. The
   swing/scrub weights freeze with the rest — they are declared, not tunable.
 
-Knob change log: (empty — initial values everywhere)
+Knob change log:
+- 2026-08-20 (init pose, Gate 0 period): added reset SETTLE + topple-resample.
+  Finding: gate0_s0 (no settle) converged to a lunge local optimum (3M steps,
+  ep_len flat ~28, 100% fall, vx saturated at cmd; eval tier 1 no-walk at
+  mu=0.7). Zero-action probe: without settle 2/5 jitter draws toppled on their
+  own within ~1.1 s (episodes doomed at t=0); with settle 10/10 stand 10 s.
+  gate0_s0 run kept as the no-settle baseline record.
 
 ## Gate 0
 
@@ -127,10 +139,11 @@ Per-seed tiers (tiers 1 and 2 are never merged):
 
 ```
 cd pengu_mujoco
-python rl/train_grid4.py --mode gate0 --seed 0            # gate (3M)
-python rl/train_grid4.py --mode e2 --seed 0               # ice arm (3M)
-python rl/train_grid4.py --mode gate0 --seed 0 --smoke    # 50k pipeline check
-python rl/eval_grid4_policy.py rl/runs/grid4/e2_s0/final.zip
+python rl_grid4/train_grid4.py --mode gate0 --seed 0            # gate (3M)
+python rl_grid4/train_grid4.py --mode e2 --seed 0               # ice arm (3M)
+python rl_grid4/train_grid4.py --mode gate0 --seed 0 --smoke    # 50k check
+python rl_grid4/eval_grid4_policy.py rl_grid4/runs/e2_s0/ckpts/final.zip
+python rl_grid4/render_grid4_policy.py rl_grid4/runs/e2_s0/ckpts/final.zip --mu 0.1
 ```
 
 Compute etiquette: check `docs/grid4_fleet_memo.md`; Mac currently also runs

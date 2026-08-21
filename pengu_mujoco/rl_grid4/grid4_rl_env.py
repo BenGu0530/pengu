@@ -201,6 +201,24 @@ class Grid4RLEnv(gym.Env):
         return out
 
     # ---------------------------------------------------------------- reset
+    def _settle(self):
+        """Hold the stand targets until rocking decays (staged-start analog for
+        RL episodes; the sweep protocol settles ~11 s before walking). Returns
+        False if the robot topples during the hold -> caller resamples jitter."""
+        d = self.data
+        R_pre = d.xmat[self.root].reshape(3, 3)
+        u_local = R_pre.T @ _WORLD_Z
+        n_min = int(0.3 / self.dt)
+        n_max = int(1.0 / self.dt)
+        for i in range(n_max):
+            mujoco.mj_step(self.model, d)
+            if not np.isfinite(d.qpos).all() or d.xpos[self.root][2] < 0.08:
+                return False
+            if i >= n_min and float(np.max(np.abs(d.qvel))) < 0.3:
+                break
+        u = d.xmat[self.root].reshape(3, 3) @ u_local
+        return float(u @ _WORLD_Z) > math.cos(math.radians(30))
+
     def reset(self, seed=None, options=None):
         if seed is not None:
             self._rng = np.random.default_rng(seed)
@@ -222,29 +240,36 @@ class Grid4RLEnv(gym.Env):
             self.model.actuator_biasprm[self.aid, 1] *= f
             self.model.dof_damping[:] *= rng.uniform(0.9, 1.1)
 
-        mujoco.mj_resetData(self.model, self.data)
-        gc.set_initial_pose(self.model, self.data, self._act_ids, self._jnt_adr)
         d = self.data
+        for _attempt in range(8):
+            mujoco.mj_resetData(self.model, self.data)
+            gc.set_initial_pose(self.model, self.data, self._act_ids, self._jnt_adr)
 
-        # sweep-protocol pose jitter (kept in eval too): yaw +-5deg, pitch +-3deg,
-        # lateral +-1cm
-        yaw = math.radians(rng.uniform(-5, 5))
-        pitch = math.radians(rng.uniform(-3, 3))
-        qj = _quat_mul(_quat_about(_WORLD_Z, yaw), _quat_about([1, 0, 0], pitch))
-        d.qpos[3:7] = _quat_mul(qj, d.qpos[3:7].copy())
-        d.qpos[0] += rng.uniform(-0.01, 0.01)
+            # sweep-protocol pose jitter (kept in eval too): yaw +-5deg,
+            # pitch +-3deg, lateral +-1cm
+            yaw = math.radians(rng.uniform(-5, 5))
+            pitch = math.radians(rng.uniform(-3, 3))
+            qj = _quat_mul(_quat_about(_WORLD_Z, yaw), _quat_about([1, 0, 0], pitch))
+            d.qpos[3:7] = _quat_mul(qj, d.qpos[3:7].copy())
+            d.qpos[0] += rng.uniform(-0.01, 0.01)
 
-        if self.init_jitter:                            # tier-1 DR (training only)
-            d.qpos[self.jqadr] += rng.uniform(-0.05, 0.05, size=len(self.jqadr))
+            if self.init_jitter:                        # tier-1 DR (training only)
+                d.qpos[self.jqadr] += rng.uniform(-0.05, 0.05, size=len(self.jqadr))
+
+            mujoco.mj_forward(self.model, d)
+            ctrl0 = d.ctrl[self.aid].copy()
+            if not np.any(ctrl0):
+                ctrl0 = d.qpos[self.jqadr].copy()
+                d.ctrl[self.aid] = ctrl0
+            if self._settle():                          # quiet stand reached
+                break
+            # else: this jitter draw topples on its own -> resample
+
+        if self.init_jitter:
             d.qvel[:] += rng.normal(0.0, 0.02, size=d.qvel.shape)
-
         mujoco.mj_forward(self.model, d)
         self._calibrate_frames()
-
         ctrl0 = d.ctrl[self.aid].copy()
-        if not np.any(ctrl0):
-            ctrl0 = d.qpos[self.jqadr].copy()
-            d.ctrl[self.aid] = ctrl0
         a0 = np.clip((ctrl0 - self.ctrl_mid) / self.ctrl_half, -1.0, 1.0)
         self.act_filt = a0.astype(np.float64)
         self.last_action = a0.astype(np.float32)
