@@ -1,0 +1,6 @@
+ckpt,rep,mu,survived,pass,net_fwd,heading_align,torso_roll_rms_deg,root_roll_rms_deg,eff_kappa,single_frac
+runs/grid4/gate0_s0/final.zip,0,0.7,0,0,0.0,0.0,nan,nan,,0.0
+runs/grid4/gate0_s0/final.zip,1,0.7,0,0,0.0,0.0,nan,nan,,0.0
+runs/grid4/gate0_s0/final.zip,2,0.7,0,0,0.0,0.0,nan,nan,,0.0
+runs/grid4/gate0_s0/final.zip,3,0.7,0,0,0.0,0.0,nan,nan,,0.0
+runs/grid4/gate0_s0/final.zip,4,0.7,0,0,0.0,0.0,nan,nan,,0.0
