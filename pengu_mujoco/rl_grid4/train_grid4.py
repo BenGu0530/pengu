@@ -51,6 +51,9 @@ def main():
                     help="vx_cmd curriculum c1 (declared amendment): start 0.12, "
                          "+0.05 whenever recent mean vx >= 0.6*cmd and fall<=0.5, "
                          "cap 0.47. Eval stays fixed at 0.47.")
+    ap.add_argument("--init-from", default=None,
+                    help="warm-start from a prior final.zip (policy+value weights); "
+                         "tag gets _w suffix")
     ap.add_argument("--out", default=os.path.join(_HERE, "runs"))
     a = ap.parse_args()
     if a.smoke:
@@ -78,7 +81,8 @@ def main():
     LOG_STD_INIT = -1.0
     EXPLORATION_VERSION = "e1"
     tag = (f"{a.mode}_{REWARD_VERSION}{ACTION_VERSION}{EXPLORATION_VERSION}"
-           + ("c2" if a.curriculum else "") + f"_s{a.seed}"
+           + ("c2" if a.curriculum else "") + ("_w" if a.init_from else "")
+           + f"_s{a.seed}"
            + ("_smoke" if a.smoke else "") + ("_t2" if a.tier2 else ""))
     outdir = os.path.join(a.out, tag)
     ckptdir = os.path.join(outdir, "ckpts")
@@ -189,12 +193,16 @@ def main():
         callbacks.append(CheckpointCallback(
             save_freq=max(250_000 // a.n_envs, 1), save_path=ckptdir, name_prefix="ckpt"))
 
-    model = PPO("MlpPolicy", venv, device="cpu", seed=a.seed,
-                n_steps=1024, batch_size=4096, n_epochs=5,
-                gamma=0.99, gae_lambda=0.95, learning_rate=3e-4,
-                ent_coef=a.ent, clip_range=0.2, target_kl=0.03,
-                policy_kwargs=dict(net_arch=[256, 256], log_std_init=LOG_STD_INIT),
-                verbose=0)
+    if a.init_from:
+        model = PPO.load(a.init_from, env=venv, device="cpu")
+        print(f"[train_grid4] warm-start from {a.init_from}", flush=True)
+    else:
+        model = PPO("MlpPolicy", venv, device="cpu", seed=a.seed,
+                    n_steps=1024, batch_size=4096, n_epochs=5,
+                    gamma=0.99, gae_lambda=0.95, learning_rate=3e-4,
+                    ent_coef=a.ent, clip_range=0.2, target_kl=0.03,
+                    policy_kwargs=dict(net_arch=[256, 256], log_std_init=LOG_STD_INIT),
+                    verbose=0)
     print(f"[train_grid4] {tag}: {a.steps} steps x {a.n_envs} envs -> {outdir}", flush=True)
     model.learn(total_timesteps=a.steps, callback=callbacks, progress_bar=False)
     model.save(os.path.join(ckptdir, "final"))
