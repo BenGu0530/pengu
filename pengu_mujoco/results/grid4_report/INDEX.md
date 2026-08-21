@@ -90,16 +90,14 @@ cross/
   diag_pass_vs_mu.png    selection-matched pass fraction (all 0.85-1.00)
   diag_support_vs_mu.png single_frac and ds_move_frac, selection-matched
   ds_move_mu07.png       shuffle vs stepping, mu=0.1 vs mu=0.7, both own-selection
+  ds_move_mu01.png       shuffle vs stepping at mu=0.1
   volume_vs_mu.png  passfrac_vs_mu.png  speed_vs_mu.png  overlap_mu01.png   (map-level)
-  roll_to_speed.png  ds_move_mu01.png                                       (mu=0.1 finalists)
-  start_pass_vs_mu.png  start_speed_vs_mu.png  start_roll_vs_mu.png  start_delta.png
 cN/
   heatmap.png                nbhd-mean pass over freq x hip_phi, one panel per mu
   top_gaits.csv              top 50 ranked at mu=0.1
   top_gaits_mu03/05/07.csv   top 50 ranked at that mu
   finalists.csv              top-20 selected at mu=0.1, re-run at all 4 mu
   finalists_mu03/05/07.csv   top-20 selected at that mu, re-run at all 4 mu
-  finalists_staged.csv       mu=0.1 selection with a slow start
   demos/                     mp4 clips
 c6/com_wiper_mu01.png        COM sway vs height in the body frame
 ```
@@ -146,7 +144,10 @@ Worth noting against that: **c2's μ=0.1 champion walks nearly straight** — +5
 axis, 2.68 m forward against 0.25 m lateral, the straightest of any config measured.
 
 **Slow start does not change the picture**, but costs some gaits speed: c6 at μ=0.1 gains
-45% and c5 at μ=0.3 gains 59% when started gently.
+45% and c5 at μ=0.3 gains 59% when started gently. That comparison was run on the
+5-config set before c2 landed and its artifacts have been removed as superseded; it is
+reproducible with `physics/grid4_finalists_staged.py` + `grid4_cross_staged.py` if
+needed.
 
 ---
 
