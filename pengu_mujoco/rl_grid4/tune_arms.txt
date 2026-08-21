@@ -1,46 +1,27 @@
-# Reward-tuning arms. One line = one arm = ONE single-factor change from the
-# frozen r2 baseline. Arms are independent: none is chosen in response to
-# another's result, and none compounds on another. Declared before running so
-# the sweep is not researcher-in-the-loop.
+# Reward MAGNITUDE tuning. Do NOT run this before ablate_arms.txt -- picking
+# magnitudes is only meaningful for terms the ablation showed to matter, and
+# these arms choose numbers rather than answering yes/no.
 #
-# Frozen baseline for reference (RW_DEFAULT in grid4_rl_env.py):
-#   track 0.8   sigma2 0.02   progress 1.0   back 2.0   energy 0.0005
-#   swing 1.0   swing_cap 0.6  scrub 0.8     smooth 0.01  fall 10.0
+# Same rules as the ablation list: single-factor, declared up front, no arm
+# selected in response to another's result, none compounding on another.
 #
-# Problem being attacked: the policy caps near vx 0.2 while the designed family
-# reaches 0.47-0.60 on the same body. The lunge runs prove the body CAN produce
-# 0.47 in this action space, so this is a pricing problem, not a capability one.
-#
-# Format: <name> <rw overrides...>          '#' comments and blank lines ignored.
+# Format: <name> <rw overrides...>
 
-# --- forward driver: v1 used 4.0, v2 cut it to 1.0 to kill the lunge. The lunge
-# was actually killed by settle + e1 (probe-verified), so the cut may be over-correction.
+# forward driver: v1 used 4.0, v2 cut to 1.0
 progress3       progress=3.0
 progress6       progress=6.0
 
-# --- stepping prior: swing_rate is not gated on translation, so stepping in
-# place harvests 25.6% of positive income. Ben saw exactly this in the demo.
+# stepping prior magnitude and how much of it can be harvested in place
 swing03         swing=0.3
-swing00         swing=0.0
 swingcap02      swing_cap=0.2
 
-# --- risk appetite: v2 doubled the fall penalty to kill the lunge. Survival is
-# now solved (fall 0.12-0.5, ep_len 375-472), so -10 may over-deter speed.
+# risk appetite: v2 doubled the fall penalty from 5 to 10
 fall5           fall=5.0
 fall2           fall=2.0
 
-# --- tracking kernel: sigma ~0.14 centred at 0.47 prices everything below
-# vx 0.2 at ~zero, so a creep policy sees almost no gradient toward the target.
+# tracking kernel width: sigma ~0.14 centred at 0.47 prices vx<0.2 at ~zero
 sigma006        sigma2=0.06
 sigma020        sigma2=0.20
 
-# --- slip tax: the designed gaits that reach 0.47-0.60 on ice do so WITH slip.
-# Measured scrub is a flat 0.16-0.23 regardless of speed, so this is a long shot,
-# but it is cheap and it is the only term that directly opposes the fast-on-ice
-# strategy the sweep says works.
+# slip tax
 scrub02         scrub=0.2
-scrub00         scrub=0.0
-
-# --- action rate: smallest term in the budget (2.5% of positive income).
-# Included for completeness; expected to be a null.
-smooth00        smooth=0.0

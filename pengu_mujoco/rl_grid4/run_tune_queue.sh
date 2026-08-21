@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Run the reward-tuning arms in tune_arms.txt one after another, N at a time,
+# Run the reward arms in ablate_arms.txt (default) one after another, N at a time,
 # each followed automatically by the frozen eval. Resumable: an arm whose
 # eval CSV already exists is skipped, so re-running the script continues where
 # it stopped after a reboot or a Ctrl-C.
 #
 #   bash run_tune_queue.sh                       # defaults: 3 concurrent, 6M steps, seed 0
 #   JOBS=2 STEPS=3000000 SEEDS="0 1" bash run_tune_queue.sh
-#   ARMS=tune_arms.txt bash run_tune_queue.sh
+#   ARMS=tune_arms.txt bash run_tune_queue.sh   # magnitude tuning, only after ablations
 #
 # Every arm is an independent single-factor change from the frozen baseline;
 # none is selected in response to another's result. Tags carry the override, so
@@ -14,7 +14,7 @@
 set -u
 cd "$(dirname "$0")"
 
-ARMS=${ARMS:-tune_arms.txt}
+ARMS=${ARMS:-ablate_arms.txt}
 JOBS=${JOBS:-3}
 STEPS=${STEPS:-6000000}
 SEEDS=${SEEDS:-0}

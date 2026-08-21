@@ -1,0 +1,35 @@
+# Reward ABLATIONS. One line = one arm = one term switched OFF (weight 0),
+# everything else at the frozen r2 value. The question each arm answers is
+# "is this term earning its place", not "what is the best magnitude" -- no arm
+# here picks a number. Magnitude tuning lives in tune_arms.txt and only makes
+# sense after this tells us which terms matter.
+#
+# Arms are declared before any of them runs, none is chosen in response to
+# another's result, and none compounds on another.
+#
+# Frozen baseline (RW_DEFAULT in grid4_rl_env.py):
+#   track 0.8   sigma2 0.02   progress 1.0   back 2.0   energy 0.0005
+#   swing 1.0   swing_cap 0.6  scrub 0.8     smooth 0.01  fall 10.0
+#
+# Format: <name> <rw overrides...>          '#' comments and blank lines ignored.
+
+# --- the two speed drivers. Removing one leaves the other, so the policy always
+# still has some reason to move forward; this reads which one is doing the work.
+no_track        track=0.0
+no_progress     progress=0.0
+
+# --- the declared stepping prior. If stepping survives without it, the claim
+# upgrades from "stepping is seeded" to "stepping is emergent" -- a big change
+# in what the arm can report.
+no_swing        swing=0.0
+
+# --- penalties. Each asks whether the term is buying anything or just taxing.
+no_scrub        scrub=0.0
+no_smooth       smooth=0.0
+no_energy       energy=0.0
+no_back         back=0.0
+
+# --- fall penalty off. Expect the lunge to come back (v1 with fall -5 already
+# lunged); included because it bounds how much of the current caution is priced
+# by this term rather than by the settle + e1 fix.
+no_fall         fall=0.0

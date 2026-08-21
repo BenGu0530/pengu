@@ -140,6 +140,10 @@ class Grid4RLEnv(gym.Env):
                 raise ValueError(f"unknown reward weight(s): {sorted(unknown)}; "
                                  f"valid: {sorted(RW_DEFAULT)}")
             self.rw.update({k: float(v) for k, v in rw.items()})
+            if self.rw["sigma2"] <= 0:
+                raise ValueError("sigma2 must be > 0 (it is the kernel variance, "
+                                 "exp(-(vx-cmd)^2/sigma2)); to switch the kernel "
+                                 "off use track=0 instead")
         if w_smooth is not None:          # back-compat with --no-smooth
             self.rw["smooth"] = float(w_smooth)
         self.w_smooth = self.rw["smooth"]
