@@ -60,6 +60,10 @@ STALL_TORQUE = 4.1        # N*m, XM430 forcerange
 #     become the main income; per-episode ladder now stand(0) < dash(~+4)
 #     < step-in-place(~+100) < walk(~+750): steepest ascent = live longer.
 REWARD_VERSION = "r2"
+# Action-rate weight. Default 0.01 is the frozen r2 value; the ablation arm sets
+# it to 0 via Grid4RLEnv(w_smooth=0.0) / train_grid4.py --no-smooth, which also
+# retags the run so an ablation can never be mixed with a frozen-recipe run.
+W_SMOOTH_DEFAULT = 0.01
 W_PROGRESS = 1.0
 FALL_PENALTY = 10.0
 
@@ -114,8 +118,9 @@ class Grid4RLEnv(gym.Env):
                  seed=None, eval_mode=False,
                  filter_alpha=ALPHA, action_delay=1,
                  obs_noise=True, init_jitter=True,
-                 rand_gains=False, push=False):
+                 rand_gains=False, push=False, w_smooth=W_SMOOTH_DEFAULT):
         super().__init__()
+        self.w_smooth = float(w_smooth)
         self.eval_mode = bool(eval_mode)
         if self.eval_mode:                 # frozen protocol: pose jitter only
             action_delay, obs_noise, init_jitter = 0, False, False
@@ -408,7 +413,7 @@ class Grid4RLEnv(gym.Env):
         r_energy = -0.0005 * energy
         r_swing = 1.0 * float(np.clip(swing_rate, 0.0, 0.6))
         r_scrub = -0.8 * scrub
-        r_smooth = -0.01 * float(np.sum((a - self.last_action.astype(np.float64)) ** 2))
+        r_smooth = -self.w_smooth * float(np.sum((a - self.last_action.astype(np.float64)) ** 2))
         reward = r_track + r_progress + r_back + r_energy + r_swing + r_scrub + r_smooth
 
         roll, pitch_t = self._tilt()
