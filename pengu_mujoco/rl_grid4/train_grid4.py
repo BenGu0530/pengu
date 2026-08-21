@@ -101,7 +101,10 @@ def main():
                    "fall_rate": np.mean([e["fell"] for e in eps]) if eps else float("nan"),
                    "torso_roll_rms_deg":
                        np.mean([e["torso_roll_rms_deg"] for e in eps]) if eps else float("nan"),
-                   "single_frac": np.mean([e["single_frac"] for e in eps]) if eps else float("nan")}
+                   "single_frac": np.mean([e["single_frac"] for e in eps]) if eps else float("nan"),
+                   "hip_diff_rms_deg":
+                       np.mean([e.get("hip_diff_rms_deg", 0.0) for e in eps]) if eps else float("nan"),
+                   "hip_corr": np.mean([e.get("hip_corr", 0.0) for e in eps]) if eps else float("nan")}
             for k in self.COMP:
                 row[k] = np.mean([e[k] for e in eps]) if eps else float("nan")
             for i, name in enumerate(["hipL", "hipR", "crankR", "torso", "crankL"]):
@@ -116,6 +119,8 @@ def main():
                             for k, v in row.items()})
             print(f"[diag] {row['steps']:>9} steps  ep_len={row['ep_len']:.0f} "
                   f"fall={row['fall_rate']:.2f}  vx={row['vx']:.3f}  "
+                  f"hip_diff={row['hip_diff_rms_deg']:.1f}deg "
+                  f"hip_corr={row['hip_corr']:+.2f}  "
                   f"torso_rms={row['torso_roll_rms_deg']:.1f}deg  "
                   f"sigma_torso={row['sigma_torso']:.3f}", flush=True)
 

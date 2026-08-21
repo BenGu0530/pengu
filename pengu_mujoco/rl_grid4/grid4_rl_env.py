@@ -286,6 +286,8 @@ class Grid4RLEnv(gym.Env):
         self._torso_roll_sq = 0.0
         self._single = 0
         self._sub = 0
+        # left-right alternation stats: running sums of hip-L/hip-R angles
+        self._hip = np.zeros(6)          # n, sx, sy, sxx, syy, sxy
         return self._obs(), {}
 
     # ---------------------------------------------------------------- step
@@ -371,6 +373,9 @@ class Grid4RLEnv(gym.Env):
         self.last_action = a.astype(np.float32)
         self.step_i += 1
         self._torso_roll_sq += self.torso_roll() ** 2
+        hl = float(d.qpos[self.jqadr[0]])
+        hr = float(d.qpos[self.jqadr[1]])
+        self._hip += (1.0, hl, hr, hl * hl, hr * hr, hl * hr)
         for k, val in (("r_track", r_track), ("r_progress", r_progress),
                        ("r_back", r_back), ("r_energy", r_energy),
                        ("r_swing", r_swing), ("r_scrub", r_scrub),
@@ -389,8 +394,25 @@ class Grid4RLEnv(gym.Env):
                 "torso_roll_rms_deg": math.degrees(math.sqrt(self._torso_roll_sq / n)),
                 "single_frac": self._single / max(1, self._sub),
                 "fell": float(fell),
+                **self.hip_alternation(),
             }
         return self._obs(), float(reward), terminated, truncated, info
+
+    def hip_alternation(self):
+        """Walk indicator without rendering: RMS of the (hip_L - hip_R) swing
+        difference in deg (stepping amplitude; lunge/synchronous push ~ 0) and
+        the hip_L/hip_R correlation (alternating gait -> ~ -1, in-phase -> +1)."""
+        hn, sx, sy, sxx, syy, sxy = self._hip
+        if hn < 10:
+            return {"hip_diff_rms_deg": 0.0, "hip_corr": 0.0}
+        mx, my = sx / hn, sy / hn
+        vx_ = max(0.0, sxx / hn - mx * mx)
+        vy_ = max(0.0, syy / hn - my * my)
+        cov = sxy / hn - mx * my
+        diff_var = max(0.0, vx_ + vy_ - 2.0 * cov)
+        corr = cov / math.sqrt(vx_ * vy_) if vx_ > 1e-10 and vy_ > 1e-10 else 0.0
+        return {"hip_diff_rms_deg": math.degrees(math.sqrt(diff_var)),
+                "hip_corr": float(np.clip(corr, -1.0, 1.0))}
 
     # ---------------------------------------------------------------- obs
     def _obs(self):

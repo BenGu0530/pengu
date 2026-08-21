@@ -88,6 +88,7 @@ def run_trial(model_sb3, env, mu, trial_seed, dur):
     dn = np.linalg.norm(disp)
     heading_align = float(disp @ hm) / dn if dn > 1e-6 else 0.0
 
+    hip = env.hip_alternation()
     tr = np.asarray(torso_rolls)
     rr = np.asarray(root_rolls)
     var = float(np.var(rr))
@@ -100,6 +101,8 @@ def run_trial(model_sb3, env, mu, trial_seed, dur):
         "root_roll_rms_deg": round(math.degrees(float(np.sqrt(np.mean(rr ** 2)))), 2),
         "eff_kappa": round(eff_kappa, 3) if np.isfinite(eff_kappa) else "",
         "single_frac": round(single / n_meas, 3),
+        "hip_diff_rms_deg": round(hip["hip_diff_rms_deg"], 2),
+        "hip_corr": round(hip["hip_corr"], 3),
     }
 
 
@@ -154,7 +157,8 @@ def main():
         base = os.path.dirname(base)
     out = a.out or os.path.join(base, "eval_frozen.csv")
     fields = ["ckpt", "rep", "mu", "survived", "pass", "net_fwd", "heading_align",
-              "torso_roll_rms_deg", "root_roll_rms_deg", "eff_kappa", "single_frac"]
+              "torso_roll_rms_deg", "root_roll_rms_deg", "eff_kappa", "single_frac",
+              "hip_diff_rms_deg", "hip_corr"]
     with open(out, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields)
         w.writeheader()
