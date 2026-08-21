@@ -73,6 +73,9 @@ def main():
     ap.add_argument("--init-from", default=None,
                     help="warm-start from a prior final.zip (policy+value weights); "
                          "tag gets _w suffix")
+    ap.add_argument("--name", default=None,
+                    help="run dir name under --out (e.g. e2/s0/stageA); "
+                         "overrides the auto version tag")
     ap.add_argument("--out", default=os.path.join(_HERE, "runs"))
     a = ap.parse_args()
     if a.smoke:
@@ -112,12 +115,13 @@ def main():
     LOG_STD_INIT = -1.0
     EXPLORATION_VERSION = "e1"
     rwtag = "".join(f"-{k}{v:g}" for k, v in sorted(rw.items())) if rw else ""
-    tag = (f"{a.mode}_{REWARD_VERSION}{'ns' if a.no_smooth else ''}{rwtag}"
-           f"{ACTION_VERSION}{EXPLORATION_VERSION}"
-           + ("c2" if a.curriculum else "") + ("_w" if a.init_from else "")
-           + (f"_mu{a.mu_fixed:g}" if a.mu_fixed is not None and a.mode != "gate0" else "")
-           + f"_s{a.seed}"
-           + ("_smoke" if a.smoke else "") + ("_t2" if a.tier2 else ""))
+    tag = a.name or (
+        f"{a.mode}_{REWARD_VERSION}{'ns' if a.no_smooth else ''}{rwtag}"
+        f"{ACTION_VERSION}{EXPLORATION_VERSION}"
+        + ("c2" if a.curriculum else "") + ("_w" if a.init_from else "")
+        + (f"_mu{a.mu_fixed:g}" if a.mu_fixed is not None and a.mode != "gate0" else "")
+        + f"_s{a.seed}"
+        + ("_smoke" if a.smoke else "") + ("_t2" if a.tier2 else ""))
     outdir = os.path.join(a.out, tag)
     ckptdir = os.path.join(outdir, "ckpts")
     os.makedirs(ckptdir, exist_ok=True)

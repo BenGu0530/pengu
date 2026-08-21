@@ -82,6 +82,25 @@ Readouts, stated without interpretation:
 - Behavior note from demos: high-cadence short-stride stepping; swing income
   collects without much translation (candidate reward lever left to Ben).
 
+## 3b. runs/ layout (renamed 2026-08-21; old tag-soup names -> readable tree)
+
+```
+rl_grid4/runs/
+  e2/s{0..3}/{stageA,stageB}/     # the arm; stageB holds eval_frozen.csv + demos
+  gate0/s{0,1}/{stageA,stageB}/   # frozen-recipe gate rounds (mu=0.7)
+  archive/                        # dead ends, readable names:
+    gate0_v1_nosettle_s0, gate0_v1_settle_s0     (lunge, reward v1)
+    gate0_v2_fullrange_s0, gate0_v2_crankband_s0 (lunge, v2 pricing)
+    gate0_c1_standdeadlock_s0, gate0_c2_scratch_s0
+    e2_fullmu_stageA_s0                          (dash-lock, pre mu-curriculum)
+  gate0_r2nsa1e1c2_s{0,1,2}/      # Thomas (rml3) no-smooth ablation - NOT
+                                  # renamed, his naming, different diag schema
+```
+Old->new: e2_r2a1e1_mu0.4_sN = e2/sN/stageA; e2_r2a1e1c2_w_sN = e2/sN/stageB;
+gate0_r2a1e1_sN = gate0/sN/stageA; gate0_r2a1e1c2_w_sN = gate0/sN/stageB.
+Video files now carry the run name (demo_e2_s2_stageB_mu0.1_final.mp4).
+train_grid4 --name sets run dirs directly; run_e2_arm.sh updated.
+
 ## 4. Deliverables / archive
 
 - Per seed: eval_frozen.csv, diag.csv (A and B stages), ckpts every 250k +

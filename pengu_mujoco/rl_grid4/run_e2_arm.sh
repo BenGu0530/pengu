@@ -15,9 +15,10 @@ SEEDS="${SEEDS:-0 1 2 3}"
 for s in $SEEDS; do
   echo "=== e2 seed $s stage A (scratch, cmd 0.47, mu 0.4) $(date) ==="
   nice -n 10 "$PY" rl_grid4/train_grid4.py --mode e2 --seed "$s" --n-envs 8 \
-    --mu-fixed 0.4
+    --mu-fixed 0.4 --name "e2/s$s/stageA"
   echo "=== e2 seed $s stage B (warm + curriculum, mu U(0.1,0.4)) $(date) ==="
   nice -n 10 "$PY" rl_grid4/train_grid4.py --mode e2 --seed "$s" --n-envs 8 \
-    --curriculum --init-from "rl_grid4/runs/e2_r2a1e1_mu0.4_s$s/ckpts/final.zip"
+    --curriculum --init-from "rl_grid4/runs/e2/s$s/stageA/ckpts/final.zip" \
+    --name "e2/s$s/stageB"
 done
 echo "=== e2 arm complete $(date) ==="
