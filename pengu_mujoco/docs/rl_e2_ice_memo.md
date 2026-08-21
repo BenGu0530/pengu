@@ -129,7 +129,22 @@ Knob change log:
   own within ~1.1 s (episodes doomed at t=0); with settle 10/10 stand 10 s.
   gate0_s0 run kept as the no-settle baseline record.
 
-## Gate 0
+## Gate 0 — PASSED 2026-08-21 (config frozen)
+
+Record: gate0_r2a1e1c2_w_s1 frozen eval at mu=0.7: pass 3/5 (net_fwd
+0.047-0.246, mean 0.146; heading 0.82-0.96; survived 4/5; torso roll RMS
+44-50 deg; eff_kappa 2.2-5.3). Tier 3 readout. gate0_r2a1e1c2_w_s0: pass 2/5
+(net_fwd mean 0.043). Full run archive under rl_grid4/runs/ (nosettle / r2a0
+/ r2a1 / c1 / c2-scratch dead ends kept for the record).
+
+FROZEN training protocol (the validated recipe; applies to every arm seed,
+see run_e2_arm.sh): stage A = from scratch, fixed vx_cmd 0.47, 3M steps
+(reward v2, action a1, exploration e1, settle reset) -> stage B = warm-start
+from A + curriculum c2, 3M steps. All capability knobs now frozen at the
+values in the logs above; the r3 (swing weight) candidate was NOT needed and
+is not applied.
+
+## Gate 0 (original definition)
 
 mu fixed 0.7 (+-5%), vx_cmd 0.47, 2 seeds x 3M steps. Pass = frozen-eval pass
 rule (survive AND heading_align>0.5 AND net_fwd>0.05) for at least one seed.
