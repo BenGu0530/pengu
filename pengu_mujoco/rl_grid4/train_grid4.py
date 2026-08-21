@@ -55,6 +55,11 @@ def main():
                     help="override mu to a fixed value +-5%% (mu-curriculum "
                          "amendment: e2 stage A runs at 0.4, the easy end of "
                          "the arm's range; stage B runs the full U(0.1,0.4))")
+    ap.add_argument("--cmd0", type=float, default=None,
+                    help="start the c2 curriculum at this vx_cmd instead of 0.12. "
+                         "Needed to RESUME a curriculum run: --init-from restores "
+                         "policy+value weights only, so without this the ramp "
+                         "silently restarts from 0.12.")
     ap.add_argument("--init-from", default=None,
                     help="warm-start from a prior final.zip (policy+value weights); "
                          "tag gets _w suffix")
@@ -127,6 +132,10 @@ def main():
                    "fall_rate": np.mean([e["fell"] for e in eps]) if eps else float("nan"),
                    "torso_roll_rms_deg":
                        np.mean([e["torso_roll_rms_deg"] for e in eps]) if eps else float("nan"),
+                   "torso_roll_mean_deg":
+                       np.mean([e.get("torso_roll_mean_deg", float("nan")) for e in eps])
+                       if eps else float("nan"),
+                   "vx_cmd": float(getattr(curric, "cmd", float("nan"))),
                    "single_frac": np.mean([e["single_frac"] for e in eps]) if eps else float("nan"),
                    "hip_diff_rms_deg":
                        np.mean([e.get("hip_diff_rms_deg", 0.0) for e in eps]) if eps else float("nan"),
@@ -160,9 +169,10 @@ def main():
         away from zero (receding carrot). Cap 0.47 (the experiment command)."""
         CHECK, WINDOW, CMD0, STEP, CAP = 25_000, 100, 0.12, 0.05, 0.47
 
-        def __init__(self):
+
+        def __init__(self, cmd0=None):
             super().__init__()
-            self.cmd = self.CMD0
+            self.cmd = self.CMD0 if cmd0 is None else float(cmd0)
             self._eps = []
             self._next = self.CHECK
 
@@ -195,7 +205,8 @@ def main():
                               flush=True)
             return True
 
-    callbacks = [Diag()] + ([Curriculum()] if a.curriculum else [])
+    curric = Curriculum(a.cmd0) if a.curriculum else None
+    callbacks = [Diag()] + ([curric] if curric else [])
     if not a.smoke:
         callbacks.append(CheckpointCallback(
             save_freq=max(250_000 // a.n_envs, 1), save_path=ckptdir, name_prefix="ckpt"))

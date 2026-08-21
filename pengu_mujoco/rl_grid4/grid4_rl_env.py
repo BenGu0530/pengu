@@ -318,6 +318,7 @@ class Grid4RLEnv(gym.Env):
                     ("r_track", "r_progress", "r_back", "r_energy", "r_swing",
                      "r_scrub", "r_smooth", "r_fall", "vx")}
         self._torso_roll_sq = 0.0
+        self._torso_roll_sum = 0.0   # DC component: separates a steady lean from a waddle
         self._single = 0
         self._sub = 0
         # left-right alternation stats: running sums of hip-L/hip-R angles
@@ -406,7 +407,9 @@ class Grid4RLEnv(gym.Env):
 
         self.last_action = a.astype(np.float32)
         self.step_i += 1
-        self._torso_roll_sq += self.torso_roll() ** 2
+        _tr = self.torso_roll()
+        self._torso_roll_sq += _tr ** 2
+        self._torso_roll_sum += _tr
         hl = float(d.qpos[self.jqadr[0]])
         hr = float(d.qpos[self.jqadr[1]])
         self._hip += (1.0, hl, hr, hl * hl, hr * hr, hl * hr)
@@ -426,6 +429,10 @@ class Grid4RLEnv(gym.Env):
                 "len": self.step_i,
                 "mu": self.mu,
                 "torso_roll_rms_deg": math.degrees(math.sqrt(self._torso_roll_sq / n)),
+                # RMS^2 = mean^2 + var, so RMS alone cannot tell a +-30 deg waddle
+                # from a steady 30 deg lean. Log the mean so they separate:
+                # |mean| << RMS -> waddling; |mean| ~ RMS -> leaning and holding.
+                "torso_roll_mean_deg": math.degrees(self._torso_roll_sum / n),
                 "single_frac": self._single / max(1, self._sub),
                 "fell": float(fell),
                 **self.hip_alternation(),
