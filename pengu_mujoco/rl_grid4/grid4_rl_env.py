@@ -181,6 +181,10 @@ class Grid4RLEnv(gym.Env):
         self._rng = np.random.default_rng(seed)
         self.mu = None
 
+    def set_vx_cmd(self, v):
+        """Curriculum hook (trainer-side, via VecEnv.env_method)."""
+        self.vx_cmd = float(v)
+
     # ---------------------------------------------------------------- frames
     def _calibrate_frames(self):
         """com_wiper self-calibration: pick the root local axis best aligned with

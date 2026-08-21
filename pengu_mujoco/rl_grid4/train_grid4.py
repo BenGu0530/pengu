@@ -47,6 +47,10 @@ def main():
     ap.add_argument("--smoke", action="store_true", help="50k steps, 4 envs")
     ap.add_argument("--tier2", action="store_true", help="enable tier-2 DR (gains+push)")
     ap.add_argument("--ent", type=float, default=0.005)
+    ap.add_argument("--curriculum", action="store_true",
+                    help="vx_cmd curriculum c1 (declared amendment): start 0.12, "
+                         "+0.05 whenever recent mean vx >= 0.6*cmd and fall<=0.5, "
+                         "cap 0.47. Eval stays fixed at 0.47.")
     ap.add_argument("--out", default=os.path.join(_HERE, "runs"))
     a = ap.parse_args()
     if a.smoke:
@@ -73,7 +77,8 @@ def main():
     # contain multi-second survival for the value function to see.
     LOG_STD_INIT = -1.0
     EXPLORATION_VERSION = "e1"
-    tag = (f"{a.mode}_{REWARD_VERSION}{ACTION_VERSION}{EXPLORATION_VERSION}_s{a.seed}"
+    tag = (f"{a.mode}_{REWARD_VERSION}{ACTION_VERSION}{EXPLORATION_VERSION}"
+           + ("c1" if a.curriculum else "") + f"_s{a.seed}"
            + ("_smoke" if a.smoke else "") + ("_t2" if a.tier2 else ""))
     outdir = os.path.join(a.out, tag)
     ckptdir = os.path.join(outdir, "ckpts")
@@ -134,7 +139,42 @@ def main():
                   f"torso_rms={row['torso_roll_rms_deg']:.1f}deg  "
                   f"sigma_torso={row['sigma_torso']:.3f}", flush=True)
 
-    callbacks = [Diag()]
+    class Curriculum(BaseCallback):
+        """vx_cmd ramp c1: performance-gated, checked every CHECK steps over the
+        last WINDOW finished episodes. Starts at CMD0; +STEP when mean ep vx >=
+        0.6*cmd and fall_rate <= 0.5; capped at 0.47 (the experiment command)."""
+        CHECK, WINDOW, CMD0, STEP, CAP = 25_000, 100, 0.12, 0.05, 0.47
+
+        def __init__(self):
+            super().__init__()
+            self.cmd = self.CMD0
+            self._eps = []
+            self._next = self.CHECK
+
+        def _on_training_start(self):
+            self.training_env.env_method("set_vx_cmd", self.cmd)
+            print(f"[curriculum] vx_cmd start {self.cmd:.2f}", flush=True)
+
+        def _on_step(self):
+            for info in self.locals.get("infos", []):
+                if "ep" in info:
+                    self._eps.append((info["ep"]["vx"], info["ep"]["fell"]))
+                    if len(self._eps) > self.WINDOW:
+                        self._eps.pop(0)
+            if self.num_timesteps >= self._next:
+                self._next += self.CHECK
+                if len(self._eps) >= 30 and self.cmd < self.CAP:
+                    vx = float(np.mean([e[0] for e in self._eps]))
+                    fall = float(np.mean([e[1] for e in self._eps]))
+                    if vx >= 0.6 * self.cmd and fall <= 0.5:
+                        self.cmd = min(self.CAP, self.cmd + self.STEP)
+                        self.training_env.env_method("set_vx_cmd", self.cmd)
+                        self._eps = []
+                        print(f"[curriculum] {self.num_timesteps} steps -> "
+                              f"vx_cmd {self.cmd:.2f}", flush=True)
+            return True
+
+    callbacks = [Diag()] + ([Curriculum()] if a.curriculum else [])
     if not a.smoke:
         callbacks.append(CheckpointCallback(
             save_freq=max(250_000 // a.n_envs, 1), save_path=ckptdir, name_prefix="ckpt"))

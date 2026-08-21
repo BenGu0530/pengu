@@ -106,6 +106,14 @@ torso neutrality is NOT touched by any entry):
   kept: gate0_s0_nosettle (v1, no settle), gate0_s0 (v1, settle, cut at 1.1M).
 
 Knob change log:
+- 2026-08-21 (curriculum c1, declared amendment per the rescue ladder):
+  vx_cmd performance-gated ramp 0.12 -> 0.47 (+0.05 when recent mean ep vx
+  >= 0.6*cmd and fall_rate <= 0.5, checked every 25k steps). Basis: r2a1e1
+  both seeds converged to a "safe creep" (survive 24 s deterministic, net_fwd
+  0.02-0.05 vs pass line 0.05; s0 pass 0/5, s1 pass 2/5 at mu=0.7). The
+  tracking kernel (sigma 0.14, center 0.47) prices every speed below ~0.2 at
+  ~zero, so from creep speed there is no kernel gradient — the ramp keeps the
+  kernel reachable at every stage. Eval commands 0.47 fixed, unchanged.
 - 2026-08-21 (exploration, Gate 0 period): log_std_init 0 -> -1.0 (e1).
   Probe: the robot is open-loop unstable under ANY uncorrelated action noise
   (zero-mean policy survives 0.7 s at sigma 0.85, 2.7 s even at sigma 0.15),
