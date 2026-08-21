@@ -19,8 +19,8 @@ import matplotlib.pyplot as plt
 _HERE = os.path.dirname(os.path.abspath(__file__)); _ROOT = os.path.dirname(_HERE)
 OUT = os.path.join(_ROOT, "results", "grid4_report")
 CROSS = os.path.join(OUT, "cross"); os.makedirs(CROSS, exist_ok=True)
-CONF = {"c1": (0.0, 1.05), "c3": (0.0, 1.31), "c4": (2.0, 1.05),
-        "c5": (2.0, 1.20), "c6": (2.0, 1.31)}
+CONF = {"c1": (0.0, 1.05), "c2": (0.0, 1.20), "c3": (0.0, 1.31),
+        "c4": (2.0, 1.05), "c5": (2.0, 1.20), "c6": (2.0, 1.31)}
 KCOL = {0.0: "tab:blue", 2.0: "tab:red"}
 
 ap = argparse.ArgumentParser()
