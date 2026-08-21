@@ -65,7 +65,15 @@ def main():
         env_kwargs.update(mu_lo=0.1, mu_hi=0.4)
 
     from grid4_rl_env import REWARD_VERSION, ACTION_VERSION
-    tag = (f"{a.mode}_{REWARD_VERSION}{ACTION_VERSION}_s{a.seed}"
+    # e1 (capability knob, 2026-08-21): log_std_init 0 -> -1.0. Probe: a
+    # zero-mean policy under exploration noise survives 0.7 s at sigma 0.85
+    # but the robot is open-loop unstable at ANY sigma (2.7 s even at 0.15),
+    # so with default sigma~1 no surviving samples exist and the dash is the
+    # only harvestable strategy. Smaller init sigma lets early rollouts
+    # contain multi-second survival for the value function to see.
+    LOG_STD_INIT = -1.0
+    EXPLORATION_VERSION = "e1"
+    tag = (f"{a.mode}_{REWARD_VERSION}{ACTION_VERSION}{EXPLORATION_VERSION}_s{a.seed}"
            + ("_smoke" if a.smoke else "") + ("_t2" if a.tier2 else ""))
     outdir = os.path.join(a.out, tag)
     ckptdir = os.path.join(outdir, "ckpts")
@@ -135,7 +143,8 @@ def main():
                 n_steps=1024, batch_size=4096, n_epochs=5,
                 gamma=0.99, gae_lambda=0.95, learning_rate=3e-4,
                 ent_coef=a.ent, clip_range=0.2, target_kl=0.03,
-                policy_kwargs=dict(net_arch=[256, 256]), verbose=0)
+                policy_kwargs=dict(net_arch=[256, 256], log_std_init=LOG_STD_INIT),
+                verbose=0)
     print(f"[train_grid4] {tag}: {a.steps} steps x {a.n_envs} envs -> {outdir}", flush=True)
     model.learn(total_timesteps=a.steps, callback=callbacks, progress_bar=False)
     model.save(os.path.join(ckptdir, "final"))

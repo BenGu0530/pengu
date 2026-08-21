@@ -106,6 +106,14 @@ torso neutrality is NOT touched by any entry):
   kept: gate0_s0_nosettle (v1, no settle), gate0_s0 (v1, settle, cut at 1.1M).
 
 Knob change log:
+- 2026-08-21 (exploration, Gate 0 period): log_std_init 0 -> -1.0 (e1).
+  Probe: the robot is open-loop unstable under ANY uncorrelated action noise
+  (zero-mean policy survives 0.7 s at sigma 0.85, 2.7 s even at sigma 0.15),
+  so at PPO's default init sigma~1 no rollout ever survives and the dash is
+  the only harvestable strategy — reward pricing (v2) alone could not fix it.
+- 2026-08-21 (action mapping, Gate 0 period): cranks narrowed to -1.2+-0.6 rad
+  (a1), reset settles at the working stance (stance-angle scan: -1.2 most
+  topple-robust, 7/8 seeds). Hips/torso untouched.
 - 2026-08-20 (init pose, Gate 0 period): added reset SETTLE + topple-resample.
   Finding: gate0_s0 (no settle) converged to a lunge local optimum (3M steps,
   ep_len flat ~28, 100% fall, vx saturated at cmd; eval tier 1 no-walk at
