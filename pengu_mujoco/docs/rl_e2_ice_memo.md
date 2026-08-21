@@ -106,6 +106,12 @@ torso neutrality is NOT touched by any entry):
   kept: gate0_s0_nosettle (v1, no settle), gate0_s0 (v1, settle, cut at 1.1M).
 
 Knob change log:
+- 2026-08-21 (mu curriculum, declared amendment per the rescue ladder):
+  e2 stage A runs at fixed mu=0.4 (easy end of the arm's range); stage B
+  runs the full U(0.1,0.4). Under the full range from scratch, stage A
+  dash-locked (1M steps, ep_len 16-18, fall 1.00, sigma shrinking) — on
+  low-mu episodes survival income is invisible again. Applied uniformly to
+  all arm seeds.
 - 2026-08-21 (curriculum c1, declared amendment per the rescue ladder):
   vx_cmd performance-gated ramp 0.12 -> 0.47 (+0.05 when recent mean ep vx
   >= 0.6*cmd and fall_rate <= 0.5, checked every 25k steps). Basis: r2a1e1

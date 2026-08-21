@@ -51,6 +51,10 @@ def main():
                     help="vx_cmd curriculum c1 (declared amendment): start 0.12, "
                          "+0.05 whenever recent mean vx >= 0.6*cmd and fall<=0.5, "
                          "cap 0.47. Eval stays fixed at 0.47.")
+    ap.add_argument("--mu-fixed", type=float, default=None,
+                    help="override mu to a fixed value +-5%% (mu-curriculum "
+                         "amendment: e2 stage A runs at 0.4, the easy end of "
+                         "the arm's range; stage B runs the full U(0.1,0.4))")
     ap.add_argument("--init-from", default=None,
                     help="warm-start from a prior final.zip (policy+value weights); "
                          "tag gets _w suffix")
@@ -66,7 +70,9 @@ def main():
     from stable_baselines3.common.callbacks import BaseCallback, CheckpointCallback
 
     env_kwargs = dict(rand_gains=a.tier2, push=a.tier2)
-    if a.mode == "gate0":
+    if a.mu_fixed is not None:
+        env_kwargs.update(mu_fixed=a.mu_fixed)
+    elif a.mode == "gate0":
         env_kwargs.update(mu_fixed=0.7)
     else:
         env_kwargs.update(mu_lo=0.1, mu_hi=0.4)
@@ -82,6 +88,7 @@ def main():
     EXPLORATION_VERSION = "e1"
     tag = (f"{a.mode}_{REWARD_VERSION}{ACTION_VERSION}{EXPLORATION_VERSION}"
            + ("c2" if a.curriculum else "") + ("_w" if a.init_from else "")
+           + (f"_mu{a.mu_fixed:g}" if a.mu_fixed is not None and a.mode != "gate0" else "")
            + f"_s{a.seed}"
            + ("_smoke" if a.smoke else "") + ("_t2" if a.tier2 else ""))
     outdir = os.path.join(a.out, tag)

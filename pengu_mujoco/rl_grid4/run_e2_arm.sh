@@ -9,11 +9,15 @@ set -u
 cd "$(dirname "$0")/.."
 PY=/opt/anaconda3/envs/pengu/bin/python
 SEEDS="${SEEDS:-0 1 2 3}"
+# mu-curriculum amendment 2026-08-21: stage A at fixed mu=0.4 (the easy end
+# of the arm's range) — under full U(0.1,0.4) stage A dash-locked (1M steps,
+# ep_len 16-18, fall 1.00). Stage B runs the full range.
 for s in $SEEDS; do
-  echo "=== e2 seed $s stage A (scratch, cmd 0.47) $(date) ==="
-  nice -n 10 "$PY" rl_grid4/train_grid4.py --mode e2 --seed "$s" --n-envs 8
-  echo "=== e2 seed $s stage B (warm + curriculum) $(date) ==="
+  echo "=== e2 seed $s stage A (scratch, cmd 0.47, mu 0.4) $(date) ==="
   nice -n 10 "$PY" rl_grid4/train_grid4.py --mode e2 --seed "$s" --n-envs 8 \
-    --curriculum --init-from "rl_grid4/runs/e2_r2a1e1_s$s/ckpts/final.zip"
+    --mu-fixed 0.4
+  echo "=== e2 seed $s stage B (warm + curriculum, mu U(0.1,0.4)) $(date) ==="
+  nice -n 10 "$PY" rl_grid4/train_grid4.py --mode e2 --seed "$s" --n-envs 8 \
+    --curriculum --init-from "rl_grid4/runs/e2_r2a1e1_mu0.4_s$s/ckpts/final.zip"
 done
 echo "=== e2 arm complete $(date) ==="
