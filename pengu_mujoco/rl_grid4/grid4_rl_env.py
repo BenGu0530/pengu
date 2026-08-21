@@ -52,6 +52,17 @@ VX_CMD = 0.47             # m/s
 ALPHA = 0.2               # action filter (capability knob, freezes after Gate 0)
 STALL_TORQUE = 4.1        # N*m, XM430 forcerange
 
+# Reward version log (analysis in docs/rl_e2_ice_memo.md):
+# v1: progress 4*max(0,vx), fall -5. Outcome: lunge local optimum -- the dash
+#     harvests progress+track+swing from step 1 (~70/ep) while survival is
+#     priced at ~0, so "what it gives up" costs the optimizer nothing.
+# v2: progress 1*max(0,vx), fall -10. Sustained terms (tracking kernel, swing)
+#     become the main income; per-episode ladder now stand(0) < dash(~+4)
+#     < step-in-place(~+100) < walk(~+750): steepest ascent = live longer.
+REWARD_VERSION = "r2"
+W_PROGRESS = 1.0
+FALL_PENALTY = 10.0
+
 ACT_NAMES = list(gc.ACTUATORS)            # ["hip-L","hip-R","crank1-R","torso","crank1-L"]
 TORSO_IDX = ACT_NAMES.index("torso")
 LEG_IDX = [i for i in range(len(ACT_NAMES)) if i != TORSO_IDX]
@@ -354,7 +365,7 @@ class Grid4RLEnv(gym.Env):
         self._prev_xy = xy
 
         r_track = 0.8 * math.exp(-((vx - self.vx_cmd) ** 2) / 0.02)
-        r_progress = 4.0 * max(0.0, vx)
+        r_progress = W_PROGRESS * max(0.0, vx)
         r_back = 2.0 * min(0.0, vx)
         r_energy = -0.0005 * energy
         r_swing = 1.0 * float(np.clip(swing_rate, 0.0, 0.6))
@@ -367,7 +378,7 @@ class Grid4RLEnv(gym.Env):
         fell = (z < 0.08 or abs(roll) > math.radians(60)
                 or abs(pitch_t) > math.radians(60)
                 or not np.isfinite(d.qpos).all())
-        r_fall = -5.0 if fell else 0.0
+        r_fall = -FALL_PENALTY if fell else 0.0
         reward += r_fall
 
         self.last_action = a.astype(np.float32)

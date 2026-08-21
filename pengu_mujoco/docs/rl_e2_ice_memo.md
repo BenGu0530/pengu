@@ -94,6 +94,17 @@ a minimal amendment only if circling shows up, uniformly across arms).
 - Preference (never): anything touching torso / weight transfer. The
   swing/scrub weights freeze with the rest — they are declared, not tunable.
 
+Reward change log (Ben authorized autonomous reward iteration 2026-08-20;
+torso neutrality is NOT touched by any entry):
+- v1 -> v2 (2026-08-20): progress 4*max(0,vx) -> 1*max(0,vx); fall -5 -> -10.
+  Frame-strip + component analysis of gate0 v1 runs (with and without settle):
+  the 250k->500k reward rise came from r_progress/r_track while ep_len FELL
+  (15.4->14.4) -- the dash harvests progress+track+swing from step 1 (~70/ep)
+  and survival is priced ~0, so the optimizer loses nothing by falling.
+  v2 reprices: per-episode ladder stand(0) < dash(~+4) < step-in-place(~+100)
+  < walk(~+750). Runs tagged with reward version (gate0_r2_s0, ...); v1 runs
+  kept: gate0_s0_nosettle (v1, no settle), gate0_s0 (v1, settle, cut at 1.1M).
+
 Knob change log:
 - 2026-08-20 (init pose, Gate 0 period): added reset SETTLE + topple-resample.
   Finding: gate0_s0 (no settle) converged to a lunge local optimum (3M steps,

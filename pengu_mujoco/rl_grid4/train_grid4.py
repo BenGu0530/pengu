@@ -64,7 +64,9 @@ def main():
     else:
         env_kwargs.update(mu_lo=0.1, mu_hi=0.4)
 
-    tag = f"{a.mode}_s{a.seed}" + ("_smoke" if a.smoke else "") + ("_t2" if a.tier2 else "")
+    from grid4_rl_env import REWARD_VERSION
+    tag = (f"{a.mode}_{REWARD_VERSION}_s{a.seed}"
+           + ("_smoke" if a.smoke else "") + ("_t2" if a.tier2 else ""))
     outdir = os.path.join(a.out, tag)
     ckptdir = os.path.join(outdir, "ckpts")
     os.makedirs(ckptdir, exist_ok=True)
