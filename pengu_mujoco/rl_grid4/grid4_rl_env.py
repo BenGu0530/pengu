@@ -60,10 +60,23 @@ STALL_TORQUE = 4.1        # N*m, XM430 forcerange
 #     become the main income; per-episode ladder now stand(0) < dash(~+4)
 #     < step-in-place(~+100) < walk(~+750): steepest ascent = live longer.
 REWARD_VERSION = "r2"
-# Action-rate weight. Default 0.01 is the frozen r2 value; the ablation arm sets
-# it to 0 via Grid4RLEnv(w_smooth=0.0) / train_grid4.py --no-smooth, which also
-# retags the run so an ablation can never be mixed with a frozen-recipe run.
-W_SMOOTH_DEFAULT = 0.01
+# Frozen r2 reward weights. Every one is overridable per-run via
+# Grid4RLEnv(rw={...}) / train_grid4.py --rw key=val, which also retags the run,
+# so a tuning arm can never be pooled with a frozen-recipe run. Absent an
+# override the numbers below are used and the frozen path is unchanged.
+RW_DEFAULT = {
+    "track":    0.8,      # tracking kernel gain
+    "sigma2":   0.02,     # kernel variance: exp(-(vx-cmd)^2 / sigma2), sigma ~ 0.14
+    "progress": 1.0,      # W_PROGRESS, forward driver (v1 used 4.0)
+    "back":     2.0,      # backward penalty gain
+    "energy":   0.0005,   # torso EXCLUDED
+    "swing":    1.0,      # stepping prior, clipped at swing_cap
+    "swing_cap": 0.6,
+    "scrub":    0.8,      # stance slip
+    "smooth":   0.01,     # action rate
+    "fall":     10.0,     # magnitude; applied as -fall (v2 raised this from 5.0)
+}
+W_SMOOTH_DEFAULT = RW_DEFAULT["smooth"]
 W_PROGRESS = 1.0
 FALL_PENALTY = 10.0
 
@@ -118,9 +131,18 @@ class Grid4RLEnv(gym.Env):
                  seed=None, eval_mode=False,
                  filter_alpha=ALPHA, action_delay=1,
                  obs_noise=True, init_jitter=True,
-                 rand_gains=False, push=False, w_smooth=W_SMOOTH_DEFAULT):
+                 rand_gains=False, push=False, w_smooth=None, rw=None):
         super().__init__()
-        self.w_smooth = float(w_smooth)
+        self.rw = dict(RW_DEFAULT)
+        if rw:
+            unknown = set(rw) - set(RW_DEFAULT)
+            if unknown:
+                raise ValueError(f"unknown reward weight(s): {sorted(unknown)}; "
+                                 f"valid: {sorted(RW_DEFAULT)}")
+            self.rw.update({k: float(v) for k, v in rw.items()})
+        if w_smooth is not None:          # back-compat with --no-smooth
+            self.rw["smooth"] = float(w_smooth)
+        self.w_smooth = self.rw["smooth"]
         self.eval_mode = bool(eval_mode)
         if self.eval_mode:                 # frozen protocol: pose jitter only
             action_delay, obs_noise, init_jitter = 0, False, False
@@ -407,12 +429,13 @@ class Grid4RLEnv(gym.Env):
         vx = float((xy - self._prev_xy) @ fh2) / self.control_dt
         self._prev_xy = xy
 
-        r_track = 0.8 * math.exp(-((vx - self.vx_cmd) ** 2) / 0.02)
-        r_progress = W_PROGRESS * max(0.0, vx)
-        r_back = 2.0 * min(0.0, vx)
-        r_energy = -0.0005 * energy
-        r_swing = 1.0 * float(np.clip(swing_rate, 0.0, 0.6))
-        r_scrub = -0.8 * scrub
+        w = self.rw
+        r_track = w["track"] * math.exp(-((vx - self.vx_cmd) ** 2) / w["sigma2"])
+        r_progress = w["progress"] * max(0.0, vx)
+        r_back = w["back"] * min(0.0, vx)
+        r_energy = -w["energy"] * energy
+        r_swing = w["swing"] * float(np.clip(swing_rate, 0.0, w["swing_cap"]))
+        r_scrub = -w["scrub"] * scrub
         r_smooth = -self.w_smooth * float(np.sum((a - self.last_action.astype(np.float64)) ** 2))
         reward = r_track + r_progress + r_back + r_energy + r_swing + r_scrub + r_smooth
 
@@ -421,7 +444,7 @@ class Grid4RLEnv(gym.Env):
         fell = (z < 0.08 or abs(roll) > math.radians(60)
                 or abs(pitch_t) > math.radians(60)
                 or not np.isfinite(d.qpos).all())
-        r_fall = -FALL_PENALTY if fell else 0.0
+        r_fall = -self.rw["fall"] if fell else 0.0
         reward += r_fall
 
         self.last_action = a.astype(np.float32)

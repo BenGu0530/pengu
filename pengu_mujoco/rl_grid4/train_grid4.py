@@ -55,6 +55,12 @@ def main():
                     help="override mu to a fixed value +-5%% (mu-curriculum "
                          "amendment: e2 stage A runs at 0.4, the easy end of "
                          "the arm's range; stage B runs the full U(0.1,0.4))")
+    ap.add_argument("--rw", nargs="+", default=None, metavar="KEY=VAL",
+                    help="override frozen reward weights, e.g. --rw progress=3.0 "
+                         "swing=0.3 fall=5 sigma2=0.06. Keys: track sigma2 progress "
+                         "back energy swing swing_cap scrub smooth fall. The run tag "
+                         "records every override so a tuning arm can never be pooled "
+                         "with a frozen-recipe run.")
     ap.add_argument("--no-smooth", action="store_true",
                     help="ABLATION: set the action-rate weight to 0 (frozen r2 uses "
                          "-0.01*||a_t - a_{t-1}||^2). Run tag gets an 'ns' marker so "
@@ -79,6 +85,14 @@ def main():
     from stable_baselines3.common.callbacks import BaseCallback, CheckpointCallback
 
     env_kwargs = dict(rand_gains=a.tier2, push=a.tier2)
+    rw = {}
+    if a.rw:
+        for kv in a.rw:
+            k, _, v = kv.partition("=")
+            if not _:
+                raise SystemExit(f"--rw expects KEY=VAL, got {kv!r}")
+            rw[k.strip()] = float(v)
+        env_kwargs.update(rw=rw)
     if a.no_smooth:
         env_kwargs.update(w_smooth=0.0)
     if a.mu_fixed is not None:
@@ -97,7 +111,8 @@ def main():
     # contain multi-second survival for the value function to see.
     LOG_STD_INIT = -1.0
     EXPLORATION_VERSION = "e1"
-    tag = (f"{a.mode}_{REWARD_VERSION}{'ns' if a.no_smooth else ''}"
+    rwtag = "".join(f"-{k}{v:g}" for k, v in sorted(rw.items())) if rw else ""
+    tag = (f"{a.mode}_{REWARD_VERSION}{'ns' if a.no_smooth else ''}{rwtag}"
            f"{ACTION_VERSION}{EXPLORATION_VERSION}"
            + ("c2" if a.curriculum else "") + ("_w" if a.init_from else "")
            + (f"_mu{a.mu_fixed:g}" if a.mu_fixed is not None and a.mode != "gate0" else "")
