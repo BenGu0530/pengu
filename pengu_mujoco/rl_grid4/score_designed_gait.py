@@ -104,13 +104,8 @@ def run_designed(mu, seed):
         if np.any(np.abs(a) > 1.0):
             clip_hits += 1
         a_cl = np.clip(a, -1, 1)
-        if _hf_filt is None:
-            _hf_filt = a_cl.copy()
-            _hf_filt2 = a_cl.copy()
-        else:
-            _hf_filt = (1 - _ALPHA) * _hf_filt + _ALPHA * a_cl
-        _hf_filt2 = (1 - _ALPHA) * _hf_filt2 + _ALPHA * _hf_filt
-        _resid = ((_hf_filt - _hf_filt2) * _hf_scale)[_HFIDX]  # r3c: executed HF, hips+torso
+        _hf_filt = a_cl.copy() if _hf_filt is None else (1 - _ALPHA) * _hf_filt + _ALPHA * a_cl
+        _resid = ((a_cl - _hf_filt) * _hf_scale)[_HFIDX]   # r3d: commanded HF, hips+torso
         _hf_sum += -_RW["hf"] * float(_resid @ _resid)
         obs, r, term, trunc, info = env.step(a_cl)
         env._ep["r_hf"] = _hf_sum

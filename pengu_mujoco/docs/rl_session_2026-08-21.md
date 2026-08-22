@@ -284,3 +284,41 @@ possible. Iteration rounds logged here.
   tax 50% of pos reward, a2p0-cheat 25%, c6 9%, noise 0.085/step (suicide
   breakeven ~118 steps). Smoke: hip5Hz -0.044, crank5Hz 0.000, noise
   -0.078/step. Full 2x2 re-run (a1 pricing changed too): runs/e2x2hf3/.
+  - Round 3 watch item (a1p1 @1.75M): vx 0.012 vs round-1's 0.107 at the same
+    point; torso_rms shrank 33 -> 17 deg under the w=6 executed-HF tax on the
+    torso dim. Red-line-adjacent note: the ENERGY term exempts the torso by
+    rule ("no reverse bias on the measured variable"); hf currently prices
+    the torso (r3 cited the smooth-term precedent instead). If stand-deadlock
+    is confirmed at 2-2.25M, the "should hf exempt torso" question goes to
+    Ben — not acted on unilaterally.
+  - Round 3 cell a1p1 DONE: full stand-deadlock (eval 0/5 at every mu,
+    net_fwd ~ -0.004; training end fall 0.08, vx -0.006, sigma_torso
+    collapsed 0.356 -> 0.235). Trajectory diverged from round 1 (which
+    walked 0.107 at 1.75M): under the w=6 executed-HF tax the torso
+    quieted (rms 33 -> 15 deg mid-run) and walking never broke out.
+    Watch a2p1/a1p0/a2p0 to separate "w too high" from "torso pricing".
+  - Round 3 mid-run diagnosis (a2p1 also stands deterministically at 1.5M and
+    2.25M while training-vx runs 0.08-0.16 on noise): r3c EXEMPTS noise (the
+    alpha filter absorbs white noise before the cascade sees it) and TAXES
+    coherent oscillation - and the first-order cascade's residual peaks right
+    on the 1-3 Hz walking band. Net effect: the stand->walk barrier rises,
+    "stand deterministically + let sigma collect swing income" wins. Inverse
+    of intent. Second-difference (executed accel) variant was calibrated and
+    REJECTED offline: white noise is broadband, so its accel resid (0.033)
+    exceeds the 5 Hz cheat's (0.025) - any deterrent w suicides.
+  - Round 4 design (r3d, ready to launch when round 3 ends): back to the
+    EMPIRICALLY validated commanded-residual form (round 1 killed 5 Hz and
+    still walked), restricted to hips+torso (cranks unpriced pending
+    hardware), w=1.0. Calibration (HT commanded resid^2, mu=0.1): 5Hz-cheat
+    pays 78% of pos reward, r2-a2p0-cheat 29%, r3-a2p0-walker 13%, c6 4%,
+    noise -0.236/step (= round-1's empirically survivable level). Mechanism
+    summary of the three failures now on record: commanded=works, band-scaled
+    =noise-suicide, executed=stand-collapse, accel=noise-suicide.
+  - Round 3 cell a2p1 DONE: same stand-deadlock (0/5 at every mu, net_fwd
+    ~0.003-0.005). Two of two r3c cells confirm the mechanism.
+
+- Round 3 STOPPED after 2/2 completed cells confirmed the stand-deadlock
+  mechanism (a1p0/a2p0 not run under r3c; partial a1p0 logs archived at
+  runs/e2x2hf3/). Round 4 (r3d) launched: commanded residual, hips+torso
+  only, w=1.0, full 2x2 at runs/e2x2hf4/. Smoke: hip5Hz -0.063, crank5Hz
+  0.000, hip1.5Hz -0.028, noise -0.210/step.

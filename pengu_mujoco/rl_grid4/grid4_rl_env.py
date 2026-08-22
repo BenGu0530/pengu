@@ -84,7 +84,18 @@ STALL_TORQUE = 4.1        # N*m, XM430 forcerange
 #     0.5 -> 6.0 on the 3-dim quantity: 5Hz-cheat tax 50% of its positive
 #     reward (round-1 deterrent level), a2p0-cheat 25%, c6 9%, noise
 #     0.085/step (suicide breakeven ~118 steps: no death gradient).
-REWARD_VERSION = "r3c"
+#     OUTCOME: stand-deadlock, 2/2 cells 0/5 at every mu. Executed pricing
+#     exempts noise (the alpha filter absorbs it first) and taxes coherent
+#     oscillation, with the cascade residual peaking on the 1-3 Hz walking
+#     band: "stand deterministically + let sigma collect swing" wins.
+# v3d: back to the commanded residual (the round-1 form that killed 5 Hz and
+#     still walked), restricted to hips+torso (cranks unpriced pending
+#     hardware facts), w=1.0. Calibration (HT commanded resid^2, mu=0.1):
+#     5Hz-cheat 78% of pos reward, r2-a2p0-cheat 29%, r3-a2p0-walker 13%,
+#     c6 4%, noise -0.236/step (round-1's empirically survivable level).
+#     Executed-accel variant rejected offline: broadband noise accel (0.033)
+#     exceeds the 5 Hz cheat's (0.025) -> any deterrent w suicides.
+REWARD_VERSION = "r3d"
 HF_IDX = [i for i in range(len(gc.ACTUATORS)) if i not in
           (gc.ACTUATORS.index("crank1-R"), gc.ACTUATORS.index("crank1-L"))]
 # Frozen r2 reward weights. Every one is overridable per-run via
@@ -102,7 +113,7 @@ RW_DEFAULT = {
     "scrub":    0.8,      # stance slip
     "smooth":   0.01,     # action rate
     "fall":     10.0,     # magnitude; applied as -fall (v2 raised this from 5.0)
-    "hf":       6.0,      # executed-HF residual, hips+torso only (r3c; see log)
+    "hf":       1.0,      # commanded-HF residual, hips+torso only (r3d; see log)
 }
 W_SMOOTH_DEFAULT = RW_DEFAULT["smooth"]
 W_PROGRESS = 1.0
@@ -487,11 +498,9 @@ class Grid4RLEnv(gym.Env):
         r_swing = w["swing"] * float(np.clip(swing_rate, 0.0, w["swing_cap"]))
         r_scrub = -w["scrub"] * scrub
         r_smooth = -self.w_smooth * float(np.sum((a - self.last_action.astype(np.float64)) ** 2))
-        # r3c: price the EXECUTED signal's HF content (act_filt is what the
-        # servo tracks; commanded noise the filter absorbs is physically
-        # harmless). Residual of a second alpha cascade, band-fair units.
-        self.act_filt2 = (1.0 - self.alpha) * self.act_filt2 + self.alpha * self.act_filt
-        _hf_resid = ((self.act_filt - self.act_filt2) * self.hf_scale)[HF_IDX]
+        # r3d: commanded residual (round-1 form), hips+torso only; hf_scale
+        # is 1 on those dims in both bands (same ctrlrange), kept for safety.
+        _hf_resid = ((a - self.act_filt) * self.hf_scale)[HF_IDX]
         r_hf = -w["hf"] * float(_hf_resid @ _hf_resid)
         reward = r_track + r_progress + r_back + r_energy + r_swing + r_scrub + r_smooth + r_hf
 

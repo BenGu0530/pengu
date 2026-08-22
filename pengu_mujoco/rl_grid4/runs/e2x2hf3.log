@@ -1,0 +1,73 @@
+=== e2x2hf3 a1p1 (single-stage, r3c) Sat Aug 22 15:32:15 EDT 2026 ===
+[train_grid4] e2x2hf3/a1p1: 3000000 steps x 8 envs -> /Users/ben/Documents/CMU/Robomechanics Lab/PenguMujoco/pengu_mujoco/rl_grid4/runs/e2x2hf3/a1p1
+[curriculum] vx_cmd start 0.12
+[diag]    250000 steps  ep_len=141 fall=0.91  vx=-0.049  hip_diff=9.7deg hip_corr=+0.11  torso_rms=13.4deg roll_rate=87dps stride_asym=-0.093  r_hf=-0.094  sigma_torso=0.356
+[curriculum] 475000 steps -> vx_cmd 0.17 (survival gate)
+[diag]    500000 steps  ep_len=386 fall=0.35  vx=0.027  hip_diff=6.7deg hip_corr=+0.50  torso_rms=27.2deg roll_rate=70dps stride_asym=-0.149  r_hf=-0.072  sigma_torso=0.350
+[curriculum] 500000 steps -> vx_cmd 0.22 (survival gate)
+[curriculum] 525000 steps -> vx_cmd 0.27 (survival gate)
+[curriculum] 550000 steps -> vx_cmd 0.32 (survival gate)
+[curriculum] 575000 steps -> vx_cmd 0.37 (survival gate)
+[diag]    750000 steps  ep_len=304 fall=0.55  vx=0.057  hip_diff=5.8deg hip_corr=+0.73  torso_rms=33.5deg roll_rate=111dps stride_asym=-0.156  r_hf=-0.068  sigma_torso=0.343
+[diag]   1000000 steps  ep_len=285 fall=0.69  vx=0.056  hip_diff=7.8deg hip_corr=+0.58  torso_rms=33.2deg roll_rate=85dps stride_asym=-0.100  r_hf=-0.073  sigma_torso=0.339
+[diag]   1250000 steps  ep_len=306 fall=0.64  vx=0.025  hip_diff=8.8deg hip_corr=+0.41  torso_rms=29.7deg roll_rate=72dps stride_asym=-0.128  r_hf=-0.077  sigma_torso=0.336
+[diag]   1500000 steps  ep_len=195 fall=0.87  vx=-0.016  hip_diff=9.3deg hip_corr=+0.07  torso_rms=15.8deg roll_rate=76dps stride_asym=-0.200  r_hf=-0.075  sigma_torso=0.328
+[curriculum] 1650000 steps -> vx_cmd 0.42 (survival gate)
+[diag]   1750000 steps  ep_len=347 fall=0.50  vx=0.012  hip_diff=8.8deg hip_corr=+0.10  torso_rms=17.2deg roll_rate=62dps stride_asym=-0.210  r_hf=-0.076  sigma_torso=0.323
+[diag]   2000000 steps  ep_len=196 fall=0.88  vx=-0.023  hip_diff=7.1deg hip_corr=+0.05  torso_rms=14.4deg roll_rate=69dps stride_asym=-0.332  r_hf=-0.062  sigma_torso=0.296
+[diag]   2250000 steps  ep_len=288 fall=0.74  vx=0.016  hip_diff=7.9deg hip_corr=+0.00  torso_rms=15.1deg roll_rate=66dps stride_asym=-0.445  r_hf=-0.063  sigma_torso=0.280
+[diag]   2500000 steps  ep_len=291 fall=0.69  vx=0.000  hip_diff=8.2deg hip_corr=-0.07  torso_rms=19.0deg roll_rate=62dps stride_asym=-0.493  r_hf=-0.057  sigma_torso=0.262
+[curriculum] 2550000 steps -> vx_cmd 0.47 (survival gate)
+[curriculum] 2575000 steps -> vx_cmd 0.47 (survival gate)
+[diag]   2750000 steps  ep_len=443 fall=0.19  vx=-0.002  hip_diff=6.6deg hip_corr=+0.15  torso_rms=26.9deg roll_rate=41dps stride_asym=-0.537  r_hf=-0.039  sigma_torso=0.247
+[diag]   3000000 steps  ep_len=466 fall=0.08  vx=-0.006  hip_diff=5.3deg hip_corr=+0.40  torso_rms=34.1deg roll_rate=38dps stride_asym=-0.559  r_hf=-0.031  sigma_torso=0.235
+[train_grid4] done -> /Users/ben/Documents/CMU/Robomechanics Lab/PenguMujoco/pengu_mujoco/rl_grid4/runs/e2x2hf3/a1p1/ckpts/final.zip
+=== e2x2hf3 a1p1 eval Sat Aug 22 16:36:41 EDT 2026 ===
+  mu=0.1  pass=0.0  net_fwd mean=-0.004 min=-0.005  torso_rms med=44.7deg
+  mu=0.2  pass=0.0  net_fwd mean=-0.005 min=-0.005  torso_rms med=48.0deg
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:4232: RuntimeWarning: Degrees of freedom <= 0 for slice
+  return _methods._var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:178: RuntimeWarning: invalid value encountered in divide
+  arrmean = um.true_divide(arrmean, div, out=arrmean,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:211: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:3824: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+  mu=0.3  pass=0.0  net_fwd mean=-0.004 min=-0.005  torso_rms med=nandeg
+  mu=0.4  pass=0.0  net_fwd mean=-0.004 min=-0.005  torso_rms med=45.1deg
+[ckpts] tier 1 no-walk (zero standing on torso claims)
+wrote /Users/ben/Documents/CMU/Robomechanics Lab/PenguMujoco/pengu_mujoco/rl_grid4/runs/e2x2hf3/a1p1/eval_frozen.csv (20 trials)
+=== e2x2hf3 a2p1 (single-stage, r3c) Sat Aug 22 16:37:10 EDT 2026 ===
+[train_grid4] e2x2hf3/a2p1: 3000000 steps x 8 envs -> /Users/ben/Documents/CMU/Robomechanics Lab/PenguMujoco/pengu_mujoco/rl_grid4/runs/e2x2hf3/a2p1
+[curriculum] vx_cmd start 0.12
+[curriculum] 200000 steps -> vx_cmd 0.17 (survival gate)
+[curriculum] 225000 steps -> vx_cmd 0.22 (survival gate)
+[diag]    250000 steps  ep_len=178 fall=0.82  vx=-0.045  hip_diff=9.7deg hip_corr=+0.13  torso_rms=13.5deg roll_rate=83dps stride_asym=-0.124  r_hf=-0.094  sigma_torso=0.356
+[curriculum] 250000 steps -> vx_cmd 0.27 (survival gate)
+[curriculum] 275000 steps -> vx_cmd 0.32 (survival gate)
+[curriculum] 300000 steps -> vx_cmd 0.37 (survival gate)
+[curriculum] 350000 steps -> vx_cmd 0.42 (survival gate)
+[diag]    500000 steps  ep_len=342 fall=0.58  vx=0.069  hip_diff=8.2deg hip_corr=+0.52  torso_rms=28.6deg roll_rate=84dps stride_asym=-0.173  r_hf=-0.083  sigma_torso=0.344
+[diag]    750000 steps  ep_len=187 fall=0.94  vx=0.159  hip_diff=11.4deg hip_corr=+0.43  torso_rms=32.1deg roll_rate=118dps stride_asym=-0.060  r_hf=-0.116  sigma_torso=0.336
+[diag]   1000000 steps  ep_len=235 fall=0.86  vx=0.129  hip_diff=11.6deg hip_corr=+0.36  torso_rms=31.1deg roll_rate=107dps stride_asym=+0.012  r_hf=-0.123  sigma_torso=0.333
+[diag]   1250000 steps  ep_len=324 fall=0.65  vx=0.059  hip_diff=11.7deg hip_corr=+0.14  torso_rms=21.6deg roll_rate=87dps stride_asym=-0.060  r_hf=-0.112  sigma_torso=0.333
+[diag]   1500000 steps  ep_len=294 fall=0.75  vx=0.084  hip_diff=12.4deg hip_corr=+0.05  torso_rms=20.8deg roll_rate=92dps stride_asym=-0.076  r_hf=-0.114  sigma_torso=0.324
+[diag]   1750000 steps  ep_len=335 fall=0.62  vx=0.040  hip_diff=11.3deg hip_corr=+0.11  torso_rms=21.1deg roll_rate=80dps stride_asym=-0.031  r_hf=-0.108  sigma_torso=0.317
+[diag]   2000000 steps  ep_len=271 fall=0.79  vx=0.157  hip_diff=12.3deg hip_corr=+0.22  torso_rms=23.1deg roll_rate=100dps stride_asym=+0.024  r_hf=-0.116  sigma_torso=0.313
+[diag]   2250000 steps  ep_len=322 fall=0.63  vx=0.111  hip_diff=11.8deg hip_corr=+0.20  torso_rms=26.4deg roll_rate=95dps stride_asym=+0.072  r_hf=-0.112  sigma_torso=0.308
+[diag]   2500000 steps  ep_len=356 fall=0.52  vx=0.093  hip_diff=10.9deg hip_corr=+0.18  torso_rms=22.5deg roll_rate=83dps stride_asym=+0.107  r_hf=-0.115  sigma_torso=0.308
+[diag]   2750000 steps  ep_len=319 fall=0.63  vx=0.114  hip_diff=12.2deg hip_corr=+0.07  torso_rms=24.8deg roll_rate=96dps stride_asym=+0.118  r_hf=-0.124  sigma_torso=0.305
+[diag]   3000000 steps  ep_len=316 fall=0.64  vx=0.137  hip_diff=12.3deg hip_corr=+0.11  torso_rms=28.0deg roll_rate=103dps stride_asym=+0.113  r_hf=-0.128  sigma_torso=0.301
+[train_grid4] done -> /Users/ben/Documents/CMU/Robomechanics Lab/PenguMujoco/pengu_mujoco/rl_grid4/runs/e2x2hf3/a2p1/ckpts/final.zip
+=== e2x2hf3 a2p1 eval Sat Aug 22 17:37:28 EDT 2026 ===
+  mu=0.1  pass=0.0  net_fwd mean=0.004 min=0.003  torso_rms med=20.8deg
+  mu=0.2  pass=0.0  net_fwd mean=0.003 min=-0.002  torso_rms med=23.0deg
+  mu=0.3  pass=0.0  net_fwd mean=0.002 min=-0.003  torso_rms med=23.0deg
+  mu=0.4  pass=0.0  net_fwd mean=0.005 min=0.005  torso_rms med=23.7deg
+[ckpts] tier 1 no-walk (zero standing on torso claims)
+wrote /Users/ben/Documents/CMU/Robomechanics Lab/PenguMujoco/pengu_mujoco/rl_grid4/runs/e2x2hf3/a2p1/eval_frozen.csv (20 trials)
+=== e2x2hf3 a1p0 (single-stage, r3c) Sat Aug 22 17:37:58 EDT 2026 ===
+[train_grid4] e2x2hf3/a1p0: 3000000 steps x 8 envs -> /Users/ben/Documents/CMU/Robomechanics Lab/PenguMujoco/pengu_mujoco/rl_grid4/runs/e2x2hf3/a1p0
+[curriculum] vx_cmd start 0.12
