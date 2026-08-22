@@ -6,6 +6,25 @@ working agreement: numbers only, corrections first, no verdicts.
 
 ## 0. Corrections
 
+- **(added post-session, from machine D's rl_session_2026-08-21_machineD.md)**
+  Round-6 claim "c2 from scratch: stand/rock, no path to locomotion" was
+  premature: that run was cut at 1.25M. Machine D ran the same config to the
+  full 3M and reached vx 0.224 (curriculum hit cmd 0.47 at 2.45M) — i.e.
+  scratch+curriculum can produce locomotion given the full budget; the
+  warm-start stage may not have been necessary. The two-stage recipe stays
+  the recorded protocol for the arm data in §3, with this caveat.
+- **Clarification re machine D's open item on the curriculum restart**: in
+  the frozen recipe, stage B STARTING the ramp at cmd=0.12 on top of the
+  warm-started policy is the designed behavior (this session, round 7), not
+  an accidental resume; the `--init-from`-resumes-mid-curriculum case that
+  machine D fixed with --cmd0 is a genuine bug for continuation runs.
+  Whether the Gate-0 records stand as-is: Ben's call.
+- **Machine D's convergence finding applies to §3**: at 6M steps vx
+  oscillates between fast/fragile and slow/safe attractors; seed spread is
+  the same magnitude as within-run swing. The §3 table (3M+3M) carries the
+  same caveat: arm-level comparisons are not interpretable until stability
+  is addressed.
+
 - **`rl_design_memo.md` §1 has the c3/c6 ice numbers swapped.** Verified from
   `results/grid4_report/*/topupK5.csv`: at mu=0.1 (K=5 net_fwd_mean) c6
   (kappa=2, COM-1.31) = 0.4689 and c3 (kappa=0) = 0.1636 — the memo wrote
