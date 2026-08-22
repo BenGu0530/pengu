@@ -322,3 +322,9 @@ possible. Iteration rounds logged here.
   runs/e2x2hf3/). Round 4 (r3d) launched: commanded residual, hips+torso
   only, w=1.0, full 2x2 at runs/e2x2hf4/. Smoke: hip5Hz -0.063, crank5Hz
   0.000, hip1.5Hz -0.028, noise -0.210/step.
+  - Round 4 (w=1.0) KILLED at 500k: dash-suicide (ep_len 32 -> 14, fall
+    1.00, vx 0.10, hip_corr -0.87 — sprint-and-die harvesting progress).
+    HT noise tax -0.28..-0.32/step exceeded early standing income. Partial
+    at runs/e2x2hf4/. Round 4b launched with w=0.6, which reproduces
+    round-1's proven survivable HT noise tax (-0.14/step) at 5Hz deterrence
+    47% (round 1: 54%). Full 2x2 at runs/e2x2hf4b/.

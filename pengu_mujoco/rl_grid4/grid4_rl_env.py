@@ -113,7 +113,12 @@ RW_DEFAULT = {
     "scrub":    0.8,      # stance slip
     "smooth":   0.01,     # action rate
     "fall":     10.0,     # magnitude; applied as -fall (v2 raised this from 5.0)
-    "hf":       1.0,      # commanded-HF residual, hips+torso only (r3d; see log)
+    "hf":       0.6,      # commanded-HF residual, hips+torso only (r3d; see log)
+                          # w=1.0 probe (e2x2hf4, 500k) dash-suicided: HT noise
+                          # tax -0.28..-0.32/step made survival net-negative
+                          # (ep_len 14, fall 1.00, vx 0.10 = sprint-and-die).
+                          # 0.6 reproduces round-1's proven survivable HT noise
+                          # tax (-0.14/step) with 5Hz deterrence 47% (~r1's 54%).
 }
 W_SMOOTH_DEFAULT = RW_DEFAULT["smooth"]
 W_PROGRESS = 1.0
