@@ -88,7 +88,8 @@ def run_designed(mu, seed):
     # r3b: residuals are scaled to band-fair units; this replay normalizes by
     # the FULL ctrlrange, so scale = full-range halves / a1 reference halves.
     from grid4_rl_env import (ALPHA as _ALPHA, RW_DEFAULT as _RW,
-                              CRANK_IDX as _CIDX, CRANK_HALF as _CHALF)
+                              CRANK_IDX as _CIDX, CRANK_HALF as _CHALF,
+                              HF_IDX as _HFIDX)
     _href = env.ctrl_half.copy()      # full-range halves (overridden above)
     _href[_CIDX] = _CHALF
     _hf_scale = env.ctrl_half / _href
@@ -103,8 +104,13 @@ def run_designed(mu, seed):
         if np.any(np.abs(a) > 1.0):
             clip_hits += 1
         a_cl = np.clip(a, -1, 1)
-        _hf_filt = a_cl.copy() if _hf_filt is None else (1 - _ALPHA) * _hf_filt + _ALPHA * a_cl
-        _resid = (a_cl - _hf_filt) * _hf_scale
+        if _hf_filt is None:
+            _hf_filt = a_cl.copy()
+            _hf_filt2 = a_cl.copy()
+        else:
+            _hf_filt = (1 - _ALPHA) * _hf_filt + _ALPHA * a_cl
+        _hf_filt2 = (1 - _ALPHA) * _hf_filt2 + _ALPHA * _hf_filt
+        _resid = ((_hf_filt - _hf_filt2) * _hf_scale)[_HFIDX]  # r3c: executed HF, hips+torso
         _hf_sum += -_RW["hf"] * float(_resid @ _resid)
         obs, r, term, trunc, info = env.step(a_cl)
         env._ep["r_hf"] = _hf_sum

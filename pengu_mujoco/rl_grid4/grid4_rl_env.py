@@ -69,7 +69,24 @@ STALL_TORQUE = 4.1        # N*m, XM430 forcerange
 # v3b: hf residual scaled to band-independent units (x ctrl_half / a1-ref
 #     halves). Round-1 r3 priced in normalized units, so the a2 band diluted
 #     the crank tax ~10x and bought high frequency back. a1 pricing unchanged.
-REWARD_VERSION = "r3b"
+# v3c: hf priced on the EXECUTED signal (act_filt vs a second alpha cascade)
+#     instead of the commanded residual. r3b taxed exploration NOISE at
+#     -0.94/step in the a2 band (scale^2 x sigma^2), making death (-10 ~= 11
+#     steps of tax) cheaper than living -> learned suicide at 250k (ep_len
+#     18, fall 1.00). The servo tracks act_filt, so executed HF is the
+#     physically meaningful quantity; white-noise tax drops ~9x and cannot be
+#     dodged by pre-filter amplitude inflation (tax is on what executes).
+#     Priced on HIPS+TORSO ONLY: per-dim audit (2026-08-22) shows the cheat
+#     policies' HF lives in torso/hips (a1p1 torso 0.045) while c6's lives in
+#     the cranks (0.231/dim, hips/torso 0.003/0.010) — and the crank's honest
+#     speed limit is an open hardware question (servo model/gearing pending
+#     from Ben), so cranks are unpriced until that is settled. w recalibrated
+#     0.5 -> 6.0 on the 3-dim quantity: 5Hz-cheat tax 50% of its positive
+#     reward (round-1 deterrent level), a2p0-cheat 25%, c6 9%, noise
+#     0.085/step (suicide breakeven ~118 steps: no death gradient).
+REWARD_VERSION = "r3c"
+HF_IDX = [i for i in range(len(gc.ACTUATORS)) if i not in
+          (gc.ACTUATORS.index("crank1-R"), gc.ACTUATORS.index("crank1-L"))]
 # Frozen r2 reward weights. Every one is overridable per-run via
 # Grid4RLEnv(rw={...}) / train_grid4.py --rw key=val, which also retags the run,
 # so a tuning arm can never be pooled with a frozen-recipe run. Absent an
@@ -85,7 +102,7 @@ RW_DEFAULT = {
     "scrub":    0.8,      # stance slip
     "smooth":   0.01,     # action rate
     "fall":     10.0,     # magnitude; applied as -fall (v2 raised this from 5.0)
-    "hf":       0.5,      # high-freq residual ||a - act_filt||^2 (r3), all 5 dims
+    "hf":       6.0,      # executed-HF residual, hips+torso only (r3c; see log)
 }
 W_SMOOTH_DEFAULT = RW_DEFAULT["smooth"]
 W_PROGRESS = 1.0
@@ -365,6 +382,7 @@ class Grid4RLEnv(gym.Env):
         ctrl0 = d.ctrl[self.aid].copy()
         a0 = np.clip((ctrl0 - self.ctrl_mid) / self.ctrl_half, -1.0, 1.0)
         self.act_filt = a0.astype(np.float64)
+        self.act_filt2 = a0.astype(np.float64)    # r3c: cascade for executed-HF pricing
         self.last_action = a0.astype(np.float32)
         self._queue = collections.deque([ctrl0.copy()] * self.delay, maxlen=self.delay + 1)
 
@@ -469,7 +487,11 @@ class Grid4RLEnv(gym.Env):
         r_swing = w["swing"] * float(np.clip(swing_rate, 0.0, w["swing_cap"]))
         r_scrub = -w["scrub"] * scrub
         r_smooth = -self.w_smooth * float(np.sum((a - self.last_action.astype(np.float64)) ** 2))
-        _hf_resid = (a - self.act_filt) * self.hf_scale   # filter-rejected content, band-fair units
+        # r3c: price the EXECUTED signal's HF content (act_filt is what the
+        # servo tracks; commanded noise the filter absorbs is physically
+        # harmless). Residual of a second alpha cascade, band-fair units.
+        self.act_filt2 = (1.0 - self.alpha) * self.act_filt2 + self.alpha * self.act_filt
+        _hf_resid = ((self.act_filt - self.act_filt2) * self.hf_scale)[HF_IDX]
         r_hf = -w["hf"] * float(_hf_resid @ _hf_resid)
         reward = r_track + r_progress + r_back + r_energy + r_swing + r_scrub + r_smooth + r_hf
 

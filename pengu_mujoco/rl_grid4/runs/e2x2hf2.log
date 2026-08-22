@@ -1,0 +1,5 @@
+=== e2x2hf2 a2p1 (single-stage, r3b) Sat Aug 22 15:01:16 EDT 2026 ===
+[train_grid4] e2x2hf2/a2p1: 3000000 steps x 8 envs -> /Users/ben/Documents/CMU/Robomechanics Lab/PenguMujoco/pengu_mujoco/rl_grid4/runs/e2x2hf2/a2p1
+[curriculum] vx_cmd start 0.12
+[diag]    250000 steps  ep_len=18 fall=1.00  vx=0.045  hip_diff=21.6deg hip_corr=-0.52  torso_rms=8.2deg roll_rate=86dps stride_asym=-0.169  r_hf=-0.941  sigma_torso=0.331
+[diag]    500000 steps  ep_len=12 fall=1.00  vx=0.121  hip_diff=26.8deg hip_corr=-0.84  torso_rms=6.9deg roll_rate=77dps stride_asym=-0.018  r_hf=-0.779  sigma_torso=0.294

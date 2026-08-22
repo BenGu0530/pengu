@@ -260,3 +260,27 @@ possible. Iteration rounds logged here.
   Ben (red-line adjacent, not acted on): is HELD-LEAN walking a cheat to
   penalize or a legitimate emergent weight-shift strategy? No torso-shaping
   change made either way.
+
+- Round 2 (r3b) KILLED at 250k: learned suicide. Band-fair scaling taxed
+  exploration NOISE itself at -0.94/step in the a2 band (scale^2 x sigma^2
+  through the cranks) vs early income ~0.6-0.9/step, so dying (-10 ~= 11
+  steps of tax) beat living: a2p1 diag ep_len 18, fall 1.00, r_hf -0.941
+  (round-1 same point: ep_len 172). Partial run archived at runs/e2x2hf2/.
+  Lesson logged: any per-step penalty must be checked against the suicide
+  breakeven (penalty x expected ep_len vs fall cost) before launch.
+
+- Round 3 (2026-08-22, launched): REWARD r3c — hf priced on the EXECUTED
+  signal (act_filt vs a second alpha cascade; the servo tracks act_filt, so
+  commanded noise the filter absorbs is physically harmless) and on
+  HIPS+TORSO ONLY. Per-dim audit: cheat HF lives in torso/hips (a1p1 torso
+  0.045/dim) while c6's HF lives in the cranks (0.231/dim, hips/torso
+  0.003/0.010) — and the honest crank speed limit is an open hardware
+  question (Ben: servo model/gearing per joint?), so cranks are unpriced
+  for now. Under executed-signal pricing c6's crank would otherwise pay the
+  MOST of all streams (casc resid^2 0.476 vs 5Hz-cheat 0.087) — consistent
+  with the measured crank slew exceeding the W350 no-load limit 60-69% of
+  its walk window; whether that rules the designed family infeasible is a
+  hardware-facts question, deferred. w recalibrated 6.0 (3-dim): 5Hz-cheat
+  tax 50% of pos reward, a2p0-cheat 25%, c6 9%, noise 0.085/step (suicide
+  breakeven ~118 steps). Smoke: hip5Hz -0.044, crank5Hz 0.000, noise
+  -0.078/step. Full 2x2 re-run (a1 pricing changed too): runs/e2x2hf3/.
