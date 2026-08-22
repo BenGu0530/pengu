@@ -1,0 +1,38 @@
+== mu=0.1 ==
+  c6 designed (seed 0)   ep 24.0s fell=0 torso_rms=30.3 hip_corr=+0.11 clip=0.00
+    walk-window per-step: track=+0.466 progress=+0.448 back=+0.000 energy=-0.013 swing=+0.137 scrub=-0.285 smooth=-0.000 fall=+0.000 vx=+0.448
+    TOTAL/step=+0.753  (x500 steps -> +376/10s)
+  c6 designed (seed 1)   ep 24.0s fell=0 torso_rms=33.1 hip_corr=+0.12 clip=0.00
+    walk-window per-step: track=+0.377 progress=+0.368 back=+0.000 energy=-0.013 swing=+0.134 scrub=-0.280 smooth=-0.000 fall=+0.000 vx=+0.368
+    TOTAL/step=+0.585  (x500 steps -> +293/10s)
+  c6 designed (seed 2)   ep 24.0s fell=0 torso_rms=31.3 hip_corr=+0.11 clip=0.00
+    walk-window per-step: track=+0.372 progress=+0.375 back=+0.000 energy=-0.013 swing=+0.131 scrub=-0.282 smooth=-0.000 fall=+0.000 vx=+0.375
+    TOTAL/step=+0.582  (x500 steps -> +291/10s)
+  learned s2 (seed 0)    ep 24.0s fell=0 torso_rms=34.6 hip_corr=+0.04
+    walk-window per-step: track=+0.218 progress=+0.228 back=-0.125 energy=-0.005 swing=+0.175 scrub=-0.198 smooth=-0.010 fall=+0.000 vx=+0.165
+    TOTAL/step=+0.282  (x500 steps -> +141/10s)
+  learned s2 (seed 1)    ep 24.0s fell=0 torso_rms=40.1 hip_corr=+0.09
+    walk-window per-step: track=+0.154 progress=+0.213 back=-0.233 energy=-0.005 swing=+0.172 scrub=-0.227 smooth=-0.010 fall=+0.000 vx=+0.097
+    TOTAL/step=+0.065  (x500 steps -> +32/10s)
+  learned s2 (seed 2)    ep 24.0s fell=0 torso_rms=35.2 hip_corr=+0.07
+    walk-window per-step: track=+0.117 progress=+0.149 back=-0.177 energy=-0.005 swing=+0.156 scrub=-0.231 smooth=-0.010 fall=+0.000 vx=+0.060
+    TOTAL/step=-0.001  (x500 steps -> -1/10s)
+== mu=0.3 ==
+  c6 designed (seed 0)   ep 24.0s fell=0 torso_rms=16.0 hip_corr=+0.16 clip=0.00
+    walk-window per-step: track=+0.054 progress=+0.129 back=-0.031 energy=-0.013 swing=+0.058 scrub=-0.121 smooth=-0.000 fall=+0.000 vx=+0.113
+    TOTAL/step=+0.076  (x500 steps -> +38/10s)
+  c6 designed (seed 1)   ep 24.0s fell=0 torso_rms=19.5 hip_corr=+0.16 clip=0.00
+    walk-window per-step: track=+0.025 progress=+0.093 back=-0.043 energy=-0.013 swing=+0.044 scrub=-0.106 smooth=-0.000 fall=+0.000 vx=+0.072
+    TOTAL/step=+0.001  (x500 steps -> +0/10s)
+  c6 designed (seed 2)   ep 19.3s fell=1 torso_rms=19.3 hip_corr=+0.26 clip=0.00
+    walk-window per-step: track=+0.030 progress=+0.095 back=-0.041 energy=-0.013 swing=+0.053 scrub=-0.099 smooth=-0.000 fall=-0.024 vx=+0.075
+    TOTAL/step=+0.001  (x500 steps -> +1/10s)
+  learned s2 (seed 0)    ep 24.0s fell=0 torso_rms=35.7 hip_corr=-0.23
+    walk-window per-step: track=+0.205 progress=+0.250 back=-0.261 energy=-0.005 swing=+0.173 scrub=-0.159 smooth=-0.008 fall=+0.000 vx=+0.119
+    TOTAL/step=+0.196  (x500 steps -> +98/10s)
+  learned s2 (seed 1)    ep 24.0s fell=0 torso_rms=37.0 hip_corr=-0.18
+    walk-window per-step: track=+0.039 progress=+0.051 back=-0.607 energy=-0.005 swing=+0.126 scrub=-0.168 smooth=-0.008 fall=+0.000 vx=-0.252
+    TOTAL/step=-0.572  (x500 steps -> -286/10s)
+  learned s2 (seed 2)    ep 24.0s fell=0 torso_rms=23.2 hip_corr=-0.20
+    walk-window per-step: track=+0.196 progress=+0.229 back=-0.150 energy=-0.005 swing=+0.131 scrub=-0.160 smooth=-0.009 fall=+0.000 vx=+0.154
+    TOTAL/step=+0.233  (x500 steps -> +116/10s)
