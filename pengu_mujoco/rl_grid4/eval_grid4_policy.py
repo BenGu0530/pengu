@@ -115,6 +115,9 @@ def main():
     ap.add_argument("--torso-thresh", type=float, default=5.0,
                     help="deg, torso roll RMS cut between silent/active")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--trial-seed-base", type=int, default=0,
+                    help="offset for trial seeds; use a nonzero value for a "
+                         "confirmation eval independent of a selection eval")
     ap.add_argument("--crank-band", nargs=2, type=float, default=None,
                     metavar=("MID", "HALF"),
                     help="must match the band the policy was trained with")
@@ -134,7 +137,7 @@ def main():
                              crank_band=tuple(a.crank_band) if a.crank_band else None)
             trials = []
             for rep in range(a.repeats):
-                r = run_trial(model, env, mu, trial_seed=1000 * rep + int(mu * 100), dur=a.dur)
+                r = run_trial(model, env, mu, trial_seed=a.trial_seed_base + 1000 * rep + int(mu * 100), dur=a.dur)
                 r["ckpt"] = os.path.relpath(ckpt, _HERE)
                 r["rep"] = rep
                 trials.append(r)

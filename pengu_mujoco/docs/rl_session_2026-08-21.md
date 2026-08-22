@@ -101,6 +101,30 @@ Readouts, stated without interpretation:
 - Behavior note from demos: high-cadence short-stride stepping; swing income
   collects without much translation (candidate reward lever left to Ben).
 
+## 3a. Best-checkpoint results (added 2026-08-22; supersedes final.zip rows in §3)
+
+Selection-rule amendment: rml2's checkpoint sweep (docs/ckpt_sweep_rml2_memo)
+showed final.zip samples the late-training oscillation at an arbitrary phase
+(best-vs-final pass deltas +2..+10 of 12). Adopted procedure: select each
+seed's checkpoint by frozen-eval pass count (3 reps), then CONFIRM on
+independent trial seeds (--trial-seed-base 50000, 5 reps). Confirmation
+numbers below are the reportable ones (net_fwd mean, pass/5):
+
+| seed@ckpt | mu0.1 | mu0.2 | mu0.3 | mu0.4 | tier | eff_k med |
+|---|---|---|---|---|---|---|
+| s0@1.5M | 0.386 (5) | 0.364 (5) | 0.339 (5) | 0.088 (3) | 3 | 0.44 |
+| s1@750k | 0.085 (5) | 0.111 (5) | 0.057 (4) | 0.059 (2) | 1 | 0.63 |
+| s2@3.0M | 0.050 (2) | 0.251 (5) | 0.483 (5) | 0.085 (3) | 1 | 2.83 |
+| s3@2.5M | 0.125 (5) | 0.120 (4) | 0.282 (5) | 0.241 (5) | 3 | 3.14 |
+
+Readouts: tier 3 = 2/4 seeds (was 1/4 on final.zip); tier 2 still empty
+(torso RMS 34-58 deg on every seed). s0@1.5M mu0.1 mean 0.386 = 2.4x the
+kappa0 ceiling 0.164, single trials up to 0.574 (kappa2 ceiling 0.469);
+s2@3.0M mu0.3 0.483 vs kappa0's 0.490 there. Effective-kappa is strongly
+seed-dependent (0.44 / 0.63 / 2.83 / 3.14). Selection-vs-confirmation
+shrinkage exists but is moderate (s0 pooled 0.356 -> 0.29). CSVs:
+runs/e2/s*/stageB/eval_bestckpt_confirm.csv.
+
 ## 3b. runs/ layout (renamed 2026-08-21; old tag-soup names -> readable tree)
 
 ```
