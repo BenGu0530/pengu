@@ -45,4 +45,22 @@ and `--mus 0.7`.
 
 ## Results
 
-(to be filled by rml2)
+Machine rml2 (16 cores, shared with Isaac Lab, nice 19), 2026-08-22.
+`eval_ckpt_sweep.py`, 13 ckpts per run (250k..3M + final), frozen eval
+24 s, mu {0.1,0.2,0.3,0.4} +-5%, 3 repeats = 12 trials per ckpt.
+Selection metric as fixed in the script: total pass count, tie-break mean
+net_fwd.
+
+| run | best ckpt | pass best | pass final | delta | net_fwd best | net_fwd final |
+|---|---|---|---|---|---|---|
+| e2/s0/stageB | 1500k | 12/12 | 7/12 | +5 | 0.3556 | 0.0730 |
+| e2/s1/stageB |  750k | 11/12 | 1/12 | +10 | 0.0925 | 0.0225 |
+| e2/s2/stageB | 3000k | 12/12 | 10/12 | +2 | 0.2378 | 0.2363 |
+| e2/s3/stageB | 2500k | 12/12 | 7/12 | +5 | 0.2144 | 0.1140 |
+
+Per-ckpt rows: `rl_grid4/runs/e2/s*/stageB/ckpt_sweep.csv`.
+Log: `rl_grid4/ckpt_sweep_rml2.log`.
+
+Note on s2: its best ckpt (3000k) is the last saved checkpoint, which is a
+different file from `final.zip`; the two differ by the steps between the last
+checkpoint save and the end of training.

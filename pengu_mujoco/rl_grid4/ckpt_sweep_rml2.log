@@ -1,0 +1,62 @@
+  rl_grid4/runs/e2/s0/stageB    250k: pass  4/12  net_fwd +0.057
+  rl_grid4/runs/e2/s0/stageB    500k: pass  2/12  net_fwd +0.027
+  rl_grid4/runs/e2/s0/stageB    750k: pass  5/12  net_fwd +0.046
+  rl_grid4/runs/e2/s0/stageB   1000k: pass  7/12  net_fwd +0.069
+  rl_grid4/runs/e2/s0/stageB   1250k: pass  7/12  net_fwd +0.118
+  rl_grid4/runs/e2/s0/stageB   1500k: pass 12/12  net_fwd +0.356
+  rl_grid4/runs/e2/s0/stageB   1750k: pass 12/12  net_fwd +0.192
+  rl_grid4/runs/e2/s0/stageB   2000k: pass  8/12  net_fwd +0.178
+  rl_grid4/runs/e2/s0/stageB   2250k: pass  4/12  net_fwd +0.066
+  rl_grid4/runs/e2/s0/stageB   2500k: pass  8/12  net_fwd +0.062
+  rl_grid4/runs/e2/s0/stageB   2750k: pass 10/12  net_fwd +0.192
+  rl_grid4/runs/e2/s0/stageB   3000k: pass  9/12  net_fwd +0.101
+  rl_grid4/runs/e2/s0/stageB   final: pass  7/12  net_fwd +0.073
+[rl_grid4/runs/e2/s0/stageB] best=1500k (pass 12, nf 0.3556) vs final (pass 7, nf 0.073) -> rl_grid4/runs/e2/s0/stageB/ckpt_sweep.csv
+  rl_grid4/runs/e2/s1/stageB    250k: pass  4/12  net_fwd +0.059
+  rl_grid4/runs/e2/s1/stageB    500k: pass  8/12  net_fwd +0.120
+  rl_grid4/runs/e2/s1/stageB    750k: pass 11/12  net_fwd +0.093
+  rl_grid4/runs/e2/s1/stageB   1000k: pass 10/12  net_fwd +0.081
+  rl_grid4/runs/e2/s1/stageB   1250k: pass  1/12  net_fwd +0.132
+  rl_grid4/runs/e2/s1/stageB   1500k: pass  1/12  net_fwd +0.022
+  rl_grid4/runs/e2/s1/stageB   1750k: pass  0/12  net_fwd +0.025
+  rl_grid4/runs/e2/s1/stageB   2000k: pass  1/12  net_fwd +0.028
+  rl_grid4/runs/e2/s1/stageB   2250k: pass  3/12  net_fwd +0.034
+  rl_grid4/runs/e2/s1/stageB   2500k: pass  1/12  net_fwd +0.028
+  rl_grid4/runs/e2/s1/stageB   2750k: pass  2/12  net_fwd +0.042
+  rl_grid4/runs/e2/s1/stageB   3000k: pass  0/12  net_fwd +0.019
+  rl_grid4/runs/e2/s1/stageB   final: pass  1/12  net_fwd +0.023
+[rl_grid4/runs/e2/s1/stageB] best=750k (pass 11, nf 0.0925) vs final (pass 1, nf 0.0225) -> rl_grid4/runs/e2/s1/stageB/ckpt_sweep.csv
+  rl_grid4/runs/e2/s2/stageB    250k: pass  5/12  net_fwd +0.118
+  rl_grid4/runs/e2/s2/stageB    500k: pass  3/12  net_fwd +0.040
+  rl_grid4/runs/e2/s2/stageB    750k: pass  4/12  net_fwd +0.038
+  rl_grid4/runs/e2/s2/stageB   1000k: pass  3/12  net_fwd +0.037
+  rl_grid4/runs/e2/s2/stageB   1250k: pass  5/12  net_fwd +0.078
+  rl_grid4/runs/e2/s2/stageB   1500k: pass  5/12  net_fwd +0.042
+  rl_grid4/runs/e2/s2/stageB   1750k: pass  5/12  net_fwd +0.048
+  rl_grid4/runs/e2/s2/stageB   2000k: pass  3/12  net_fwd +0.037
+  rl_grid4/runs/e2/s2/stageB   2250k: pass  4/12  net_fwd +0.033
+  rl_grid4/runs/e2/s2/stageB   2500k: pass  7/12  net_fwd +0.080
+  rl_grid4/runs/e2/s2/stageB   2750k: pass 10/12  net_fwd +0.160
+  rl_grid4/runs/e2/s2/stageB   3000k: pass 12/12  net_fwd +0.238
+  rl_grid4/runs/e2/s2/stageB   final: pass 10/12  net_fwd +0.236
+[rl_grid4/runs/e2/s2/stageB] best=3000k (pass 12, nf 0.2378) vs final (pass 10, nf 0.2363) -> rl_grid4/runs/e2/s2/stageB/ckpt_sweep.csv
+  rl_grid4/runs/e2/s3/stageB    250k: pass  6/12  net_fwd +0.077
+  rl_grid4/runs/e2/s3/stageB    500k: pass  7/12  net_fwd +0.170
+  rl_grid4/runs/e2/s3/stageB    750k: pass 11/12  net_fwd +0.227
+  rl_grid4/runs/e2/s3/stageB   1000k: pass  9/12  net_fwd +0.154
+  rl_grid4/runs/e2/s3/stageB   1250k: pass  9/12  net_fwd +0.147
+  rl_grid4/runs/e2/s3/stageB   1500k: pass  5/12  net_fwd +0.157
+  rl_grid4/runs/e2/s3/stageB   1750k: pass  7/12  net_fwd +0.062
+  rl_grid4/runs/e2/s3/stageB   2000k: pass 11/12  net_fwd +0.174
+  rl_grid4/runs/e2/s3/stageB   2250k: pass 10/12  net_fwd +0.063
+  rl_grid4/runs/e2/s3/stageB   2500k: pass 12/12  net_fwd +0.214
+  rl_grid4/runs/e2/s3/stageB   2750k: pass  6/12  net_fwd +0.069
+  rl_grid4/runs/e2/s3/stageB   3000k: pass  9/12  net_fwd +0.117
+  rl_grid4/runs/e2/s3/stageB   final: pass  7/12  net_fwd +0.114
+[rl_grid4/runs/e2/s3/stageB] best=2500k (pass 12, nf 0.2144) vs final (pass 7, nf 0.114) -> rl_grid4/runs/e2/s3/stageB/ckpt_sweep.csv
+
+=== best-vs-final summary ===
+rl_grid4/runs/e2/s0/stageB: best 1500k pass 12 (final 7, delta +5), net_fwd 0.3556 vs 0.073
+rl_grid4/runs/e2/s1/stageB: best 750k pass 11 (final 1, delta +10), net_fwd 0.0925 vs 0.0225
+rl_grid4/runs/e2/s2/stageB: best 3000k pass 12 (final 10, delta +2), net_fwd 0.2378 vs 0.2363
+rl_grid4/runs/e2/s3/stageB: best 2500k pass 12 (final 7, delta +5), net_fwd 0.2144 vs 0.114
