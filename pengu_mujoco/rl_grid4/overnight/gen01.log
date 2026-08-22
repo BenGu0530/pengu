@@ -1,0 +1,31 @@
+=== gen01  2026-08-22 00:38:30 ===
+  base : smooth=0.01
+  kernel_wide : sigma2=0.20
+  kernel_off : track=0.0
+  training 3 candidates ...
+  training done 00:58:48
+  base: eval + render done
+  kernel_wide: eval + render done
+  kernel_off: eval + render done
+
+=== gen01 ===
+cand              vtail  vswg  fall  eplen   roll  rollμ  |μ|/R  rate   hipc   asym  sing  ePass  eNfwd
+-------------------------------------------------------------------------------------------------------
+base              0.073 0.020  0.27    427   27.7   -7.1   0.26    97   0.31  0.124  0.54   0.75  0.146
+kernel_wide       0.067 0.055  0.30    410   23.2   -2.7   0.12    92   0.55  0.089  0.54   0.05  0.029   unstable
+kernel_off        0.124 0.051  0.56    357   36.9   -6.0   0.16   138   0.37  0.047  0.50   0.00  0.009   unstable
+
+reward budget at the last diag row (per step):
+cand                 track  progress      back    energy     swing     scrub    smooth      fall  pos_sum
+base                 0.104     0.141    -0.160    -0.008     0.108    -0.128    -0.022    -0.022    0.354
+kernel_off           0.000     0.253    -0.198    -0.011     0.126    -0.178    -0.015    -0.040    0.379
+kernel_wide          0.360     0.133    -0.179    -0.008     0.104    -0.138    -0.022    -0.036    0.597
+
+HELD-LEAN     |roll_mean|/roll_RMS > 0.7 -- torso parked to one side, not swinging.
+              This is the failure that reads as a success in the summary numbers.
+STATIC-TORSO  high roll RMS but roll RATE < 30 deg/s -- leaning, barely moving.
+ASYM          |stride_asym| > 0.25 -- one leg taking much longer strides, i.e.
+              curving or compensating for a held lean.
+unstable      vswing > 0.05 over the last 1M steps; the vtail is a draw, not a value.
+Frames: overnight/<gen>/frames/<cand>_strip.png  (t = 3, 6, 9 s stacked)
+=== gen01 complete 2026-08-22 00:59:45 ===

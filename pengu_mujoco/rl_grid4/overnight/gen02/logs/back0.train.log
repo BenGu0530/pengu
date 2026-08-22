@@ -1,0 +1,2 @@
+[train_grid4] overnight/gen02/back0: 3000000 steps x 4 envs -> /home/rml2/Documents/ben_gu/ben_pengu/pengu/pengu_mujoco/rl_grid4/runs/overnight/gen02/back0
+[curriculum] vx_cmd start 0.12

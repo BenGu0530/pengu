@@ -1,0 +1,19 @@
+[train_grid4] overnight/gen01/kernel_off: 3000000 steps x 4 envs -> /home/rml2/Documents/ben_gu/ben_pengu/pengu/pengu_mujoco/rl_grid4/runs/overnight/gen01/kernel_off
+[curriculum] vx_cmd start 0.12
+[diag]    250000 steps  ep_len=76 fall=1.00  vx=0.021  hip_diff=12.3deg hip_corr=+0.19  torso_rms=21.5deg roll_rate=110dps stride_asym=+0.107  sigma_torso=0.373
+[diag]    500000 steps  ep_len=66 fall=1.00  vx=0.270  hip_diff=23.5deg hip_corr=+0.13  torso_rms=50.7deg roll_rate=211dps stride_asym=+0.151  sigma_torso=0.373
+[diag]    750000 steps  ep_len=76 fall=1.00  vx=0.283  hip_diff=23.9deg hip_corr=+0.16  torso_rms=47.7deg roll_rate=224dps stride_asym=+0.168  sigma_torso=0.370
+[diag]   1000000 steps  ep_len=92 fall=1.00  vx=0.327  hip_diff=24.7deg hip_corr=+0.11  torso_rms=42.6deg roll_rate=231dps stride_asym=+0.154  sigma_torso=0.371
+[diag]   1250000 steps  ep_len=114 fall=1.00  vx=0.277  hip_diff=23.2deg hip_corr=+0.27  torso_rms=44.3deg roll_rate=212dps stride_asym=+0.102  sigma_torso=0.371
+[diag]   1500000 steps  ep_len=149 fall=0.99  vx=0.243  hip_diff=19.3deg hip_corr=+0.50  torso_rms=48.1deg roll_rate=235dps stride_asym=+0.084  sigma_torso=0.370
+[diag]   1750000 steps  ep_len=190 fall=0.95  vx=0.199  hip_diff=19.2deg hip_corr=+0.40  torso_rms=41.2deg roll_rate=182dps stride_asym=+0.066  sigma_torso=0.370
+[diag]   2000000 steps  ep_len=225 fall=0.90  vx=0.180  hip_diff=17.8deg hip_corr=+0.45  torso_rms=42.3deg roll_rate=162dps stride_asym=+0.103  sigma_torso=0.364
+[diag]   2250000 steps  ep_len=285 fall=0.74  vx=0.133  hip_diff=16.5deg hip_corr=+0.43  torso_rms=38.0deg roll_rate=152dps stride_asym=+0.033  sigma_torso=0.369
+[diag]   2500000 steps  ep_len=344 fall=0.58  vx=0.106  hip_diff=15.6deg hip_corr=+0.40  torso_rms=39.3deg roll_rate=141dps stride_asym=+0.027  sigma_torso=0.370
+[curriculum] 2500000 steps -> vx_cmd 0.17 (speed gate)
+[curriculum] 2525000 steps -> vx_cmd 0.22 (speed gate)
+[curriculum] 2700000 steps -> vx_cmd 0.27 (speed gate)
+[diag]   2750000 steps  ep_len=373 fall=0.49  vx=0.102  hip_diff=14.1deg hip_corr=+0.40  torso_rms=41.2deg roll_rate=126dps stride_asym=+0.060  sigma_torso=0.373
+[diag]   3000000 steps  ep_len=357 fall=0.56  vx=0.154  hip_diff=15.5deg hip_corr=+0.37  torso_rms=36.9deg roll_rate=138dps stride_asym=+0.047  sigma_torso=0.378
+[curriculum] 3000000 steps -> vx_cmd 0.32 (speed gate)
+[train_grid4] done -> /home/rml2/Documents/ben_gu/ben_pengu/pengu/pengu_mujoco/rl_grid4/runs/overnight/gen01/kernel_off/ckpts/final.zip

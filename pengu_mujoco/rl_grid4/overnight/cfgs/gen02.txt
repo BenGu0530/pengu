@@ -1,0 +1,9 @@
+# gen02 — the forward/backward pricing imbalance.
+# base's per-step budget: progress +0.141 but back -0.160, i.e. the policy loses
+# MORE to backward motion than it gains from forward. back weight is 2.0 against
+# progress 1.0. pos_sum 0.354 against negatives ~-0.340: net ~+0.014/step, barely
+# above break-even. The earlier ablation's back0 also had the best eval of that
+# set (ePass 0.80).
+back05          back=0.5
+back0           back=0.0
+prog3           progress=3.0

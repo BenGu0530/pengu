@@ -1,0 +1,9 @@
+# gen01 — where does the speed ceiling come from? Three single-factor probes
+# from the frozen baseline, chosen from the ablation table (track0 gave the
+# fastest run in the project, 0.296 vtail, at fall 0.71).
+#
+# The question is not "which is fastest" but "which local optimum does each
+# land in" -- judged from the frames plus the lean/rate columns, not vtail.
+base            smooth=0.01
+kernel_wide     sigma2=0.20
+kernel_off      track=0.0
