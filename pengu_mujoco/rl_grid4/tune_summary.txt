@@ -1,0 +1,37 @@
+run                               kind    Msteps      vx   vtail  vswing   cmd  fall  eplen   roll   hipc   asym  ePass  eNfwd
+------------------------------------------------------------------------------------------------------------------------------
+gate0_r2a1e1c2_s0_3M              frozen    3.00   0.224   0.161   0.101  0.47  0.52    375   34.0   0.31  0.106      -      -  <unstable
+gate0_r2a1e1c2_s2                 frozen    6.00   0.123   0.086   0.071  0.47  0.57    347   45.4   0.59 -0.079      -      -  <unstable
+gate0_r2a1e1c2_s0                 frozen    6.00   0.098   0.145   0.095  0.47  0.28    433   30.1   0.58 -0.018      -      -  <unstable
+gate0_r2a1e1c2_s2_3M              frozen    3.00   0.093   0.034   0.090  0.47  0.78    274   25.3   0.26  0.073      -      -  <unstable
+gate0_r2a1e1c2_s1_3M              frozen    3.00   0.085   0.088   0.019  0.47  0.59    348   30.2   0.30 -0.047      -      -
+gate0_r2a1e1c2_s3                 frozen    6.00   0.083   0.089   0.017  0.47  0.38    404   38.0   0.52  0.024      -      -
+gate0_r2a1e1c2_s3_3M              frozen    3.00   0.063   0.048   0.043  0.37  0.67    311   35.4   0.29 -0.069      -      -
+gate0_r2a1e1c2_s1                 frozen    6.00   0.035   0.043   0.027  0.47  0.68    326   27.7  -0.04 -0.127      -      -
+gate0_r2a1e1c2_s0_cut1.25M        frozen    1.25   0.001   0.006   0.037     -  0.46    363   28.3   0.25      -      -      -
+
+gate0_r2-track0a1e1c2_s0          tune      6.00   0.340   0.296   0.072  0.42  0.71    313   42.1   0.51  0.034   0.40  0.101  <unstable
+gate0_r2-energy0a1e1c2_s0         tune      6.00   0.285   0.246   0.076  0.47  0.44    390   28.9   0.37  0.046   0.30  0.075  <unstable
+gate0_r2-back0a1e1c2_s0           tune      6.00   0.154   0.177   0.042  0.47  0.13    466   28.3   0.32  0.062   0.80  0.116
+gate0_r2-fall0a1e1c2_s0           tune      6.00   0.138   0.138   0.048  0.47  0.68    314   39.7   0.10 -0.026   0.20  0.222
+gate0_r2-swing0a1e1c2_s0          tune      6.00   0.120   0.134   0.067  0.47  0.46    384   30.9   0.20  0.101   0.05  0.017  <unstable
+gate0_r2nsa1e1c2_s0               tune      3.00   0.112   0.082   0.060  0.47  0.53    362   35.0   0.50  0.115      -      -  <unstable
+gate0_r2-scrub0a1e1c2_s0          tune      6.00   0.111   0.086   0.066  0.47  0.37    419   24.5   0.69  0.136   0.00  0.049  <unstable
+gate0_r2-smooth0a1e1c2_s0         tune      6.00   0.101   0.137   0.089  0.47  0.24    440   35.3   0.67  0.014   0.00  0.022  <unstable
+gate0_r2nsa1e1c2_s2               tune      3.00   0.087   0.053   0.066  0.47  0.71    300   31.7   0.68  0.057      -      -  <unstable
+gate0_r2nsa1e1c2_s1               tune      3.00   0.014   0.028   0.042  0.47  0.42    381   34.8   0.20 -0.237      -      -
+gate0_r2-progress0a1e1c2_s0       tune      6.00  -0.008  -0.007   0.004  0.47  0.09    459   49.9   0.73  0.427   0.65  0.055
+
+vtail  = mean vx over the last 4 diag points (1M steps). Use this, not the final
+         point: vx oscillates late in training (seed 0 went 0.193 -> 0.098 between
+         two adjacent diag points while fall went 0.78 -> 0.28).
+vswing = max-min of those 4 points. >0.05 means the run is still swinging between
+         a fast-and-falling and a slow-and-safe policy; no single number from it
+         is trustworthy.
+dvx    = change in vx over the last diag interval; '<climbing' means the run had
+         not converged when it stopped -- read its vx as a lower bound.
+rollμ  = mean torso roll. |rollμ| ~ roll means a held lean, |rollμ| << roll a waddle.
+rate   = RMS d(roll)/dt [deg/s]. ~0 with high roll = leaning, not moving.
+asym   = stride length asymmetry (L-R)/(L+R). 0 = equal strides = walking straight.
+ePass/eNfwd = frozen-eval pass fraction and mean net_fwd, all mu pooled.
+kind   = frozen recipe vs reward-tuning arm. Do not pool the two.

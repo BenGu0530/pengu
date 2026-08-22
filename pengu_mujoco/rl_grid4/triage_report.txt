@@ -1,0 +1,43 @@
+frozen baseline: 4 seed(s) at >= 5.5M steps
+    s0  vx +0.098  dvx -0.095  fall 0.28  hip_corr +0.58
+    s1  vx +0.035  dvx +0.002  fall 0.68  hip_corr -0.04
+    s2  vx +0.123  dvx +0.037  fall 0.57  hip_corr +0.59
+    s3  vx +0.083  dvx -0.006  fall 0.38  hip_corr +0.52
+    median vx +0.090   seed range [+0.035, +0.123]  (width 0.088)   median hip_corr +0.55
+
+*** NOT RANKING ***
+These runs were still climbing when they stopped, so their vx is a
+lower bound and comparing them is meaningless. Extend them first:
+    gate0_r2a1e1c2_s2
+    gate0_r2-energy0a1e1c2_s0
+    gate0_r2-swing0a1e1c2_s0
+    gate0_r2-track0a1e1c2_s0
+
+(everything below is printed for information only)
+
+arm            seeds      vx  vs base  hip_corr   fall    asym   verdict
+--------------------------------------------------------------------------------------
+track0             1   0.340   +0.250     +0.51   0.71   0.034   ADD SEEDS: outside seed range
+energy0            1   0.285   +0.194     +0.37   0.44   0.046   ADD SEEDS: outside seed range
+back0              1   0.154   +0.064     +0.32   0.13   0.062   ADD SEEDS: outside seed range
+fall0              1   0.138   +0.048     +0.10   0.68  -0.026   ADD SEEDS: outside seed range
+swing0             1   0.120   +0.030     +0.20   0.46   0.101   within seed noise, skip
+scrub0             1   0.111   +0.021     +0.69   0.37   0.136   within seed noise, skip
+smooth0            1   0.101   +0.010     +0.67   0.24   0.014   within seed noise, skip
+progress0          1  -0.008   -0.098     +0.73   0.09   0.427   ADD SEEDS: outside seed range
+
+Rule: an arm is a candidate only if its median vx falls OUTSIDE the
+frozen seeds' own range, or its hip_corr flips sign (in-phase vs
+alternating gait). A difference smaller than the baseline's seed spread
+cannot be separated from seed noise on n=1.
+
+5 arm(s) worth more seeds. Paste to run seeds 1 and 2:
+
+  SEEDS="1 2" ARMS=<(echo 'no_track track=0.0') bash run_tune_queue.sh
+  SEEDS="1 2" ARMS=<(echo 'no_energy energy=0.0') bash run_tune_queue.sh
+  SEEDS="1 2" ARMS=<(echo 'no_back back=0.0') bash run_tune_queue.sh
+  SEEDS="1 2" ARMS=<(echo 'no_fall fall=0.0') bash run_tune_queue.sh
+  SEEDS="1 2" ARMS=<(echo 'no_progress progress=0.0') bash run_tune_queue.sh
+
+  # or all of them in one queue:
+  grep -E '^(no_track|no_energy|no_back|no_fall|no_progress) ' ablate_arms.txt > followup_arms.txt && SEEDS="1 2" ARMS=followup_arms.txt bash run_tune_queue.sh
