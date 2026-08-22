@@ -34,7 +34,7 @@ T_HOLD, T_TRANSITION = 5.0, 4.0
 WALK_FROM = T_HOLD + T_TRANSITION + 2.0     # sweep SETTLE convention: 11 s
 DUR = 24.0
 COMP = ["r_track", "r_progress", "r_back", "r_energy", "r_swing",
-        "r_scrub", "r_smooth", "r_fall", "vx"]
+        "r_scrub", "r_smooth", "r_hf", "r_fall", "vx"]
 
 
 def set_c6_params():
@@ -82,6 +82,12 @@ def run_designed(mu, seed):
     walk_snap = None
     n_steps = int(DUR / env.control_dt)
     ep = {}
+    # r3 hf accounting: the replay bypasses the action filter (alpha=1.0), so
+    # env-side r_hf is identically 0. Score the designed action stream against
+    # the same alpha=0.2 reference offline and write the sum into env._ep.
+    from grid4_rl_env import ALPHA as _ALPHA, RW_DEFAULT as _RW
+    _hf_filt = None
+    _hf_sum = 0.0
     for i in range(n_steps):
         t = i * env.control_dt
         # designed controller writes data.ctrl; we lift it into action space
@@ -90,7 +96,12 @@ def run_designed(mu, seed):
         a = (ctrl_des - env.ctrl_mid) / env.ctrl_half
         if np.any(np.abs(a) > 1.0):
             clip_hits += 1
-        obs, r, term, trunc, info = env.step(np.clip(a, -1, 1))
+        a_cl = np.clip(a, -1, 1)
+        _hf_filt = a_cl.copy() if _hf_filt is None else (1 - _ALPHA) * _hf_filt + _ALPHA * a_cl
+        _resid = a_cl - _hf_filt
+        _hf_sum += -_RW["hf"] * float(_resid @ _resid)
+        obs, r, term, trunc, info = env.step(a_cl)
+        env._ep["r_hf"] = _hf_sum
         if walk_snap is None and t >= WALK_FROM:
             walk_snap = snapshot(env)
         if term or trunc:

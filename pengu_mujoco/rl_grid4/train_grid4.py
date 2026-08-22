@@ -138,7 +138,7 @@ def main():
     class Diag(BaseCallback):
         EVERY = 250_000 if not a.smoke else 10_000
         COMP = ["r_track", "r_progress", "r_back", "r_energy", "r_swing",
-                "r_scrub", "r_smooth", "r_fall", "vx"]
+                "r_scrub", "r_smooth", "r_hf", "r_fall", "vx"]
 
         def __init__(self):
             super().__init__()
@@ -200,6 +200,7 @@ def main():
                   f"torso_rms={row['torso_roll_rms_deg']:.1f}deg "
                   f"roll_rate={row['torso_roll_rate_rms_dps']:.0f}dps "
                   f"stride_asym={row['stride_asym']:+.3f}  "
+                  f"r_hf={row['r_hf']:+.3f}  "
                   f"sigma_torso={row['sigma_torso']:.3f}", flush=True)
 
     class Curriculum(BaseCallback):

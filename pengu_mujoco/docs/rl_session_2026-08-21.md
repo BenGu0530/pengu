@@ -166,3 +166,45 @@ train_grid4 --name sets run dirs directly; run_e2_arm.sh updated.
   mu=0.4). Gate runs likewise.
 - All under rl_grid4/runs/, committed. Dead-end rounds kept.
 - Compute note: entire arm ran on the Mac alongside the c4 topup (nice 10).
+
+## 5. Single-stage 2x2 probe (no-penalty, r2) — COMPLETE 2026-08-22, archived as the pre-clamp record
+
+Protocol: single-stage from scratch (C7 adopted: no warm-start, no stage A/B),
+mu ~ U(0.1,0.4), c2 vx-curriculum 0.12->0.47, 3M steps, seed 0, frozen eval
+(final.zip, 5 reps). Cells: band (a1 frozen / a2 = crank 0.0+-1.9) x priors
+(p1 = swing/scrub frozen / p0 = swing=0 scrub=0). Runs: rl_grid4/runs/e2x2/.
+
+| cell | mu0.1 pass / net_fwd | mu0.2 | mu0.3 | mu0.4 | tier |
+|---|---|---|---|---|---|
+| a1p1 | 0.8 / 0.339 | 0.6 / 0.117 | 0.4 / 0.150 | 0.0 / 0.293 | 1 |
+| a2p1 | 1.0 / 0.247 | 1.0 / 0.288 | 0.6 / 0.143 | 0.6 / 0.063 | 3 (torso med 27.1 deg) |
+| a1p0 | 0.8 / 0.218 | 0.6 / 0.058 | 1.0 / 0.119 | 0.4 / 0.103 | 1 |
+| a2p0 | 1.0 / 0.656 | 1.0 / 0.561 | 0.2 / 0.037 | 0.0 / 0.018 | 1 |
+
+(best-ckpt sweep + confirmation NOT run on these: superseded by the r3 rerun
+before that stage; final.zip numbers only. eval printed `torso_rms med=nan`
+on some tier-1 rows — prints only over passing trials; not a data bug.)
+
+Morphology probe on a1p1 final (mu=0.1, deterministic): vx 0.328, hip-diff
+zero-crossing ~5 Hz, contact duty double 0.02 / single 0.56 / airborne 0.42;
+commanded slew > 4.82 rad/s (XM430-W350 no-load) 56-81% of the time on
+hips/torso. Same probe on the c6 replay: 1.77 Hz, double 0.20 / single 0.41 /
+airborne 0.39 (longest airborne run 180 ms) — airborne fraction does NOT
+separate the two; frequency and double-support do. Note: c6's CRANK velocity
+exceeds 4.82 rad/s 60% of its walk window (max 8.4 rad/s) — if the crank
+servo is W350-spec, the designed family shares this feasibility question
+(hardware spec numbers needed to settle it).
+
+Ben's ruling 2026-08-22: the 5 Hz + curved-feet morphology is a cheating
+answer (robust but not executable / not the target style); rework as an
+iterate-until-goal task. -> REWARD r3 (hf penalty, see rl_e2_ice_memo knob
+log), full 2x2 rerun under r3 at rl_grid4/runs/e2x2hf/, goal: walks at
+mu 0.1-0.4, stride <= ~2 Hz, no aerial mincing, torso free, speed as high as
+possible. Iteration rounds logged here.
+
+## 6. r3 iterate log
+
+- Round 1 (2026-08-22, launched): e2x2hf 2x2, w_hf=0.5 (calibration: c6 tax
+  7% of positive reward, a1p1-5Hz 54%, a2p0 16%). Watch: does a1p1-style
+  high-freq reappear; sigma_torso for penalty-induced sigma collapse; r_hf
+  trend in diag.

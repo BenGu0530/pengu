@@ -106,6 +106,21 @@ torso neutrality is NOT touched by any entry):
   kept: gate0_s0_nosettle (v1, no settle), gate0_s0 (v1, settle, cut at 1.1M).
 
 Knob change log:
+- 2026-08-22 (REWARD r2 -> r3, declared amendment: hf high-frequency action
+  penalty, w=0.5). The no-penalty e2x2 cells converged to ~5 Hz aerial
+  mincing (hip-diff zero-crossing ~5 Hz, 42% airborne, 2% double support;
+  commanded slew exceeds the XM430-W350 no-load speed 4.82 rad/s 56-81% of
+  the time on hips/torso — the alpha=0.2 execution filter attenuates 5 Hz to
+  37% but the policy repays with ~2.7x pre-filter amplitude). Ben ruled the
+  morphology out (not executable on hardware) and chose a reward-side clamp:
+  r_hf = -0.5 * ||a_t - act_filt_t||^2 (exactly the content the alpha filter
+  rejects; all 5 dims incl torso, same symmetric-regularizer precedent as
+  smooth). Calibration (per-step resid^2, mu=0.1, deterministic): a1p1-final
+  0.811, a2p0-final 0.303, c6 teacher 0.133 -> at w=0.5 c6 pays 7% of its
+  positive reward (10% gate: pass), a1p1 54%, a2p0 16%. Known softness: the
+  16% figure for a2p0-style gaits; w tunable per-round via --rw hf=.. during
+  the iterate loop, frozen once the recipe freezes. Execution layer, obs,
+  eval protocol unchanged. Runs tagged r3 (e2x2hf/*).
 - 2026-08-21 (mu curriculum, declared amendment per the rescue ladder):
   e2 stage A runs at fixed mu=0.4 (easy end of the arm's range); stage B
   runs the full U(0.1,0.4). Under the full range from scratch, stage A

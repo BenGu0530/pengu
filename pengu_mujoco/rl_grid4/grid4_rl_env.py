@@ -59,7 +59,14 @@ STALL_TORQUE = 4.1        # N*m, XM430 forcerange
 # v2: progress 1*max(0,vx), fall -10. Sustained terms (tracking kernel, swing)
 #     become the main income; per-episode ladder now stand(0) < dash(~+4)
 #     < step-in-place(~+100) < walk(~+750): steepest ascent = live longer.
-REWARD_VERSION = "r2"
+# v3: r2 + hf (high-frequency action penalty). The e2x2 cells all converged to
+#     ~5 Hz aerial mincing (42% airborne, commanded slew past the XM430
+#     no-load speed 56-81% of the time): the alpha=0.2 filter attenuates but
+#     the policy repays with 2.7x pre-filter amplitude. hf prices exactly the
+#     content the filter rejects: ||a - act_filt||^2. Calibration 2026-08-22
+#     (per-step resid^2, mu=0.1): a1p1-final 0.81, a2p0-final 0.30, c6 teacher
+#     0.13 -> w=0.5 taxes c6 7% of its positive reward, a1p1 54%, a2p0 16%.
+REWARD_VERSION = "r3"
 # Frozen r2 reward weights. Every one is overridable per-run via
 # Grid4RLEnv(rw={...}) / train_grid4.py --rw key=val, which also retags the run,
 # so a tuning arm can never be pooled with a frozen-recipe run. Absent an
@@ -75,6 +82,7 @@ RW_DEFAULT = {
     "scrub":    0.8,      # stance slip
     "smooth":   0.01,     # action rate
     "fall":     10.0,     # magnitude; applied as -fall (v2 raised this from 5.0)
+    "hf":       0.5,      # high-freq residual ||a - act_filt||^2 (r3), all 5 dims
 }
 W_SMOOTH_DEFAULT = RW_DEFAULT["smooth"]
 W_PROGRESS = 1.0
@@ -355,7 +363,7 @@ class Grid4RLEnv(gym.Env):
         self._push_force = np.zeros(3)
         self._ep = {k: 0.0 for k in
                     ("r_track", "r_progress", "r_back", "r_energy", "r_swing",
-                     "r_scrub", "r_smooth", "r_fall", "vx")}
+                     "r_scrub", "r_smooth", "r_hf", "r_fall", "vx")}
         self._torso_roll_sq = 0.0
         self._torso_roll_sum = 0.0   # DC component: separates a steady lean from a waddle
         self._torso_roll_prev = self.torso_roll()
@@ -449,7 +457,9 @@ class Grid4RLEnv(gym.Env):
         r_swing = w["swing"] * float(np.clip(swing_rate, 0.0, w["swing_cap"]))
         r_scrub = -w["scrub"] * scrub
         r_smooth = -self.w_smooth * float(np.sum((a - self.last_action.astype(np.float64)) ** 2))
-        reward = r_track + r_progress + r_back + r_energy + r_swing + r_scrub + r_smooth
+        _hf_resid = a - self.act_filt          # the content the alpha filter rejects
+        r_hf = -w["hf"] * float(_hf_resid @ _hf_resid)
+        reward = r_track + r_progress + r_back + r_energy + r_swing + r_scrub + r_smooth + r_hf
 
         roll, pitch_t = self._tilt()
         z = float(d.xpos[self.root][2])
@@ -472,7 +482,8 @@ class Grid4RLEnv(gym.Env):
         for k, val in (("r_track", r_track), ("r_progress", r_progress),
                        ("r_back", r_back), ("r_energy", r_energy),
                        ("r_swing", r_swing), ("r_scrub", r_scrub),
-                       ("r_smooth", r_smooth), ("r_fall", r_fall), ("vx", vx)):
+                       ("r_smooth", r_smooth), ("r_hf", r_hf),
+                       ("r_fall", r_fall), ("vx", vx)):
             self._ep[k] += val
 
         terminated = bool(fell)
