@@ -160,3 +160,31 @@ C1 first — while a run's vx is a draw rather than a measurement, the ablation
 table, the tuning arms and any arm ranking are all uninterpretable. C2 is
 cheap and may be a large part of C1. C3 and C5 are the two that could change
 what the arm is capable of at all; C4 changes what it is being compared to.
+
+
+## Resolutions (Ben, 2026-08-22, via Mac session)
+
+- C2 ADOPTED as reporting protocol: per-run checkpoint selected by frozen
+  eval (3 reps), then CONFIRMED on independent trial seeds
+  (--trial-seed-base 50000, 5 reps); confirmation numbers are the
+  reportable ones. Applied to the 4 arm seeds already
+  (rl_session_2026-08-21.md §3a); rml2 to retrofit the ablation arms.
+- C1: re-judge after the C2 retrofit; if residual spread still covers arm
+  deltas, A/B the mechanistic fixes (fall-penalty shape, target_kl). Not
+  more steps.
+- C4: c6 teacher being scored under the RL env's exact reset protocol on
+  the Mac (score_designed_gait --seeds 20), to be reported alongside 0.4689.
+- C5: bc_express extended with --clock (oracle probe) and --frames N
+  (deployable); assigned to rml3.
+- C6: go-forward protocol is single-stage from-scratch + curriculum under
+  the fixed --cmd0 code; the Gate 0 record stands as a historical
+  qualification with the restart caveat noted. (Stage-B-restarts-at-0.12
+  was designed behavior for the two-stage recipe; the bug was silent
+  resumes of interrupted curriculum runs.)
+- C7 ADOPTED: warm-start dropped from the protocol. The current 4-seed arm
+  is kept as shared-ancestor data with that caveat; an independent-seed
+  re-run of the arm queues after C1/C2 settle.
+- C8 fleet rules (also in grid4_fleet_memo.md): (1) runs/ layout changes
+  must be announced in a memo BEFORE pushing, and other machines commit
+  local run data before pulling; (2) every training run tees stdout to a
+  committed .log so diag rows are recoverable.

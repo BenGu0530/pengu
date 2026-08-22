@@ -64,3 +64,29 @@ Log: `rl_grid4/ckpt_sweep_rml2.log`.
 Note on s2: its best ckpt (3000k) is the last saved checkpoint, which is a
 different file from `final.zip`; the two differ by the steps between the last
 checkpoint save and the end of training.
+
+
+## Phase 2 (C2 retrofit for the ablation arms) — for rml2
+
+Same procedure, the 8 ablation arms + 3 no-smooth arms (single seed each):
+
+```
+nice -n 19 python rl_grid4/eval_ckpt_sweep.py \
+  rl_grid4/runs/gate0_r2-track0a1e1c2_s0 rl_grid4/runs/gate0_r2-energy0a1e1c2_s0 \
+  rl_grid4/runs/gate0_r2-back0a1e1c2_s0 rl_grid4/runs/gate0_r2-fall0a1e1c2_s0 \
+  rl_grid4/runs/gate0_r2-swing0a1e1c2_s0 rl_grid4/runs/gate0_r2-scrub0a1e1c2_s0 \
+  rl_grid4/runs/gate0_r2-smooth0a1e1c2_s0 rl_grid4/runs/gate0_r2-progress0a1e1c2_s0 \
+  rl_grid4/runs/gate0_r2nsa1e1c2_s0 rl_grid4/runs/gate0_r2nsa1e1c2_s1 \
+  rl_grid4/runs/gate0_r2nsa1e1c2_s2 --repeats 3 >> rl_grid4/ckpt_sweep_rml2_p2.log 2>&1
+```
+
+Then CONFIRM each arm's best ckpt on independent seeds:
+`eval_grid4_policy.py <best> --repeats 5 --trial-seed-base 50000 --out
+<run>/eval_bestckpt_confirm.csv`, and append a best-vs-final + confirmed
+table under Results-2. Numbers only. After that, triage_arms.sh judgments
+should be re-read against confirmed numbers (do not re-run triage on
+final.zip values).
+
+## Results-2
+
+(to be filled by rml2)

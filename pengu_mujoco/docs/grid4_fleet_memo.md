@@ -159,3 +159,10 @@ after c1 ships: c5.
 - pitch (torso forward-lean) axis: definition + full-cross vs staged — decides whether
   more configs are queued after batch 2. Does not block batches 1–2.
 - RL (6 policies) and the mass-effect control: deferred until the table is in.
+
+
+## RL-phase fleet rules (Ben, 2026-08-22 — after the C8 near-loss)
+
+1. runs/ layout changes must be announced in a memo BEFORE pushing; other
+   machines finish + commit (git add -f) local run outputs before pulling.
+2. Every training run tees stdout to a .log committed alongside diag.csv.

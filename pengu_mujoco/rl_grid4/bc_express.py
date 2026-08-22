@@ -1,28 +1,28 @@
 """BC expressibility test: clone the c6 designed gait into the RL policy net.
 
-Question (reward audit 2026-08-21): the frozen reward prefers c6 by 2-10x at
-mu=0.1, but can the policy NETWORK + a2 action band even express that gait?
-This script does the whole test in one command:
+Round 1 (rml3, 2026-08-22, docs/bc_express_result.md): single-frame BC
+regressed to the conditional mean (constant action, hip_corr +0.98, vx 0) —
+the 36-dim obs does not identify the teacher's phase, so the test measured
+the OBSERVATION, not the network. Two follow-up modes added (C5):
 
-  1. collect (obs, action) pairs from the scripted c6 teacher (kappa=2 PID),
-     DART-style: small exploration noise on the executed action, label = the
-     teacher's clean action; mu ~ U(0.1,0.4) per episode, pose jitter on;
-  2. supervised-train an SB3 PPO MlpPolicy [256,256] (log_std_init -1) on MSE;
-  3. save as a normal PPO zip (directly usable with train_grid4 --init-from
-     for retention fine-tuning later);
-  4. run the frozen eval on the clone (a2 band) and print the table.
+  --clock      append [sin, cos] of the teacher's true phase to obs (38-dim).
+               Oracle capability probe: if this clone tracks, network + a2
+               band can express c6 and the issue is purely observability.
+               NOT a candidate policy (uses privileged input).
+  --frames N   stack the last N obs frames (36N-dim). The deployable version
+               of the same question under the frozen obs contract + history.
 
-Phase note: the teacher is time-indexed and obs has no clock, but at steady
-state each joint's (pos, vel) pair determines the sinusoid phase, so a single
-frame is in principle sufficient; the printed clone-vs-teacher tracking error
-is the check. If it fails, frame-stacking is the declared fallback (not
-implemented here).
+Modes are exclusive. Default (no flag) = original single-frame run.
+Clock/frames clones are probe-evaluated in-script (per-mu rollouts); the
+frozen eval subprocess only runs for the default mode (36-dim contract).
 
 Usage (from pengu_mujoco/):
-  python rl_grid4/bc_express.py                # full run, ~30-60 min CPU
-  python rl_grid4/bc_express.py --episodes 20 --epochs 5   # quick smoke
+  python rl_grid4/bc_express.py --clock
+  python rl_grid4/bc_express.py --frames 3
 """
 import argparse
+import collections as _c
+import math
 import os
 import subprocess
 import sys
@@ -38,6 +38,7 @@ C6 = dict(freq=1.77, hip_phi=270.0, leg_amp=105.0, hip_amp=28.0, hip_off=10.0)
 KAPPA = 2.0
 T_HOLD, T_TRANSITION = 5.0, 4.0
 EP_S = 24.0
+OBS_RAW = 36
 
 
 def set_c6_params():
@@ -53,7 +54,35 @@ def set_c6_params():
     return gc
 
 
-def collect(episodes, dart, seed):
+class FeatureMaker:
+    """obs -> BC input, per mode. Stateful for frames; reset per episode."""
+
+    def __init__(self, mode, frames=1):
+        self.mode = mode
+        self.frames = frames
+        self.dim = {"raw": OBS_RAW, "clock": OBS_RAW + 2,
+                    "frames": OBS_RAW * frames}[mode]
+        self._buf = None
+
+    def reset(self):
+        self._buf = None
+
+    def __call__(self, obs, t):
+        if self.mode == "raw":
+            return np.asarray(obs, np.float32)
+        if self.mode == "clock":
+            ph = 2 * math.pi * C6["freq"] * max(0.0, t - T_HOLD)
+            return np.concatenate([obs, [math.sin(ph), math.cos(ph)]]
+                                  ).astype(np.float32)
+        if self._buf is None:
+            self._buf = _c.deque([np.asarray(obs, np.float32)] * self.frames,
+                                 maxlen=self.frames)
+        else:
+            self._buf.append(np.asarray(obs, np.float32))
+        return np.concatenate(self._buf)
+
+
+def collect(episodes, dart, seed, fm):
     import grid4_rl_env as ge
     from grid4_rl_env import Grid4RLEnv
     from torso_control import TorsoKappaPID
@@ -70,12 +99,13 @@ def collect(episodes, dart, seed):
     n_steps = int(EP_S / env.control_dt)
     for ep in range(episodes):
         obs, _ = env.reset(seed=seed * 10_000 + ep)
+        fm.reset()
         for i in range(n_steps):
             t = i * env.control_dt
             gc.apply_ctrl(env.data, act_ids, t)
             ctrl_des = env.data.ctrl[env.aid].copy()
             a_teacher = np.clip((ctrl_des - env.ctrl_mid) / env.ctrl_half, -1, 1)
-            X.append(obs.copy()); Y.append(a_teacher.astype(np.float32))
+            X.append(fm(obs, t)); Y.append(a_teacher.astype(np.float32))
             a_exec = np.clip(a_teacher + rng.normal(0, dart, 5), -1, 1)
             obs, _r, term, trunc, _ = env.step(a_exec)
             if term:
@@ -89,14 +119,29 @@ def collect(episodes, dart, seed):
     return np.asarray(X, np.float32), np.asarray(Y, np.float32)
 
 
-def train_bc(X, Y, epochs, outdir, seed):
+def train_bc(X, Y, epochs, outdir, seed, fm):
+    import gymnasium as gym
     import torch
     from stable_baselines3 import PPO
     from stable_baselines3.common.vec_env import DummyVecEnv
     from grid4_rl_env import Grid4RLEnv
     torch.manual_seed(seed)
     torch.set_num_threads(4)
-    venv = DummyVecEnv([lambda: Grid4RLEnv(seed=seed, crank_band=CRANK_BAND)])
+
+    class AugSpace(gym.ObservationWrapper):
+        def __init__(self, env, dim):
+            super().__init__(env)
+            self.observation_space = gym.spaces.Box(-np.inf, np.inf, (dim,),
+                                                    np.float32)
+            self._dim = dim
+
+        def observation(self, obs):
+            out = np.zeros(self._dim, np.float32)
+            out[:len(obs)] = obs
+            return out
+
+    venv = DummyVecEnv([lambda: AugSpace(
+        Grid4RLEnv(seed=seed, crank_band=CRANK_BAND), fm.dim)])
     model = PPO("MlpPolicy", venv, device="cpu", seed=seed,
                 n_steps=64, batch_size=64,
                 policy_kwargs=dict(net_arch=[256, 256], log_std_init=-1.0),
@@ -106,6 +151,7 @@ def train_bc(X, Y, epochs, outdir, seed):
     Xt = torch.as_tensor(X); Yt = torch.as_tensor(Y)
     n = len(Xt)
     idx = np.arange(n)
+    mse = float("nan")
     for epoch in range(epochs):
         np.random.default_rng(seed + epoch).shuffle(idx)
         tot = 0.0
@@ -120,38 +166,48 @@ def train_bc(X, Y, epochs, outdir, seed):
             loss = torch.nn.functional.mse_loss(pred, yb)
             opt.zero_grad(); loss.backward(); opt.step()
             tot += float(loss.detach()) * len(b)
-        print(f"[bc] epoch {epoch + 1}/{epochs}  mse {tot / n:.5f}", flush=True)
+        mse = tot / n
+        print(f"[bc] epoch {epoch + 1}/{epochs}  mse {mse:.5f}", flush=True)
     path = os.path.join(outdir, "bc_c6.zip")
     model.save(path)
     venv.close()
-    return path, tot / n
+    return path, mse
 
 
-def tracking_check(ckpt, seed=0):
-    """Run the clone open-loop-free (its own feedback) and report speed."""
+def probe_eval(ckpt, fm, mus=(0.1, 0.2, 0.3, 0.4), seeds=3):
+    """In-script rollout table (handles clock/frames feature injection).
+    Also reports per-dim action std so mean-regression is caught immediately."""
     from stable_baselines3 import PPO
     from grid4_rl_env import Grid4RLEnv
     model = PPO.load(ckpt, device="cpu")
-    out = []
-    for mu in (0.1, 0.3):
-        env = Grid4RLEnv(eval_mode=True, mu_fixed=mu, episode_s=EP_S, seed=seed,
-                         crank_band=CRANK_BAND)
-        obs, _ = env.reset(seed=seed)
-        n = 0; info = {}
-        for i in range(int(EP_S / env.control_dt)):
-            act, _ = model.predict(obs, deterministic=True)
-            obs, _r, term, trunc, info = env.step(act)
-            n += 1
-            if term or trunc:
-                break
-        ep = info.get("ep", {})
-        out.append((mu, n * env.control_dt, ep.get("fell"), ep.get("vx"),
-                    ep.get("torso_roll_rms_deg"), ep.get("hip_corr")))
-        print(f"[clone] mu={mu}: {n * env.control_dt:.1f}s fell={ep.get('fell')} "
-              f"vx={ep.get('vx', float('nan')):.3f} "
-              f"torso_rms={ep.get('torso_roll_rms_deg', float('nan')):.1f} "
-              f"hip_corr={ep.get('hip_corr', float('nan')):+.2f}", flush=True)
-    return out
+    for mu in mus:
+        rows = []
+        for s in range(seeds):
+            env = Grid4RLEnv(eval_mode=True, mu_fixed=mu, episode_s=EP_S,
+                             seed=s, crank_band=CRANK_BAND)
+            obs, _ = env.reset(seed=s)
+            fm.reset()
+            acts = []
+            n = 0; info = {}
+            for i in range(int(EP_S / env.control_dt)):
+                t = i * env.control_dt
+                act, _ = model.predict(fm(obs, t), deterministic=True)
+                acts.append(act)
+                obs, _r, term, trunc, info = env.step(act)
+                n += 1
+                if term or trunc:
+                    break
+            ep = info.get("ep", {})
+            rows.append((n * env.control_dt, ep.get("fell", float("nan")),
+                         ep.get("vx", float("nan")),
+                         ep.get("torso_roll_rms_deg", float("nan")),
+                         ep.get("hip_corr", float("nan")),
+                         float(np.mean(np.std(np.asarray(acts), axis=0)))))
+        arr = np.asarray(rows)
+        print(f"[probe] mu={mu}: dur {arr[:,0].mean():.1f}s fell {arr[:,1].mean():.1f} "
+              f"vx {arr[:,2].mean():+.3f} torso_rms {arr[:,3].mean():.1f} "
+              f"hip_corr {arr[:,4].mean():+.2f} act_std {arr[:,5].mean():.3f}",
+              flush=True)
 
 
 def main():
@@ -160,17 +216,29 @@ def main():
     ap.add_argument("--epochs", type=int, default=20)
     ap.add_argument("--dart", type=float, default=0.05)
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--out", default=os.path.join(_HERE, "runs", "bc_c6"))
+    ap.add_argument("--clock", action="store_true",
+                    help="oracle phase input (capability probe)")
+    ap.add_argument("--frames", type=int, default=1,
+                    help="stack N obs frames (deployable variant)")
+    ap.add_argument("--out", default=None)
     ap.add_argument("--skip-eval", action="store_true")
     a = ap.parse_args()
-    os.makedirs(a.out, exist_ok=True)
+    if a.clock and a.frames > 1:
+        raise SystemExit("--clock and --frames are exclusive")
+    mode = "clock" if a.clock else ("frames" if a.frames > 1 else "raw")
+    fm = FeatureMaker(mode, a.frames)
+    out = a.out or os.path.join(_HERE, "runs",
+                                {"raw": "bc_c6", "clock": "bc_c6_clock",
+                                 "frames": f"bc_c6_f{a.frames}"}[mode])
+    os.makedirs(out, exist_ok=True)
+    print(f"[mode] {mode} (input dim {fm.dim}) -> {out}", flush=True)
 
-    X, Y = collect(a.episodes, a.dart, a.seed)
-    np.savez_compressed(os.path.join(a.out, "dataset.npz"), X=X, Y=Y)
-    ckpt, mse = train_bc(X, Y, a.epochs, a.out, a.seed)
+    X, Y = collect(a.episodes, a.dart, a.seed, fm)
+    np.savez_compressed(os.path.join(out, "dataset.npz"), X=X, Y=Y)
+    ckpt, mse = train_bc(X, Y, a.epochs, out, a.seed, fm)
     print(f"[bc] saved {ckpt} (final mse {mse:.5f})", flush=True)
-    tracking_check(ckpt, seed=a.seed)
-    if not a.skip_eval:
+    probe_eval(ckpt, fm)
+    if mode == "raw" and not a.skip_eval:
         subprocess.run([sys.executable,
                         os.path.join(_HERE, "eval_grid4_policy.py"), ckpt,
                         "--repeats", "5", "--crank-band", "0.0", "1.9"],

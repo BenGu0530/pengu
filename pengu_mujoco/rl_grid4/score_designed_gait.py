@@ -161,13 +161,15 @@ def main():
                     default=os.path.join(_HERE, "runs", "e2", "s2", "stageB",
                                          "ckpts", "final.zip"))
     ap.add_argument("--seeds", type=int, default=3)
+    ap.add_argument("--skip-policy", action="store_true")
     a = ap.parse_args()
     for mu in (0.1, 0.3):
         print(f"== mu={mu} ==")
         for s in range(a.seeds):
             print(fmt(run_designed(mu, seed=s), f"c6 designed (seed {s})"))
-        for s in range(a.seeds):
-            print(fmt(run_policy(a.policy, mu, seed=s), f"learned s2 (seed {s})"))
+        if not a.skip_policy:
+            for s in range(a.seeds):
+                print(fmt(run_policy(a.policy, mu, seed=s), f"learned s2 (seed {s})"))
 
 
 if __name__ == "__main__":
