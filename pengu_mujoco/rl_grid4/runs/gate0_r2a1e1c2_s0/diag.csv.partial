@@ -1,0 +1,3 @@
+steps,n_ep,ep_len,fall_rate,torso_roll_rms_deg,torso_roll_mean_deg,vx_cmd,torso_roll_rate_rms_dps,stride_L_m,stride_R_m,stride_asym,single_frac,hip_diff_rms_deg,hip_corr,r_track,r_progress,r_back,r_energy,r_swing,r_scrub,r_smooth,r_fall,vx,sigma_hipL,sigma_hipR,sigma_crankR,sigma_torso,sigma_crankL
+5750000,870,286.7425,0.7770,37.4527,-10.4635,0.4700,139.4432,0.1072,0.1118,-0.0204,0.4902,9.8813,0.5587,0.1808,0.2701,-0.1544,-0.0086,0.1379,-0.1657,-0.0199,-0.0498,0.1929,0.3471,0.2855,0.3941,0.4217,0.3874
+6000000,579,432.5147,0.2763,30.0794,-6.9035,0.4700,104.3753,0.0877,0.0915,-0.0175,0.4634,8.2019,0.5758,0.1451,0.1953,-0.1952,-0.0090,0.1300,-0.1461,-0.0209,-0.0155,0.0977,0.3461,0.2796,0.3939,0.4252,0.3959

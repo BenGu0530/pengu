@@ -1,0 +1,35 @@
+[train_grid4] gate0_r2a1e1c2_s2: 6000000 steps x 4 envs -> /home/rml2/Documents/ben_gu/ben_pengu/pengu/pengu_mujoco/rl_grid4/runs/gate0_r2a1e1c2_s2
+[curriculum] vx_cmd start 0.12
+[diag]    250000 steps  ep_len=107 fall=0.97  vx=-0.069  hip_diff=10.0deg hip_corr=+0.18  torso_rms=17.9deg roll_rate=97dps stride_asym=-0.061  sigma_torso=0.370
+[diag]    500000 steps  ep_len=257 fall=0.74  vx=0.021  hip_diff=9.0deg hip_corr=+0.54  torso_rms=33.3deg roll_rate=102dps stride_asym=-0.262  sigma_torso=0.372
+[curriculum] 600000 steps -> vx_cmd 0.17 (survival gate)
+[curriculum] 625000 steps -> vx_cmd 0.22 (survival gate)
+[curriculum] 650000 steps -> vx_cmd 0.27 (survival gate)
+[diag]    750000 steps  ep_len=320 fall=0.47  vx=0.018  hip_diff=7.8deg hip_corr=+0.54  torso_rms=36.1deg roll_rate=94dps stride_asym=-0.335  sigma_torso=0.366
+[diag]   1000000 steps  ep_len=269 fall=0.67  vx=0.025  hip_diff=9.0deg hip_corr=+0.53  torso_rms=37.6deg roll_rate=106dps stride_asym=-0.299  sigma_torso=0.366
+[curriculum] 1100000 steps -> vx_cmd 0.32 (survival gate)
+[curriculum] 1125000 steps -> vx_cmd 0.37 (survival gate)
+[curriculum] 1150000 steps -> vx_cmd 0.42 (survival gate)
+[diag]   1250000 steps  ep_len=381 fall=0.34  vx=-0.004  hip_diff=10.5deg hip_corr=+0.38  torso_rms=41.1deg roll_rate=98dps stride_asym=-0.429  sigma_torso=0.369
+[diag]   1500000 steps  ep_len=330 fall=0.42  vx=-0.007  hip_diff=11.2deg hip_corr=+0.62  torso_rms=45.2deg roll_rate=127dps stride_asym=-0.437  sigma_torso=0.370
+[diag]   1750000 steps  ep_len=259 fall=0.66  vx=0.017  hip_diff=10.4deg hip_corr=+0.71  torso_rms=50.3deg roll_rate=154dps stride_asym=-0.396  sigma_torso=0.368
+[diag]   2000000 steps  ep_len=335 fall=0.53  vx=0.024  hip_diff=10.4deg hip_corr=+0.60  torso_rms=46.1deg roll_rate=123dps stride_asym=-0.340  sigma_torso=0.372
+[diag]   2250000 steps  ep_len=200 fall=0.90  vx=0.103  hip_diff=12.0deg hip_corr=+0.63  torso_rms=46.0deg roll_rate=153dps stride_asym=-0.217  sigma_torso=0.372
+[diag]   2500000 steps  ep_len=134 fall=0.99  vx=0.159  hip_diff=13.8deg hip_corr=+0.59  torso_rms=47.5deg roll_rate=182dps stride_asym=-0.101  sigma_torso=0.372
+[diag]   2750000 steps  ep_len=266 fall=0.81  vx=0.075  hip_diff=11.9deg hip_corr=+0.62  torso_rms=43.2deg roll_rate=151dps stride_asym=-0.191  sigma_torso=0.374
+[diag]   3000000 steps  ep_len=350 fall=0.58  vx=0.058  hip_diff=12.0deg hip_corr=+0.56  torso_rms=37.4deg roll_rate=135dps stride_asym=-0.170  sigma_torso=0.371
+[curriculum] 3200000 steps -> vx_cmd 0.47 (survival gate)
+[curriculum] 3225000 steps -> vx_cmd 0.47 (survival gate)
+[diag]   3250000 steps  ep_len=398 fall=0.36  vx=0.061  hip_diff=11.0deg hip_corr=+0.54  torso_rms=38.3deg roll_rate=126dps stride_asym=-0.159  sigma_torso=0.377
+[diag]   3500000 steps  ep_len=436 fall=0.24  vx=0.059  hip_diff=10.4deg hip_corr=+0.55  torso_rms=33.5deg roll_rate=113dps stride_asym=-0.177  sigma_torso=0.378
+[diag]   3750000 steps  ep_len=407 fall=0.32  vx=0.057  hip_diff=10.8deg hip_corr=+0.57  torso_rms=38.4deg roll_rate=125dps stride_asym=-0.186  sigma_torso=0.381
+[diag]   4000000 steps  ep_len=452 fall=0.16  vx=0.027  hip_diff=10.2deg hip_corr=+0.58  torso_rms=33.5deg roll_rate=114dps stride_asym=-0.224  sigma_torso=0.386
+[diag]   4250000 steps  ep_len=406 fall=0.29  vx=0.009  hip_diff=10.3deg hip_corr=+0.52  torso_rms=33.4deg roll_rate=111dps stride_asym=-0.151  sigma_torso=0.394
+[diag]   4500000 steps  ep_len=395 fall=0.34  vx=0.024  hip_diff=11.1deg hip_corr=+0.52  torso_rms=39.2deg roll_rate=126dps stride_asym=-0.090  sigma_torso=0.394
+[diag]   4750000 steps  ep_len=418 fall=0.26  vx=0.029  hip_diff=10.9deg hip_corr=+0.53  torso_rms=38.1deg roll_rate=119dps stride_asym=-0.131  sigma_torso=0.394
+[diag]   5000000 steps  ep_len=401 fall=0.34  vx=0.016  hip_diff=11.7deg hip_corr=+0.48  torso_rms=39.7deg roll_rate=134dps stride_asym=-0.112  sigma_torso=0.390
+[diag]   5250000 steps  ep_len=457 fall=0.17  vx=0.052  hip_diff=10.6deg hip_corr=+0.49  torso_rms=35.4deg roll_rate=118dps stride_asym=-0.111  sigma_torso=0.393
+[diag]   5500000 steps  ep_len=441 fall=0.24  vx=0.084  hip_diff=10.6deg hip_corr=+0.53  torso_rms=42.3deg roll_rate=144dps stride_asym=-0.077  sigma_torso=0.394
+[diag]   5750000 steps  ep_len=428 fall=0.29  vx=0.086  hip_diff=11.0deg hip_corr=+0.52  torso_rms=36.8deg roll_rate=130dps stride_asym=-0.097  sigma_torso=0.394
+[diag]   6000000 steps  ep_len=347 fall=0.57  vx=0.123  hip_diff=11.8deg hip_corr=+0.59  torso_rms=45.4deg roll_rate=170dps stride_asym=-0.079  sigma_torso=0.398
+[train_grid4] done -> /home/rml2/Documents/ben_gu/ben_pengu/pengu/pengu_mujoco/rl_grid4/runs/gate0_r2a1e1c2_s2/ckpts/final.zip
