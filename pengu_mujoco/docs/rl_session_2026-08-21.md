@@ -125,6 +125,21 @@ seed-dependent (0.44 / 0.63 / 2.83 / 3.14). Selection-vs-confirmation
 shrinkage exists but is moderate (s0 pooled 0.356 -> 0.29). CSVs:
 runs/e2/s*/stageB/eval_bestckpt_confirm.csv.
 
+## 3c. Comparability bar (C4 measurement, 2026-08-22)
+
+c6 champion replayed under the RL env's exact conditions (reset/settle/50 Hz
+hold, full-range action bypass), 20 seeds, walk-window vx:
+
+| mu | fall rate | vx mean | median | range | sweep figure |
+|---|---|---|---|---|---|
+| 0.1 | 0.15 | 0.392 | 0.391 | 0.341-0.450 | 0.4689 (K=5) |
+| 0.3 | 0.30 | 0.084 | 0.098 | -0.131-0.240 | 0.242 |
+
+Under identical measurement conditions the mu=0.1 bar is ~0.39. Side by
+side with §3a: s0@1.5M confirmed 0.386 (5/5 pass, no falls) vs c6 0.392
+(15% falls); at mu=0.3 s2@3.0M 0.483 vs c6 0.084 (c6 is ice-specialized).
+Raw: rl_grid4/c6_under_rl_env.txt.
+
 ## 3b. runs/ layout (renamed 2026-08-21; old tag-soup names -> readable tree)
 
 ```
