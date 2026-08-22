@@ -166,3 +166,17 @@ after c1 ships: c5.
 1. runs/ layout changes must be announced in a memo BEFORE pushing; other
    machines finish + commit (git add -f) local run outputs before pulling.
 2. Every training run tees stdout to a .log committed alongside diag.csv.
+
+## ANNOUNCEMENT 2026-08-22 (Mac): REWARD default changed r2 -> r3
+
+`grid4_rl_env.py` RW_DEFAULT now includes `hf: 0.5` (high-frequency action
+penalty, see rl_e2_ice_memo knob log). Any training launched AFTER pulling
+this is r3 by default and tags itself r3. Consequences for in-flight work:
+
+- overnight gen* arms: gen01/gen02 ran under r2. Post-pull generations will
+  be r3 — do NOT pool them with r2 generations; the tag separates them.
+- To launch an exact-r2 run under new code: `--rw hf=0.0` (retags with rw
+  override, keeping pools separate).
+- Eval/render/ckpt tools are unaffected (reward not used at eval).
+- Mac is running the r3 2x2 rerun at rl_grid4/runs/e2x2hf/ (4 cells x 3M,
+  ~5 h from 10:48 EDT); please avoid launching heavy jobs on Mac until done.
