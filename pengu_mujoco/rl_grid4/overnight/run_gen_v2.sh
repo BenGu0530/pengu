@@ -55,7 +55,7 @@ while read -r name rest; do
   rd="runs/overnight/$GEN/$name"
   [ -f "$rd/ckpts/final.zip" ] || { echo "  $name: no final.zip, skipped"; continue; }
   # 1. selection sweep over every saved checkpoint (3 reps, selection seeds)
-  nice -n 10 "$PY" -u eval_ckpt_sweep.py "$rd" --repeats 3 \
+  nice -n 10 "$PY" -u eval_ckpt_sweep.py "$rd" --repeats 2 \
       > "$OUT/logs/$name.sweep.log" 2>&1
   ck=$(grep -oE "best=[^ ]+" "$OUT/logs/$name.sweep.log" | tail -1 | cut -d= -f2)
   case "$ck" in ""|*[!0-9a-zA-Z._/-]*) ck="$rd/ckpts/final.zip" ;; esac

@@ -1,0 +1,7 @@
+# C2 retrofit of the ablation arms (assigned to rml2 in rl_open_concerns
+# Resolutions). rml3 pushed only final.zip, so the intermediate checkpoints the
+# selection step needs do not exist here -- re-run with checkpoints, same seed 0
+# and same 3M, then select + confirm under the C2 protocol.
+no_track        track=0.0
+no_progress     progress=0.0
+no_swing        swing=0.0

@@ -136,3 +136,101 @@ The earlier ablation's `back0` also had the best eval of that whole set
 Prediction: if the backward tax is what caps speed, `back05`/`back0` gain
 without the fall rate exploding. If instead they just let the robot rock
 backward for free, expect ASYM or a drop in net_fwd despite a richer budget.
+
+---
+
+## Incident — 18.5 h lost (01:06 → 19:34)
+
+I edited `overnight/run_gen.sh` at 01:06 to add the C2 protocol. gen02 had been
+launched from that same file at 01:03 and was still executing it. Bash reads a
+script incrementally by byte offset, so rewriting a running script sends it to a
+wrong position; the parent shell died and its three training subshells took
+SIGHUP with it. The logs stop cleanly at `[curriculum] vx_cmd start 0.12` with
+no traceback, and dmesg shows no OOM — that is the signature. The machine idled
+until 19:34.
+
+Fix in place: generations now run from a frozen copy (`run_gen_v2.sh`,
+`queue_v2.sh`) that is never touched while a queue is live. Changes go into a
+new versioned copy.
+
+## Re-framing after Ben's Resolutions (C2 adopted)
+
+`rl_session_2026-08-21.md` §3a changes what this search should be optimising.
+Under checkpoint-selection + independent-seed confirmation:
+
+```
+s0@1.5M  mu=0.1  0.386 (5/5, no falls)     kappa0 ceiling 0.164
+                                            c6 under the RL env 0.392 (15% falls)
+```
+
+**The arm is already level with the designed c6 gait under matched conditions.**
+The "caps at 0.2" premise was largely a `final.zip` artifact. Tuning reward
+weights to raise a final-checkpoint number was optimising the wrong quantity.
+The harness now selects by eval and confirms on independent seeds, and every
+generation from here reports confirmation numbers.
+
+## Finding — torso follow is ANTI-correlated with speed
+
+From the four confirmed arm seeds, 79 surviving trials
+(`runs/e2/s*/stageB/eval_bestckpt_confirm.csv`):
+
+```
+corr(net_fwd, eff_kappa)       -0.644
+corr(net_fwd, hip_corr)        -0.485
+corr(net_fwd, torso_roll_rms)  -0.295
+corr(net_fwd, root_roll_rms)   -0.235
+```
+
+Binned by torso follow:
+
+| eff_kappa | n | mean net_fwd |
+|---|---|---|
+| < 1.0 (torso barely follows) | 19 | **+0.341** |
+| 1.0–2.0 | 13 | +0.236 |
+| > 2.0 (strong follow) | 47 | **+0.129** |
+
+**Not a seed artifact.** Within-seed correlations are −0.908 / −0.211 / −0.775 /
+−0.547 (mean −0.610), same sign in all four. **Not a mu artifact** either:
+across the 16 (seed, mu) cells the mean within-cell correlation is −0.417,
+negative in 12 of 16, and mu itself is flat against both
+(corr(mu, eff_kappa) +0.120, corr(mu, net_fwd) −0.055).
+
+**Not passive following.** If a high eff_kappa merely meant the torso riding a
+bigger rock, it would track root roll — `corr(root_roll, eff_kappa) = -0.082`,
+essentially zero, while `corr(root_roll, torso_roll) = +0.866`. The follow
+*coefficient* predicts slowness far better than the amount of rocking does.
+
+`eff_kappa` and `hip_corr` are only weakly related (+0.288) and both survive
+partialling:
+
+```
+corr(net_fwd, eff_kappa | hip_corr)  -0.602
+corr(net_fwd, hip_corr  | eff_kappa) -0.409
+```
+
+so they are independent predictors. The 2×2:
+
+| | hip_corr < 0.18 | hip_corr > 0.18 |
+|---|---|---|
+| **eff_k < 2.47** | **+0.332** (n=26) | +0.177 (n=13) |
+| **eff_k > 2.47** | +0.120 (n=13) | +0.115 (n=27) |
+
+The fast quadrant — torso not following, legs alternating — is 2.9× the other
+three, which are indistinguishable from each other.
+
+### Why this matters to the brief
+
+The experiment's premise (`rl_e2_ice_memo.md`) is that tracking 0.47 on ice
+*requires* torso use, because in the designed family c6 (κ=2) reaches 0.4689 at
+mu=0.1 where c3 (κ=0) reaches 0.1636. In the RL arm the relationship runs the
+other way: the policies that follow the roll least are the fast ones.
+
+Stated as measurement, not conclusion. Caveats: eff_kappa is observed, not
+controlled; there are 79 trials but only 4 independent policies; and this says
+nothing about whether *commanding* torso use would help — only that among what
+these policies found, more follow goes with less speed.
+
+The clean test is an intervention, not another correlation: hold the torso
+actuator fixed and retrain (a capability ablation, no reward change), or
+compare against the arm's own low-eff_kappa checkpoints. Recorded, not run —
+the queue is on the assigned C2 retrofit.
