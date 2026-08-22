@@ -25,6 +25,8 @@ def main():
     ap.add_argument("--fps", type=int, default=50)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", default=None)
+    ap.add_argument("--crank-band", nargs=2, type=float, default=None,
+                    metavar=("MID", "HALF"))
     a = ap.parse_args()
 
     import imageio
@@ -32,7 +34,8 @@ def main():
     from grid4_rl_env import Grid4RLEnv
 
     model = PPO.load(a.ckpt, device="cpu")
-    env = Grid4RLEnv(eval_mode=True, mu_fixed=a.mu, episode_s=a.dur, seed=a.seed)
+    env = Grid4RLEnv(eval_mode=True, mu_fixed=a.mu, episode_s=a.dur, seed=a.seed,
+                     crank_band=tuple(a.crank_band) if a.crank_band else None)
     obs, _ = env.reset(seed=a.seed)
 
     W, H = 640, 480

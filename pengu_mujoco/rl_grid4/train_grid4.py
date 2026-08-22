@@ -73,6 +73,10 @@ def main():
     ap.add_argument("--init-from", default=None,
                     help="warm-start from a prior final.zip (policy+value weights); "
                          "tag gets _w suffix")
+    ap.add_argument("--crank-band", nargs=2, type=float, default=None,
+                    metavar=("MID", "HALF"),
+                    help="override the a1 crank action band, e.g. 0.0 1.9 (a2 "
+                         "probe: covers the c6 designed gait's command domain)")
     ap.add_argument("--name", default=None,
                     help="run dir name under --out (e.g. e2/s0/stageA); "
                          "overrides the auto version tag")
@@ -98,6 +102,8 @@ def main():
         env_kwargs.update(rw=rw)
     if a.no_smooth:
         env_kwargs.update(w_smooth=0.0)
+    if a.crank_band:
+        env_kwargs.update(crank_band=tuple(a.crank_band))
     if a.mu_fixed is not None:
         env_kwargs.update(mu_fixed=a.mu_fixed)
     elif a.mode == "gate0":

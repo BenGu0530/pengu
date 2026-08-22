@@ -115,6 +115,9 @@ def main():
     ap.add_argument("--torso-thresh", type=float, default=5.0,
                     help="deg, torso roll RMS cut between silent/active")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--crank-band", nargs=2, type=float, default=None,
+                    metavar=("MID", "HALF"),
+                    help="must match the band the policy was trained with")
     a = ap.parse_args()
     mus = [float(x) for x in a.mus.split(",")]
 
@@ -127,7 +130,8 @@ def main():
         per_mu_pass = {}
         torso_rmss = []
         for mu in mus:
-            env = Grid4RLEnv(eval_mode=True, mu_fixed=mu, episode_s=a.dur, seed=0)
+            env = Grid4RLEnv(eval_mode=True, mu_fixed=mu, episode_s=a.dur, seed=0,
+                             crank_band=tuple(a.crank_band) if a.crank_band else None)
             trials = []
             for rep in range(a.repeats):
                 r = run_trial(model, env, mu, trial_seed=1000 * rep + int(mu * 100), dur=a.dur)

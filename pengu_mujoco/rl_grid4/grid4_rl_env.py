@@ -131,7 +131,12 @@ class Grid4RLEnv(gym.Env):
                  seed=None, eval_mode=False,
                  filter_alpha=ALPHA, action_delay=1,
                  obs_noise=True, init_jitter=True,
-                 rand_gains=False, push=False, w_smooth=None, rw=None):
+                 rand_gains=False, push=False, w_smooth=None, rw=None,
+                 crank_band=None):
+        # crank_band=(mid, half): override the a1 crank action band. a2 probe
+        # (reward audit 2026-08-21): (0.0, 1.9) — symmetric band covering both
+        # the c6 designed gait's command domain [0,+1.83] (inexpressible under
+        # a1) and the a1 negative band; settle stance follows the band mid.
         super().__init__()
         self.rw = dict(RW_DEFAULT)
         if rw:
@@ -179,8 +184,11 @@ class Grid4RLEnv(gym.Env):
         cr = self.model.actuator_ctrlrange[self.aid]
         self.ctrl_mid = cr.mean(axis=1)
         self.ctrl_half = (cr[:, 1] - cr[:, 0]) / 2.0
-        self.ctrl_mid[CRANK_IDX] = CRANK_MID          # action version a1
-        self.ctrl_half[CRANK_IDX] = CRANK_HALF
+        self.crank_mid, self.crank_half = (
+            (float(crank_band[0]), float(crank_band[1])) if crank_band
+            else (CRANK_MID, CRANK_HALF))                 # a1 default
+        self.ctrl_mid[CRANK_IDX] = self.crank_mid
+        self.ctrl_half[CRANK_IDX] = self.crank_half
 
         jids = self.model.actuator_trnid[self.aid, 0]
         self.jqadr = self.model.jnt_qposadr[jids]
@@ -324,7 +332,7 @@ class Grid4RLEnv(gym.Env):
             ctrl0 = d.ctrl[self.aid].copy()
             if not np.any(ctrl0):
                 ctrl0 = d.qpos[self.jqadr].copy()
-            ctrl0[CRANK_IDX] = CRANK_MID                # settle at working stance
+            ctrl0[CRANK_IDX] = self.crank_mid           # settle at working stance
             d.ctrl[self.aid] = ctrl0
             if self._settle():                          # quiet stand reached
                 break
