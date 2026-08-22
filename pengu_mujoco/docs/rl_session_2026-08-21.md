@@ -208,3 +208,55 @@ possible. Iteration rounds logged here.
   7% of positive reward, a1p1-5Hz 54%, a2p0 16%). Watch: does a1p1-style
   high-freq reappear; sigma_torso for penalty-induced sigma collapse; r_hf
   trend in diag.
+  - Round 1 cell a1p1 DONE (final eval: mu0.1 0.0/0.018, mu0.2 1.0/0.106,
+    mu0.3 1.0/0.085, mu0.4 0.6/0.069, tier 1 by the mu0.1 fail). Morphology
+    (deterministic, seed 0): the 5 Hz mincing is GONE (freq 2.5-2.65 Hz,
+    airborne 2-6% vs 42% under r2, r_hf paid ~0.01/step) — but the mu0.2-0.4
+    passes are HELD-LEAN walking: torso parked at -53 deg (roll_mean -53.2 ~=
+    RMS 53.5), legs shuffle under the lean; mu0.1 is a 69%-double-support
+    shuffle at vx 0.029. Mid-run note: the 2M ckpt walked mu0.1 at 0.114 with
+    freq 3.8 Hz — final drifted away from it (stopping-rule effect again).
+    Frames + video pushed to Ben (a1p1hf_final_mu0.2.mp4).
+  - Round 1 mid-run finding (a2p1 @1.5M probe): mu0.1 vx 0.246 at freq 4.5 Hz,
+    airborne 34%, falls at 4.9 s — the wide band BUYS BACK high frequency.
+    Cause: r_hf is computed on the NORMALIZED action; with crank half 1.9 vs
+    a1's 0.6 the same physical crank motion pays (0.6/1.9)^2 ~ 1/10 the tax.
+    Round-2 candidate fix: price r_hf in physical units (resid * ctrl_half,
+    fixed reference scale) so bands are taxed equally.
+  - Round 1 cell a2p1 DONE (final eval: mu0.1 0.4/0.417, mu0.2 0.6/0.141,
+    mu0.3 0.4/0.024, mu0.4 0.0/0.013, tier 1). Morphology (final, seed 0,
+    deterministic): mu-dependent switch — mu0.1 walks 0.142 at 1.55 Hz,
+    torso quiet (RMS 9.9, mean -5.1), double support 63%; mu0.2 bounces
+    0.300 at 3.1 Hz, airborne 46%, torso RMS 31.5 mean 25.5. The band
+    dilution (see mid-run note) lets the bouncy mode persist at mu>=0.2.
+  - Round 1 cell a1p0 DONE (final eval: mu0.1 0.8/0.216, mu0.2 0.2/0.017,
+    mu0.3 0.0/0.016, mu0.4 0.0/0.020, tier 1). Morphology (final, seed 0):
+    mu0.1 vx 0.363 at 3.25 Hz, airborne 28%, torso HELD-LEAN (mean 35.1 ~=
+    RMS 36.8); mu0.3 near-stand (vx 0.011). Low-mu specialist, lean cheat.
+  - Round 1 cell a2p0 DONE (final eval: mu0.1 1.0/0.448, mu0.2 1.0/0.368,
+    mu0.3 0.0/0.033, mu0.4 0.0/0.022, tier 1). Morphology (final, seed 0):
+    mu0.1 vx 0.307 at 3.25 Hz, single support 76%, airborne 18%, torso QUIET
+    (RMS 15.6, mean 6.6) — the most walk-like cell of round 1; mu0.2 vx 0.279
+    at 2.9 Hz but torso parked at -43.6 (lean switch). Demo + strips sent.
+
+  ROUND 1 SUMMARY (all finals, frozen eval pass / net_fwd):
+  | cell | mu0.1 | mu0.2 | mu0.3 | mu0.4 | morphology note |
+  |---|---|---|---|---|---|
+  | a1p1 | 0.0/0.018 | 1.0/0.106 | 1.0/0.085 | 0.6/0.069 | 2.5-2.65 Hz, HELD-LEAN -53 at mu0.2 |
+  | a2p1 | 0.4/0.417 | 0.6/0.141 | 0.4/0.024 | 0.0/0.013 | mu0.1 1.55 Hz torso-quiet walk / mu0.2 3.1 Hz bounce |
+  | a1p0 | 0.8/0.216 | 0.2/0.017 | 0.0/0.016 | 0.0/0.020 | 3.25 Hz lean-bounce at mu0.1 |
+  | a2p0 | 1.0/0.448 | 1.0/0.368 | 0.0/0.033 | 0.0/0.022 | mu0.1 3.25 Hz torso-quiet 76% single support |
+  Cross-cell: 5 Hz mincing eliminated everywhere (freq 1.55-3.25 Hz, airborne
+  <= 28% vs 42%); recurring cheats now (a) HELD-LEAN torso parked 35-53 deg
+  as static counterweight, (b) mu-specialization (low-mu fast / high-mu
+  stand), (c) final-vs-best drift persists. No cell passes all mu.
+
+- Round 2 (2026-08-22, launched): REWARD r3b — hf residual scaled to
+  band-independent units (x ctrl_half / a1-reference halves; a1 pricing
+  unchanged, a2 cranks now pay the same physical tax, previously diluted
+  ~10x). Smoke: identical 5 Hz physical crank wiggle pays identical
+  -0.0878/step in both bands. Only a2 cells re-run (a1 cells are bit-for-bit
+  the same recipe as round 1): runs/e2x2hf2/{a2p1,a2p0}. OPEN QUESTION for
+  Ben (red-line adjacent, not acted on): is HELD-LEAN walking a cheat to
+  penalize or a legitimate emergent weight-shift strategy? No torso-shaping
+  change made either way.

@@ -66,7 +66,10 @@ STALL_TORQUE = 4.1        # N*m, XM430 forcerange
 #     content the filter rejects: ||a - act_filt||^2. Calibration 2026-08-22
 #     (per-step resid^2, mu=0.1): a1p1-final 0.81, a2p0-final 0.30, c6 teacher
 #     0.13 -> w=0.5 taxes c6 7% of its positive reward, a1p1 54%, a2p0 16%.
-REWARD_VERSION = "r3"
+# v3b: hf residual scaled to band-independent units (x ctrl_half / a1-ref
+#     halves). Round-1 r3 priced in normalized units, so the a2 band diluted
+#     the crank tax ~10x and bought high frequency back. a1 pricing unchanged.
+REWARD_VERSION = "r3b"
 # Frozen r2 reward weights. Every one is overridable per-run via
 # Grid4RLEnv(rw={...}) / train_grid4.py --rw key=val, which also retags the run,
 # so a tuning arm can never be pooled with a frozen-recipe run. Absent an
@@ -197,6 +200,15 @@ class Grid4RLEnv(gym.Env):
             else (CRANK_MID, CRANK_HALF))                 # a1 default
         self.ctrl_mid[CRANK_IDX] = self.crank_mid
         self.ctrl_half[CRANK_IDX] = self.crank_half
+        # r3b: hf penalty is priced in a band-independent frame. Round-1 (r3)
+        # priced ||a - act_filt||^2 in NORMALIZED units, so the a2 crank band
+        # (half 1.9 vs a1's 0.6) paid ~1/10 the tax for the same physical
+        # motion and bought the high frequency back (session memo, Round 1
+        # mid-run finding). Scale residuals by ctrl_half relative to the a1
+        # reference halves: a1 cells price exactly as in round 1.
+        href = (cr[:, 1] - cr[:, 0]) / 2.0
+        href[CRANK_IDX] = CRANK_HALF
+        self.hf_scale = self.ctrl_half / href
 
         jids = self.model.actuator_trnid[self.aid, 0]
         self.jqadr = self.model.jnt_qposadr[jids]
@@ -457,7 +469,7 @@ class Grid4RLEnv(gym.Env):
         r_swing = w["swing"] * float(np.clip(swing_rate, 0.0, w["swing_cap"]))
         r_scrub = -w["scrub"] * scrub
         r_smooth = -self.w_smooth * float(np.sum((a - self.last_action.astype(np.float64)) ** 2))
-        _hf_resid = a - self.act_filt          # the content the alpha filter rejects
+        _hf_resid = (a - self.act_filt) * self.hf_scale   # filter-rejected content, band-fair units
         r_hf = -w["hf"] * float(_hf_resid @ _hf_resid)
         reward = r_track + r_progress + r_back + r_energy + r_swing + r_scrub + r_smooth + r_hf
 

@@ -85,7 +85,13 @@ def run_designed(mu, seed):
     # r3 hf accounting: the replay bypasses the action filter (alpha=1.0), so
     # env-side r_hf is identically 0. Score the designed action stream against
     # the same alpha=0.2 reference offline and write the sum into env._ep.
-    from grid4_rl_env import ALPHA as _ALPHA, RW_DEFAULT as _RW
+    # r3b: residuals are scaled to band-fair units; this replay normalizes by
+    # the FULL ctrlrange, so scale = full-range halves / a1 reference halves.
+    from grid4_rl_env import (ALPHA as _ALPHA, RW_DEFAULT as _RW,
+                              CRANK_IDX as _CIDX, CRANK_HALF as _CHALF)
+    _href = env.ctrl_half.copy()      # full-range halves (overridden above)
+    _href[_CIDX] = _CHALF
+    _hf_scale = env.ctrl_half / _href
     _hf_filt = None
     _hf_sum = 0.0
     for i in range(n_steps):
@@ -98,7 +104,7 @@ def run_designed(mu, seed):
             clip_hits += 1
         a_cl = np.clip(a, -1, 1)
         _hf_filt = a_cl.copy() if _hf_filt is None else (1 - _ALPHA) * _hf_filt + _ALPHA * a_cl
-        _resid = a_cl - _hf_filt
+        _resid = (a_cl - _hf_filt) * _hf_scale
         _hf_sum += -_RW["hf"] * float(_resid @ _resid)
         obs, r, term, trunc, info = env.step(a_cl)
         env._ep["r_hf"] = _hf_sum
