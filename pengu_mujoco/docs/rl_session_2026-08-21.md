@@ -375,3 +375,13 @@ possible. Iteration rounds logged here.
     mu CONFIRMED; freq <=2 Hz met at mu0.3 only (mu0.1 3.25 Hz); airborne
     17-18% (vs 42% cheat); torso free and active. Videos + frames sent.
     csv: runs/e2x2hf4b/a2p0/{ckpt_sweep.csv,eval_bestckpt_confirm.csv}.
+
+- RECIPE KEPT (Ben, 2026-08-23): r3d (hf=0.6 commanded residual hips+torso)
+  + a2 band + priors-off, single-stage — the a2p0 cell. Definitive
+  independent-seed arm queued: seeds 1-7 (run_r3d_arm.sh, runs/r3d_arm/),
+  auto-starts after the a2p0_ext probe (+3M continuation testing whether
+  torso recruitment keeps growing; torso joint was frozen to 1.25M then
+  monotonically recruited 1.5M->2.75M, amp 3.7 deg, with vx up to 0.317;
+  marginal accounting: torso hf tax 0.013/step vs ~0.70/step speed income
+  still unclaimed -> no direct reward brake at current amplitude).
+  Seed 0 = e2x2hf4b/a2p0 (best 2000k confirmed 16/20). Pool = 8 seeds.
