@@ -363,3 +363,15 @@ possible. Iteration rounds logged here.
   unpriced cranks. Both open decisions (crank pricing <- hardware specs;
   HELD-LEAN ruling) now gate the next reward change. best-ckpt sweep on the
   a2 cells running (ckpt_sweep_hf4b.log).
+  - Round 4b best-ckpt protocol (a2 cells): a2p1 best=3000k ~= final (8/12
+    both). a2p0 best=2000k pass 11/12 vs final 8/12 (+3). CONFIRMED on
+    independent seeds (50000, 5 reps): a2p0@2000k = mu0.1 5/5/0.391,
+    mu0.2 5/5/0.262, mu0.3 3/5/0.117, mu0.4 3/5/0.075 — 16/20, tier 3
+    (torso med RMS 33.7) — first policy of the program passing majority at
+    ALL four mu. Morphology (deterministic, seed 0): mu0.3 vx 0.176 at
+    2.00 Hz, single support 74%, airborne 17%, hip_corr -0.48, torso RMS
+    23.7 mean 20.0 (part lean, part sway); mu0.1 vx 0.268 at 3.25 Hz,
+    torso quiet (RMS 13.1). Goal scoreboard vs Ben's criteria: walks all
+    mu CONFIRMED; freq <=2 Hz met at mu0.3 only (mu0.1 3.25 Hz); airborne
+    17-18% (vs 42% cheat); torso free and active. Videos + frames sent.
+    csv: runs/e2x2hf4b/a2p0/{ckpt_sweep.csv,eval_bestckpt_confirm.csv}.

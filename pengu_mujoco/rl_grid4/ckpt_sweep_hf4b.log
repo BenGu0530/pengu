@@ -1,0 +1,32 @@
+  rl_grid4/runs/e2x2hf4b/a2p1    250k: pass  0/12  net_fwd +0.024
+  rl_grid4/runs/e2x2hf4b/a2p1    500k: pass  0/12  net_fwd +0.000
+  rl_grid4/runs/e2x2hf4b/a2p1    750k: pass  0/12  net_fwd +0.001
+  rl_grid4/runs/e2x2hf4b/a2p1   1000k: pass  0/12  net_fwd +0.007
+  rl_grid4/runs/e2x2hf4b/a2p1   1250k: pass  0/12  net_fwd +0.012
+  rl_grid4/runs/e2x2hf4b/a2p1   1500k: pass  0/12  net_fwd +0.002
+  rl_grid4/runs/e2x2hf4b/a2p1   1750k: pass  0/12  net_fwd +0.003
+  rl_grid4/runs/e2x2hf4b/a2p1   2000k: pass  2/12  net_fwd +0.023
+  rl_grid4/runs/e2x2hf4b/a2p1   2250k: pass  1/12  net_fwd +0.008
+  rl_grid4/runs/e2x2hf4b/a2p1   2500k: pass  0/12  net_fwd +0.004
+  rl_grid4/runs/e2x2hf4b/a2p1   2750k: pass  8/12  net_fwd +0.215
+  rl_grid4/runs/e2x2hf4b/a2p1   3000k: pass  8/12  net_fwd +0.321
+  rl_grid4/runs/e2x2hf4b/a2p1   final: pass  8/12  net_fwd +0.312
+[rl_grid4/runs/e2x2hf4b/a2p1] best=3000k (pass 8, nf 0.3206) vs final (pass 8, nf 0.3118) -> rl_grid4/runs/e2x2hf4b/a2p1/ckpt_sweep.csv
+  rl_grid4/runs/e2x2hf4b/a2p0    250k: pass  0/12  net_fwd +0.000
+  rl_grid4/runs/e2x2hf4b/a2p0    500k: pass  0/12  net_fwd -0.000
+  rl_grid4/runs/e2x2hf4b/a2p0    750k: pass  3/12  net_fwd +0.024
+  rl_grid4/runs/e2x2hf4b/a2p0   1000k: pass  0/12  net_fwd +0.026
+  rl_grid4/runs/e2x2hf4b/a2p0   1250k: pass  0/12  net_fwd -0.000
+  rl_grid4/runs/e2x2hf4b/a2p0   1500k: pass  3/12  net_fwd +0.045
+  rl_grid4/runs/e2x2hf4b/a2p0   1750k: pass  8/12  net_fwd +0.114
+  rl_grid4/runs/e2x2hf4b/a2p0   2000k: pass 11/12  net_fwd +0.212
+  rl_grid4/runs/e2x2hf4b/a2p0   2250k: pass  8/12  net_fwd +0.181
+  rl_grid4/runs/e2x2hf4b/a2p0   2500k: pass  8/12  net_fwd +0.173
+  rl_grid4/runs/e2x2hf4b/a2p0   2750k: pass  8/12  net_fwd +0.215
+  rl_grid4/runs/e2x2hf4b/a2p0   3000k: pass  8/12  net_fwd +0.225
+  rl_grid4/runs/e2x2hf4b/a2p0   final: pass  8/12  net_fwd +0.229
+[rl_grid4/runs/e2x2hf4b/a2p0] best=2000k (pass 11, nf 0.2123) vs final (pass 8, nf 0.2286) -> rl_grid4/runs/e2x2hf4b/a2p0/ckpt_sweep.csv
+
+=== best-vs-final summary ===
+rl_grid4/runs/e2x2hf4b/a2p1: best 3000k pass 8 (final 8, delta +0), net_fwd 0.3206 vs 0.3118
+rl_grid4/runs/e2x2hf4b/a2p0: best 2000k pass 11 (final 8, delta +3), net_fwd 0.2123 vs 0.2286
