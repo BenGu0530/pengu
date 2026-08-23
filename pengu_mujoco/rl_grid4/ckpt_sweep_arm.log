@@ -1,0 +1,107 @@
+  rl_grid4/runs/r3d_arm/s1    250k: pass  0/12  net_fwd -0.001
+  rl_grid4/runs/r3d_arm/s1    500k: pass  0/12  net_fwd -0.000
+  rl_grid4/runs/r3d_arm/s1    750k: pass  0/12  net_fwd +0.002
+  rl_grid4/runs/r3d_arm/s1   1000k: pass  0/12  net_fwd +0.007
+  rl_grid4/runs/r3d_arm/s1   1250k: pass  3/12  net_fwd +0.028
+  rl_grid4/runs/r3d_arm/s1   1500k: pass  1/12  net_fwd +0.015
+  rl_grid4/runs/r3d_arm/s1   1750k: pass  2/12  net_fwd +0.009
+  rl_grid4/runs/r3d_arm/s1   2000k: pass  0/12  net_fwd -0.000
+  rl_grid4/runs/r3d_arm/s1   2250k: pass 11/12  net_fwd +0.169
+  rl_grid4/runs/r3d_arm/s1   2500k: pass  9/12  net_fwd +0.216
+  rl_grid4/runs/r3d_arm/s1   2750k: pass  8/12  net_fwd +0.280
+  rl_grid4/runs/r3d_arm/s1   3000k: pass  9/12  net_fwd +0.282
+  rl_grid4/runs/r3d_arm/s1   final: pass  8/12  net_fwd +0.329
+[rl_grid4/runs/r3d_arm/s1] best=2250k (pass 11, nf 0.1692) vs final (pass 8, nf 0.3289) -> rl_grid4/runs/r3d_arm/s1/ckpt_sweep.csv
+  rl_grid4/runs/r3d_arm/s2    250k: pass  0/12  net_fwd -0.000
+  rl_grid4/runs/r3d_arm/s2    500k: pass  3/12  net_fwd +0.065
+  rl_grid4/runs/r3d_arm/s2    750k: pass  8/12  net_fwd +0.180
+  rl_grid4/runs/r3d_arm/s2   1000k: pass  8/12  net_fwd +0.118
+  rl_grid4/runs/r3d_arm/s2   1250k: pass  8/12  net_fwd +0.127
+  rl_grid4/runs/r3d_arm/s2   1500k: pass  7/12  net_fwd +0.084
+  rl_grid4/runs/r3d_arm/s2   1750k: pass  8/12  net_fwd +0.083
+  rl_grid4/runs/r3d_arm/s2   2000k: pass  9/12  net_fwd +0.113
+  rl_grid4/runs/r3d_arm/s2   2250k: pass  6/12  net_fwd +0.083
+  rl_grid4/runs/r3d_arm/s2   2500k: pass  9/12  net_fwd +0.300
+  rl_grid4/runs/r3d_arm/s2   2750k: pass  8/12  net_fwd +0.276
+  rl_grid4/runs/r3d_arm/s2   3000k: pass  8/12  net_fwd +0.322
+  rl_grid4/runs/r3d_arm/s2   final: pass 11/12  net_fwd +0.335
+[rl_grid4/runs/r3d_arm/s2] best=final (pass 11, nf 0.3347) vs final (pass 11, nf 0.3347) -> rl_grid4/runs/r3d_arm/s2/ckpt_sweep.csv
+  rl_grid4/runs/r3d_arm/s3    250k: pass  0/12  net_fwd -0.001
+  rl_grid4/runs/r3d_arm/s3    500k: pass  3/12  net_fwd +0.020
+  rl_grid4/runs/r3d_arm/s3    750k: pass  1/12  net_fwd +0.022
+  rl_grid4/runs/r3d_arm/s3   1000k: pass  0/12  net_fwd +0.011
+  rl_grid4/runs/r3d_arm/s3   1250k: pass  1/12  net_fwd +0.015
+  rl_grid4/runs/r3d_arm/s3   1500k: pass  0/12  net_fwd -0.002
+  rl_grid4/runs/r3d_arm/s3   1750k: pass  0/12  net_fwd -0.000
+  rl_grid4/runs/r3d_arm/s3   2000k: pass  0/12  net_fwd -0.000
+  rl_grid4/runs/r3d_arm/s3   2250k: pass  0/12  net_fwd +0.000
+  rl_grid4/runs/r3d_arm/s3   2500k: pass  0/12  net_fwd +0.001
+  rl_grid4/runs/r3d_arm/s3   2750k: pass  0/12  net_fwd +0.000
+  rl_grid4/runs/r3d_arm/s3   3000k: pass  2/12  net_fwd +0.053
+  rl_grid4/runs/r3d_arm/s3   final: pass  4/12  net_fwd +0.048
+[rl_grid4/runs/r3d_arm/s3] best=final (pass 4, nf 0.0483) vs final (pass 4, nf 0.0483) -> rl_grid4/runs/r3d_arm/s3/ckpt_sweep.csv
+  rl_grid4/runs/r3d_arm/s4    250k: pass  0/12  net_fwd +0.000
+  rl_grid4/runs/r3d_arm/s4    500k: pass  0/12  net_fwd +0.000
+  rl_grid4/runs/r3d_arm/s4    750k: pass  0/12  net_fwd +0.000
+  rl_grid4/runs/r3d_arm/s4   1000k: pass  0/12  net_fwd -0.000
+  rl_grid4/runs/r3d_arm/s4   1250k: pass  2/12  net_fwd +0.086
+  rl_grid4/runs/r3d_arm/s4   1500k: pass  0/12  net_fwd -0.000
+  rl_grid4/runs/r3d_arm/s4   1750k: pass  9/12  net_fwd +0.164
+  rl_grid4/runs/r3d_arm/s4   2000k: pass 11/12  net_fwd +0.192
+  rl_grid4/runs/r3d_arm/s4   2250k: pass  8/12  net_fwd +0.250
+  rl_grid4/runs/r3d_arm/s4   2500k: pass  4/12  net_fwd +0.228
+  rl_grid4/runs/r3d_arm/s4   2750k: pass  2/12  net_fwd +0.107
+  rl_grid4/runs/r3d_arm/s4   3000k: pass  7/12  net_fwd +0.170
+  rl_grid4/runs/r3d_arm/s4   final: pass 10/12  net_fwd +0.260
+[rl_grid4/runs/r3d_arm/s4] best=2000k (pass 11, nf 0.1925) vs final (pass 10, nf 0.26) -> rl_grid4/runs/r3d_arm/s4/ckpt_sweep.csv
+  rl_grid4/runs/r3d_arm/s5    250k: pass  0/12  net_fwd -0.000
+  rl_grid4/runs/r3d_arm/s5    500k: pass  0/12  net_fwd +0.028
+  rl_grid4/runs/r3d_arm/s5    750k: pass  0/12  net_fwd +0.000
+  rl_grid4/runs/r3d_arm/s5   1000k: pass  3/12  net_fwd +0.033
+  rl_grid4/runs/r3d_arm/s5   1250k: pass  5/12  net_fwd +0.040
+  rl_grid4/runs/r3d_arm/s5   1500k: pass  5/12  net_fwd +0.029
+  rl_grid4/runs/r3d_arm/s5   1750k: pass  4/12  net_fwd +0.037
+  rl_grid4/runs/r3d_arm/s5   2000k: pass 11/12  net_fwd +0.118
+  rl_grid4/runs/r3d_arm/s5   2250k: pass  7/12  net_fwd +0.074
+  rl_grid4/runs/r3d_arm/s5   2500k: pass 11/12  net_fwd +0.150
+  rl_grid4/runs/r3d_arm/s5   2750k: pass 10/12  net_fwd +0.298
+  rl_grid4/runs/r3d_arm/s5   3000k: pass 10/12  net_fwd +0.268
+  rl_grid4/runs/r3d_arm/s5   final: pass 11/12  net_fwd +0.307
+[rl_grid4/runs/r3d_arm/s5] best=final (pass 11, nf 0.3066) vs final (pass 11, nf 0.3066) -> rl_grid4/runs/r3d_arm/s5/ckpt_sweep.csv
+  rl_grid4/runs/r3d_arm/s6    250k: pass  0/12  net_fwd -0.000
+  rl_grid4/runs/r3d_arm/s6    500k: pass  0/12  net_fwd +0.000
+  rl_grid4/runs/r3d_arm/s6    750k: pass  0/12  net_fwd -0.000
+  rl_grid4/runs/r3d_arm/s6   1000k: pass  1/12  net_fwd +0.040
+  rl_grid4/runs/r3d_arm/s6   1250k: pass  5/12  net_fwd +0.057
+  rl_grid4/runs/r3d_arm/s6   1500k: pass  2/12  net_fwd +0.017
+  rl_grid4/runs/r3d_arm/s6   1750k: pass  0/12  net_fwd +0.003
+  rl_grid4/runs/r3d_arm/s6   2000k: pass  0/12  net_fwd +0.019
+  rl_grid4/runs/r3d_arm/s6   2250k: pass  0/12  net_fwd +0.002
+  rl_grid4/runs/r3d_arm/s6   2500k: pass  0/12  net_fwd +0.004
+  rl_grid4/runs/r3d_arm/s6   2750k: pass  0/12  net_fwd +0.003
+  rl_grid4/runs/r3d_arm/s6   3000k: pass  0/12  net_fwd +0.008
+  rl_grid4/runs/r3d_arm/s6   final: pass  0/12  net_fwd +0.006
+[rl_grid4/runs/r3d_arm/s6] best=1250k (pass 5, nf 0.0574) vs final (pass 0, nf 0.0056) -> rl_grid4/runs/r3d_arm/s6/ckpt_sweep.csv
+  rl_grid4/runs/r3d_arm/s7    250k: pass  0/12  net_fwd -0.000
+  rl_grid4/runs/r3d_arm/s7    500k: pass  0/12  net_fwd -0.000
+  rl_grid4/runs/r3d_arm/s7    750k: pass  0/12  net_fwd -0.000
+  rl_grid4/runs/r3d_arm/s7   1000k: pass  1/12  net_fwd +0.006
+  rl_grid4/runs/r3d_arm/s7   1250k: pass  3/12  net_fwd +0.023
+  rl_grid4/runs/r3d_arm/s7   1500k: pass  3/12  net_fwd +0.042
+  rl_grid4/runs/r3d_arm/s7   1750k: pass  5/12  net_fwd +0.098
+  rl_grid4/runs/r3d_arm/s7   2000k: pass 11/12  net_fwd +0.153
+  rl_grid4/runs/r3d_arm/s7   2250k: pass  8/12  net_fwd +0.146
+  rl_grid4/runs/r3d_arm/s7   2500k: pass 11/12  net_fwd +0.227
+  rl_grid4/runs/r3d_arm/s7   2750k: pass 11/12  net_fwd +0.354
+  rl_grid4/runs/r3d_arm/s7   3000k: pass 10/12  net_fwd +0.410
+  rl_grid4/runs/r3d_arm/s7   final: pass  9/12  net_fwd +0.387
+[rl_grid4/runs/r3d_arm/s7] best=2750k (pass 11, nf 0.3541) vs final (pass 9, nf 0.3868) -> rl_grid4/runs/r3d_arm/s7/ckpt_sweep.csv
+
+=== best-vs-final summary ===
+rl_grid4/runs/r3d_arm/s1: best 2250k pass 11 (final 8, delta +3), net_fwd 0.1692 vs 0.3289
+rl_grid4/runs/r3d_arm/s2: best final pass 11 (final 11, delta +0), net_fwd 0.3347 vs 0.3347
+rl_grid4/runs/r3d_arm/s3: best final pass 4 (final 4, delta +0), net_fwd 0.0483 vs 0.0483
+rl_grid4/runs/r3d_arm/s4: best 2000k pass 11 (final 10, delta +1), net_fwd 0.1925 vs 0.26
+rl_grid4/runs/r3d_arm/s5: best final pass 11 (final 11, delta +0), net_fwd 0.3066 vs 0.3066
+rl_grid4/runs/r3d_arm/s6: best 1250k pass 5 (final 0, delta +5), net_fwd 0.0574 vs 0.0056
+rl_grid4/runs/r3d_arm/s7: best 2750k pass 11 (final 9, delta +2), net_fwd 0.3541 vs 0.3868

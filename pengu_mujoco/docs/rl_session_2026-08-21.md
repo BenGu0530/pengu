@@ -420,3 +420,23 @@ possible. Iteration rounds logged here.
   (>=14/20), 2 failures (s3 weak, s6 rocking-stand). Both tier-3 lines
   (s2, s5) pass mu0.4 outright. Per-seed ckpt sweep launched for the
   best-ckpt + confirmation pass (ckpt_sweep_arm.log).
+
+  R3D_ARM DEFINITIVE TABLE (best-ckpt selected by sweep, CONFIRMED on
+  independent trial seeds 50000 x 5 reps; pass/net_fwd per mu):
+  | seed | best | mu0.1 | mu0.2 | mu0.3 | mu0.4 | total | tier |
+  |---|---|---|---|---|---|---|---|
+  | s0 | 2000k | 1.0/0.391 | 1.0/0.262 | 0.6/0.117 | 0.6/0.075 | 16/20 | 3 |
+  | s1 | 2250k | 0.4/0.060 | 1.0/0.239 | 0.6/0.119 | 0.8/0.093 | 14/20 | 1 |
+  | s2 | final | 0.6/0.434 | 1.0/0.553 | 0.6/0.203 | 0.4/0.049 | 13/20 | 1 |
+  | s3 | final | 0.6/0.217 | 0.4/0.065 | 0.0/0.009 | 0.0/0.008 |  5/20 | 1 |
+  | s4 | 2000k | 1.0/0.493 | 1.0/0.270 | 0.6/0.048 | 0.8/0.062 | 17/20 | 3 |
+  | s5 | final | 1.0/0.548 | 1.0/0.464 | 0.6/0.087 | 0.8/0.109 | 17/20 | 3 |
+  | s6 | 1250k | 0.0/0.001 | 0.0/0.003 | 0.4/0.048 | 0.8/0.102 |  6/20 | 1 |
+  | s7 | 2750k | 1.0/0.646 | 1.0/0.497 | 0.6/0.231 | 0.8/0.125 | 17/20 | 3 |
+  Arm stats (confirmed): 4/8 seeds tier 3 at 16-17/20; 2 mid (13-14); 2
+  weak (5-6). Three seeds' confirmed mu0.1 net_fwd EXCEED the c6 designed
+  ceiling 0.469 with 5/5 pass: s4 0.493, s5 0.548, s7 0.646 (137% of c6).
+  Morphology caveat carried from the ext probe: this family is 2.6-3.5 Hz
+  with 17-40% airborne and mixed lean episodes, not the 2 Hz clean gait
+  (that remains a2p0-3M@2000k's mu0.3 slice). csvs per seed:
+  runs/r3d_arm/s*/{ckpt_sweep.csv,eval_bestckpt_confirm.csv}.

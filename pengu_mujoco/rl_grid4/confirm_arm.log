@@ -1,0 +1,120 @@
+=== confirm s1 (ckpt_2250000_steps) Sun Aug 23 02:53:23 EDT 2026 ===
+  mu=0.1  pass=0.4  net_fwd mean=0.060 min=-0.001  torso_rms med=19.6deg
+  mu=0.2  pass=1.0  net_fwd mean=0.239 min=0.227  torso_rms med=10.0deg
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:4232: RuntimeWarning: Degrees of freedom <= 0 for slice
+  return _methods._var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:178: RuntimeWarning: invalid value encountered in divide
+  arrmean = um.true_divide(arrmean, div, out=arrmean,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:211: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:3824: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+  mu=0.3  pass=0.6  net_fwd mean=0.119 min=0.000  torso_rms med=nandeg
+  mu=0.4  pass=0.8  net_fwd mean=0.093 min=0.000  torso_rms med=nandeg
+[ckpts] tier 1 no-walk (zero standing on torso claims)
+wrote rl_grid4/runs/r3d_arm/s1/eval_bestckpt_confirm.csv (20 trials)
+=== confirm s2 (final) Sun Aug 23 02:53:37 EDT 2026 ===
+  mu=0.1  pass=0.6  net_fwd mean=0.434 min=0.058  torso_rms med=34.9deg
+  mu=0.2  pass=1.0  net_fwd mean=0.553 min=0.523  torso_rms med=26.0deg
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:4232: RuntimeWarning: Degrees of freedom <= 0 for slice
+  return _methods._var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:178: RuntimeWarning: invalid value encountered in divide
+  arrmean = um.true_divide(arrmean, div, out=arrmean,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:211: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:3824: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+  mu=0.3  pass=0.6  net_fwd mean=0.203 min=0.000  torso_rms med=nandeg
+  mu=0.4  pass=0.4  net_fwd mean=0.049 min=0.000  torso_rms med=nandeg
+[ckpts] tier 1 no-walk (zero standing on torso claims)
+wrote rl_grid4/runs/r3d_arm/s2/eval_bestckpt_confirm.csv (20 trials)
+=== confirm s3 (final) Sun Aug 23 02:53:50 EDT 2026 ===
+  mu=0.1  pass=0.6  net_fwd mean=0.217 min=0.121  torso_rms med=22.9deg
+  mu=0.2  pass=0.4  net_fwd mean=0.065 min=-0.001  torso_rms med=11.5deg
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:4232: RuntimeWarning: Degrees of freedom <= 0 for slice
+  return _methods._var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:178: RuntimeWarning: invalid value encountered in divide
+  arrmean = um.true_divide(arrmean, div, out=arrmean,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:211: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:3824: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+  mu=0.3  pass=0.0  net_fwd mean=0.009 min=0.000  torso_rms med=nandeg
+  mu=0.4  pass=0.0  net_fwd mean=0.008 min=0.000  torso_rms med=nandeg
+[ckpts] tier 1 no-walk (zero standing on torso claims)
+wrote rl_grid4/runs/r3d_arm/s3/eval_bestckpt_confirm.csv (20 trials)
+=== confirm s4 (ckpt_2000000_steps) Sun Aug 23 02:54:03 EDT 2026 ===
+  mu=0.1  pass=1.0  net_fwd mean=0.493 min=0.473  torso_rms med=24.8deg
+  mu=0.2  pass=1.0  net_fwd mean=0.270 min=0.255  torso_rms med=12.4deg
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:4232: RuntimeWarning: Degrees of freedom <= 0 for slice
+  return _methods._var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:178: RuntimeWarning: invalid value encountered in divide
+  arrmean = um.true_divide(arrmean, div, out=arrmean,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:211: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:3824: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+  mu=0.3  pass=0.6  net_fwd mean=0.048 min=0.000  torso_rms med=nandeg
+  mu=0.4  pass=0.8  net_fwd mean=0.062 min=0.000  torso_rms med=nandeg
+[ckpts] tier 3 walk, torso ACTIVE (med RMS 12.4deg >= 5.0)
+wrote rl_grid4/runs/r3d_arm/s4/eval_bestckpt_confirm.csv (20 trials)
+=== confirm s5 (final) Sun Aug 23 02:54:17 EDT 2026 ===
+  mu=0.1  pass=1.0  net_fwd mean=0.548 min=0.525  torso_rms med=46.4deg
+  mu=0.2  pass=1.0  net_fwd mean=0.464 min=0.455  torso_rms med=10.3deg
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:4232: RuntimeWarning: Degrees of freedom <= 0 for slice
+  return _methods._var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:178: RuntimeWarning: invalid value encountered in divide
+  arrmean = um.true_divide(arrmean, div, out=arrmean,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:211: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:3824: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+  mu=0.3  pass=0.6  net_fwd mean=0.087 min=0.000  torso_rms med=nandeg
+  mu=0.4  pass=0.8  net_fwd mean=0.109 min=0.000  torso_rms med=nandeg
+[ckpts] tier 3 walk, torso ACTIVE (med RMS 25.8deg >= 5.0)
+wrote rl_grid4/runs/r3d_arm/s5/eval_bestckpt_confirm.csv (20 trials)
+=== confirm s6 (ckpt_1250000_steps) Sun Aug 23 02:54:31 EDT 2026 ===
+  mu=0.1  pass=0.0  net_fwd mean=0.001 min=0.000  torso_rms med=6.9deg
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:4232: RuntimeWarning: Degrees of freedom <= 0 for slice
+  return _methods._var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:178: RuntimeWarning: invalid value encountered in divide
+  arrmean = um.true_divide(arrmean, div, out=arrmean,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:211: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:3824: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+  mu=0.2  pass=0.0  net_fwd mean=0.003 min=0.000  torso_rms med=nandeg
+  mu=0.3  pass=0.4  net_fwd mean=0.048 min=0.000  torso_rms med=nandeg
+  mu=0.4  pass=0.8  net_fwd mean=0.102 min=0.000  torso_rms med=nandeg
+[ckpts] tier 1 no-walk (zero standing on torso claims)
+wrote rl_grid4/runs/r3d_arm/s6/eval_bestckpt_confirm.csv (20 trials)
+=== confirm s7 (ckpt_2750000_steps) Sun Aug 23 02:54:44 EDT 2026 ===
+  mu=0.1  pass=1.0  net_fwd mean=0.646 min=0.592  torso_rms med=36.4deg
+  mu=0.2  pass=1.0  net_fwd mean=0.497 min=0.440  torso_rms med=33.4deg
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:4232: RuntimeWarning: Degrees of freedom <= 0 for slice
+  return _methods._var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:178: RuntimeWarning: invalid value encountered in divide
+  arrmean = um.true_divide(arrmean, div, out=arrmean,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:211: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:3824: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+/opt/anaconda3/envs/pengu/lib/python3.11/site-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+  mu=0.3  pass=0.6  net_fwd mean=0.231 min=0.000  torso_rms med=nandeg
+  mu=0.4  pass=0.8  net_fwd mean=0.125 min=0.000  torso_rms med=nandeg
+[ckpts] tier 3 walk, torso ACTIVE (med RMS 27.5deg >= 5.0)
+wrote rl_grid4/runs/r3d_arm/s7/eval_bestckpt_confirm.csv (20 trials)
+=== confirms complete Sun Aug 23 02:54:58 EDT 2026 ===
