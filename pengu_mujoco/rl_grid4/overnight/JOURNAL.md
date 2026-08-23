@@ -427,3 +427,75 @@ Then `e2_base` (chained): the frozen reward under e2 at seeds 0/1/2. The arms
 had no matched control — `runs/e2/s*` is the two-stage warm-started protocol
 that C7 dropped — so s0 is the control and the three-seed spread gives the
 C1 yardstick to read an ablation delta against.
+
+---
+
+# Program 2 — straight-walk term and penalty shaping (Ben, 2026-08-22, 24 h)
+
+Brief changed. The earlier constraint ("tune existing weights, no new terms")
+is lifted for one specific term: **a straight-walk reward**. Ben's reasoning is
+that stride balance prices the leaning torso indirectly — a torso parked to one
+side forces the legs to compensate unevenly — and that this is necessary rather
+than optional. Second ask: consider expressing terms as **"less penalty" rather
+than reward**. c6 being unreachable is accepted; the goal is to get as close as
+possible. Independent work, no coordination with other machines.
+
+## What was built, and what it was checked against
+
+**`straight`** (`RW_DEFAULT["straight"]`, default 0.0):
+`r_straight = -w * |stride_L - stride_R| / (stride_L + stride_R)`, clipped to
+[0,1], on the last COMPLETED stride of each foot, exactly 0 until both feet have
+taken one. It reads the legs only, so the torso stays unmeasured and the "let
+torso use emerge" contract holds. It is already a penalty capped at 0, so there
+is nothing to farm by standing — a standing robot never scores a touchdown edge
+and the term stays 0.
+
+**`shape=penalty`**: shifts `track`, `progress` and `swing` so each tops out at
+0 and the whole reward is <= 0. Measured shift **-1.8700/step**, matching
+`0.8 + 1.0*0.47 + 1.0*0.6` exactly.
+
+Honest caveat, not buried: this is **not** a pure level shift. `r_progress` is
+capped at `vx_cmd` in the penalty form, so overspeed stops paying extra, where
+the reward form pays unbounded `vx` and drives the dash. A second change rides
+along with the first, and S2 carries a same-band `shape=reward` control for it.
+
+**Bit-identity check before anything ran** (two trainings were live at the time):
+with `straight=0, shape=reward` the patched env reproduces the pre-patch reward
+stream over 600 random-action steps at `max|diff| = 0.000e+00`. `straight=1.0`
+bites at -0.43/step and is <=0 everywhere; `shape=penalty` is <=0 everywhere.
+
+## The arithmetic that had to come before the compute
+
+`shape=penalty` changes what DYING is worth, and that is not a detail:
+
+```
+penalty floor (standing)        -1.87 /step
+discounted over 500 steps @ .99  -186
+current fall                       10   -> a single fall is 19x cheaper than living
+```
+
+At `fall=10` the optimal policy under this shape is **to die immediately**. The
+fleet has already lost two rounds to exactly this failure. `train_grid4.py` now
+runs a preflight and **refuses to start** when `fall <= breakeven`, printing both
+numbers. Verified: `--shape penalty` alone is rejected, `--rw fall=250` passes.
+
+## Declared program
+
+Written down before any of it runs; each generation is 3 candidates, 3M steps,
+`--mode e2`, then C2 selection -> independent-seed confirmation -> render ->
+frames at t = 3/6/9 s.
+
+- **S0 — band.** `a2` (0.0+-1.9), `a3` (0.95+-0.95 = [0.00, 1.90], the *minimal*
+  band containing c6's measured command domain), `a3_s1` (a3 at seed 1). Band
+  width multiplies the exploration noise reaching the cranks, so the tight band
+  is worth measuring rather than assuming. a1 is not re-run: seed 0 of the frozen
+  band with the default reward already exists, and training is byte-deterministic
+  given (seed, config).
+- **S1 — straight-walk term, yes/no.** `straight` = 0.0 / 0.3 / 1.0 at S0's band.
+  Yes/no before magnitudes, per Ben's earlier "either yes or no but not tuning".
+- **S2 — penalty shaping, yes/no.** `pen` (fall=250), `pen_str` (+ the S1
+  weight), `ctl` (same band, `shape=reward`).
+
+Then iterate on what the **frames** show, not the table alone. The a1 ablation
+queue (`e2_a/b/c`, `e2_base`) is left to finish first rather than killed —
+working agreement 2 — costing about 2 h of the 24.

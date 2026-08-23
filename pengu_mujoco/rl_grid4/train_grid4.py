@@ -41,6 +41,13 @@ def make_env(rank, seed, env_kwargs):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--mode", choices=["gate0", "e2"], required=True)
+    ap.add_argument("--shape", choices=["reward", "penalty"], default="reward",
+                    help="penalty: shift track/progress/swing so each tops out "
+                         "at 0 and the whole reward is <= 0. Standing then "
+                         "bleeds instead of collecting income. This changes what "
+                         "DYING is worth, so --rw fall= must clear the suicide "
+                         "breakeven (floor/(1-gamma) ~ 186 at the defaults); the "
+                         "launcher refuses to start otherwise.")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--steps", type=int, default=3_000_000)
     ap.add_argument("--n-envs", type=int, default=8)
@@ -104,6 +111,23 @@ def main():
         env_kwargs.update(w_smooth=0.0)
     if a.crank_band:
         env_kwargs.update(crank_band=tuple(a.crank_band))
+    if a.shape != "reward":
+        env_kwargs.update(shape=a.shape)
+        # suicide preflight. With every term <= 0, an agent that cannot yet walk
+        # bleeds the floor each step; if a single -fall is cheaper than the
+        # discounted remaining bleed, dying is optimal and the run is wasted.
+        # This has already burned two fleet rounds, so it is a hard gate.
+        from grid4_rl_env import RW_DEFAULT as _RWD
+        _w = dict(_RWD); _w.update(rw)
+        _floor = _w["track"] + _w["progress"] * 0.47 + _w["swing"] * _w["swing_cap"]
+        _g, _T = 0.99, 500
+        _need = _floor * (1 - _g ** _T) / (1 - _g)
+        print(f"[preflight] shape=penalty floor -{_floor:.2f}/step -> discounted "
+              f"{_need:.0f}; fall={_w['fall']:g}", flush=True)
+        if _w["fall"] <= _need:
+            raise SystemExit(
+                f"[preflight] REFUSING: fall={_w['fall']:g} <= suicide breakeven "
+                f"{_need:.0f}. Dying would beat living. Set --rw fall=<bigger>.")
     if a.mu_fixed is not None:
         env_kwargs.update(mu_fixed=a.mu_fixed)
     elif a.mode == "gate0":
@@ -121,6 +145,7 @@ def main():
     LOG_STD_INIT = -1.0
     EXPLORATION_VERSION = "e1"
     rwtag = "".join(f"-{k}{v:g}" for k, v in sorted(rw.items())) if rw else ""
+    rwtag += "" if a.shape == "reward" else f"-{a.shape}"
     tag = a.name or (
         f"{a.mode}_{REWARD_VERSION}{'ns' if a.no_smooth else ''}{rwtag}"
         f"{ACTION_VERSION}{EXPLORATION_VERSION}"

@@ -113,6 +113,13 @@ RW_DEFAULT = {
     "scrub":    0.8,      # stance slip
     "smooth":   0.01,     # action rate
     "fall":     10.0,     # magnitude; applied as -fall (v2 raised this from 5.0)
+    "straight": 0.0,      # stride-balance penalty, -w * |L-R|/(L+R) on the last
+                          # completed stride of each foot. Default 0 = OFF, so
+                          # every run predating it is bit-identical. Measures the
+                          # LEGS, never the torso, so it stays inside the
+                          # "let torso use emerge" contract while removing the
+                          # payoff for a one-sided lean: a torso parked to one
+                          # side makes the legs take unequal strides.
     "hf":       0.6,      # commanded-HF residual, hips+torso only (r3d; see log)
                           # w=1.0 probe (e2x2hf4, 500k) dash-suicided: HT noise
                           # tax -0.28..-0.32/step made survival net-negative
@@ -176,11 +183,12 @@ class Grid4RLEnv(gym.Env):
                  filter_alpha=ALPHA, action_delay=1,
                  obs_noise=True, init_jitter=True,
                  rand_gains=False, push=False, w_smooth=None, rw=None,
-                 crank_band=None):
+                 crank_band=None, shape="reward"):
         # crank_band=(mid, half): override the a1 crank action band. a2 probe
         # (reward audit 2026-08-21): (0.0, 1.9) — symmetric band covering both
         # the c6 designed gait's command domain [0,+1.83] (inexpressible under
         # a1) and the a1 negative band; settle stance follows the band mid.
+        self.shape = str(shape)
         super().__init__()
         self.rw = dict(RW_DEFAULT)
         if rw:
@@ -409,7 +417,7 @@ class Grid4RLEnv(gym.Env):
         self._push_force = np.zeros(3)
         self._ep = {k: 0.0 for k in
                     ("r_track", "r_progress", "r_back", "r_energy", "r_swing",
-                     "r_scrub", "r_smooth", "r_hf", "r_fall", "vx")}
+                     "r_scrub", "r_smooth", "r_hf", "r_straight", "r_fall", "vx")}
         self._torso_roll_sq = 0.0
         self._torso_roll_sum = 0.0   # DC component: separates a steady lean from a waddle
         self._torso_roll_prev = self.torso_roll()
@@ -420,6 +428,7 @@ class Grid4RLEnv(gym.Env):
         self._con_prev = {b: True for b in self.foot_bids}
         self._td_xy = {b: None for b in self.foot_bids}
         self._stride = {b: [] for b in self.foot_bids}
+        self._last_stride = {b: None for b in self.foot_bids}
         self._single = 0
         self._sub = 0
         # left-right alternation stats: running sums of hip-L/hip-R angles
@@ -481,8 +490,9 @@ class Grid4RLEnv(gym.Env):
                     swing_fwd += rf - rel_fwd[b]
                 if con[b] and not self._con_prev[b]:          # touchdown edge
                     if self._td_xy[b] is not None:
-                        self._stride[b].append(
-                            float(np.linalg.norm(xy - self._td_xy[b])))
+                        _sd = float(np.linalg.norm(xy - self._td_xy[b]))
+                        self._stride[b].append(_sd)
+                        self._last_stride[b] = _sd
                     self._td_xy[b] = xy.copy()
                 self._con_prev[b] = con[b]
                 foot_abs[b] = xy.copy()
@@ -502,12 +512,34 @@ class Grid4RLEnv(gym.Env):
         r_energy = -w["energy"] * energy
         r_swing = w["swing"] * float(np.clip(swing_rate, 0.0, w["swing_cap"]))
         r_scrub = -w["scrub"] * scrub
+        # stride balance. Only priced once BOTH feet have completed a stride,
+        # so it says nothing before walking starts and cannot be farmed by
+        # standing (a standing robot never scores a touchdown edge).
+        _sL, _sR = (self._last_stride[b] for b in sorted(self.foot_bids))
+        if w["straight"] and _sL is not None and _sR is not None and (_sL + _sR) > 1e-6:
+            _asym = abs(_sL - _sR) / (_sL + _sR)          # in [0, 1]
+            r_straight = -w["straight"] * float(min(_asym, 1.0))
+        else:
+            r_straight = 0.0
         r_smooth = -self.w_smooth * float(np.sum((a - self.last_action.astype(np.float64)) ** 2))
         # r3d: commanded residual (round-1 form), hips+torso only; hf_scale
         # is 1 on those dims in both bands (same ctrlrange), kept for safety.
         _hf_resid = ((a - self.act_filt) * self.hf_scale)[HF_IDX]
         r_hf = -w["hf"] * float(_hf_resid @ _hf_resid)
-        reward = r_track + r_progress + r_back + r_energy + r_swing + r_scrub + r_smooth + r_hf
+        # "less penalty, not reward" shape (Ben, 2026-08-22): the three positive
+        # terms are shifted so each tops out at 0 and everything is a penalty.
+        # Same gradients, different level -- which is the point: with positive
+        # income, surviving without walking still pays (the stand-and-collect-
+        # swing-income deadlock); with penalty-only, standing bleeds and only
+        # walking stops the bleeding. The shift changes what DYING is worth, so
+        # `fall` has to be re-checked against the suicide breakeven whenever
+        # this is on -- see shape_shift() / the launcher's preflight.
+        if self.shape == "penalty":
+            r_track = w["track"] * (math.exp(-((vx - self.vx_cmd) ** 2) / w["sigma2"]) - 1.0)
+            r_progress = w["progress"] * (min(max(vx, 0.0), self.vx_cmd) - self.vx_cmd)
+            r_swing = w["swing"] * (float(np.clip(swing_rate, 0.0, w["swing_cap"])) - w["swing_cap"])
+        reward = (r_track + r_progress + r_back + r_energy + r_swing
+                  + r_scrub + r_smooth + r_hf + r_straight)
 
         roll, pitch_t = self._tilt()
         z = float(d.xpos[self.root][2])
@@ -531,6 +563,7 @@ class Grid4RLEnv(gym.Env):
                        ("r_back", r_back), ("r_energy", r_energy),
                        ("r_swing", r_swing), ("r_scrub", r_scrub),
                        ("r_smooth", r_smooth), ("r_hf", r_hf),
+                       ("r_straight", r_straight),
                        ("r_fall", r_fall), ("vx", vx)):
             self._ep[k] += val
 

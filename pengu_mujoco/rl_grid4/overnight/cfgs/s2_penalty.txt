@@ -1,0 +1,19 @@
+# S2 -- "less penalty, not reward" (Ben, 2026-08-22), yes/no.
+#
+# shape=penalty shifts track/progress/swing so each tops out at 0: identical
+# gradients, whole reward <= 0. Measured shift -1.8700/step, matching
+# 0.8 + 1.0*0.47 + 1.0*0.6 exactly. Standing then bleeds instead of collecting,
+# which is aimed straight at the stand-and-collect deadlock.
+#
+# One honest caveat: it is NOT a pure level shift. r_progress is capped at vx_cmd
+# in this form, so overspeed stops paying extra -- the reward shape pays
+# unbounded vx and drives the dash. That is a second change riding along, and
+# the control arm is the same band with shape=reward.
+#
+# fall=250 is forced by arithmetic, not taste: floor -1.87/step discounted over
+# a 500-step episode at gamma .99 is 186, so at fall=10 a single fall is 19x
+# cheaper than living and the optimal policy is to die immediately. The launcher
+# now REFUSES to start when fall <= breakeven.
+pen     --crank-band BAND --shape penalty --rw fall=250
+pen_str --crank-band BAND --shape penalty --rw fall=250 straight=STRW
+ctl     --crank-band BAND

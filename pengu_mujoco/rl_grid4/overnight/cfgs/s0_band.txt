@@ -1,0 +1,19 @@
+# S0 -- which crank band to build the rest on. Declared before any of it runs.
+#
+# Own measurement (docs/reward_audit_c6.md S4): c6 needs crank ctrl
+# [0.000, +1.833] rad; the frozen a1 band is [-1.80, -0.60]. Disjoint, 100% out
+# of band, confirmed on achieved joint angles. Ben: c6 being unreachable is
+# fine, the goal is to get as close as possible -- so the band has to at least
+# contain it, or "as close as possible" is capped by the mapping, not the policy.
+#
+# a1 reference is NOT re-run here: seed 0 of the frozen band + default reward is
+# already trained (e2_base drops it as a byte-duplicate), and training is
+# byte-deterministic given (seed, config).
+#
+# a3 is the MINIMAL band containing c6's domain: 0.95 +- 0.95 = [0.00, 1.90].
+# a2 (0.0 +- 1.9 = [-1.90, +1.90]) contains it too but is 2x wider, and band
+# width multiplies the exploration noise that reaches the cranks -- the reason
+# to prefer the tight one, and the reason to measure both instead of assuming.
+a2      --crank-band 0.0 1.9
+a3      --crank-band 0.95 0.95
+a3_s1   --crank-band 0.95 0.95 --seed 1

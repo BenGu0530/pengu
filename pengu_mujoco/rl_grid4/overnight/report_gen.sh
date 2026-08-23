@@ -69,7 +69,7 @@ for r in sorted(rows, key=lambda r: -(r[13] if r[13]==r[13] else -1)):
           + ("   " + ",".join(flags) if flags else ""))
 
 print("\nreward budget at the last diag row (per step):")
-comp = ["r_track","r_progress","r_back","r_energy","r_swing","r_scrub","r_smooth","r_hf","r_fall"]
+comp = ["r_track","r_progress","r_back","r_energy","r_swing","r_scrub","r_smooth","r_hf","r_straight","r_fall"]
 print(f"{'cand':<16}" + "".join(f"{c.replace('r_',''):>10}" for c in comp) + f"{'pos_sum':>9}{'net':>8}")
 for r in rows:
     L = r[14]

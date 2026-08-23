@@ -1,0 +1,17 @@
+# S1 -- the straight-walk term, yes/no (Ben, 2026-08-22).
+#
+# r_straight = -w * |stride_L - stride_R| / (stride_L + stride_R), on the last
+# COMPLETED stride of each foot, 0 until both feet have taken one. It reads the
+# LEGS only, so the torso stays unmeasured and "let torso use emerge" holds; the
+# mechanism Ben named is that a torso parked to one side forces the legs to
+# compensate unevenly, so stride balance prices that lean indirectly.
+#
+# It is a penalty capped at 0, which is already the "less penalty, not reward"
+# form -- there is nothing here to farm by standing, because a standing robot
+# never scores a touchdown edge and the term stays exactly 0.
+#
+# Yes/no first, magnitudes only after (Ben, earlier: "either yes or no but not
+# tuning"). BAND is set by S0 and patched in before launch.
+str0    --crank-band BAND --rw straight=0.0
+str03   --crank-band BAND --rw straight=0.3
+str10   --crank-band BAND --rw straight=1.0
