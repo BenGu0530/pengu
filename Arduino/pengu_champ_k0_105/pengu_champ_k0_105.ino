@@ -42,7 +42,8 @@ float p_hipOffD  = 30.0f;                     // [deg] symmetric forward-pitch o
 
 // torso kappa-PID (sim TorsoKappaPID values)
 float p_kappa = 0.0f, p_kp = 2.0f, p_ki = 0.1f;   // kappa=0: torso counter-rotates to stay world-upright
-const float TORSO_CLAMP_DEG = 45.0f;
+const float TORSO_CLAMP_DEG = 10.0f;   // HARDWARE: torso collides with the legs beyond ~±10 deg
+const float ROLL_HOME_DEG   = -2.0f;   // HARDWARE hardcode: IMU reads -2 when the torso is truly level
 float S_TILT = +1.0f;                  // <-- VERIFY (check #1 above)
 
 // staged start (sim-validated: no hip_off step-shove)
@@ -167,12 +168,14 @@ void run_walk() {
   // IMU re-home: average roll during the settle window (robot still, torso at home);
   // everything below uses roll RELATIVE to that reference -> drift/mount offset cancelled
   if (t > T_RAMP && t < T_RAMP + T_SETTLE)
-    roll_ref = 0.98f * roll_ref + 0.02f * imu_roll;
+    roll_ref = 0.98f * roll_ref + 0.02f * imu_roll;          // measured, DIAGNOSTIC ONLY
   if (!roll_homed && t >= T_RAMP + T_SETTLE) {
     roll_homed = true;
-    DEBUG_SERIAL.print("IMU re-homed: roll_ref = "); DEBUG_SERIAL.println(roll_ref, 2);
+    DEBUG_SERIAL.print("settle-measured roll = "); DEBUG_SERIAL.print(roll_ref, 2);
+    DEBUG_SERIAL.print("  (control uses hardcoded ROLL_HOME_DEG = ");
+    DEBUG_SERIAL.print(ROLL_HOME_DEG, 1); DEBUG_SERIAL.println(")");
   }
-  float rollRel = imu_roll - roll_ref;
+  float rollRel = imu_roll - ROLL_HOME_DEG;                  // hardware hardcode reference
 
   // torso feedback — target torso WORLD roll = kappa * hip-axis roll (kappa=0: hold level)
   float J_deg  = dxl.getPresentPosition(XM_TORSO_ROLL, UNIT_DEGREE) - home_deg[idxOf(XM_TORSO_ROLL)];
