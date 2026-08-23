@@ -362,3 +362,68 @@ swing, because nothing rewards one. If the lean survives at `hf=0`, that is evid
 the lean is load-bearing for the gait rather than a pricing artifact — and the
 question stops being a reward-weight question, which is a result for Ben to judge
 rather than something to tune around.
+
+---
+
+## Incident 3 — the whole search trained on the wrong friction (Ben caught it)
+
+Every generation from gen01 through gen03 ran `--mode gate0`, which fixes
+**mu = 0.7**, while every eval ran at **mu 0.1/0.2/0.3/0.4**. Trained on one
+friction, scored on another.
+
+`train_grid4.py`'s own docstring says what gate0 is:
+
+```
+gate0  -- qualification gate, NOT an experiment arm: mu fixed 0.7 (+-5%),
+          proves the frozen setup can learn locomotion at all
+e2     -- the ice arm: mu ~ U(0.1, 0.4) per episode, vx_cmd = 0.47
+```
+
+and `rl_e2_ice_memo.md:153` records **`Gate 0 — PASSED 2026-08-21 (config
+frozen)`**. The protocol had already moved to e2.
+
+Where it came from: I copied the `--mode gate0` invocation out of the memo's
+usage block when writing the rml3 one-liner, without checking that the gate had
+already been passed. `ablate_arms.txt`, `run_gen.sh`, v2 and v3 all inherited
+that line. Ben never approved mu=0.7 and I never surfaced it as a choice.
+
+**Discarded** (out-of-distribution readings of a question nobody asked):
+
+- the arm ranking, `no_back` fastest at eNfwd 0.321
+- `corr(|roll_mean|, net_fwd) = +0.650` over 10 arms
+- the whole C2 retrofit table as a statement about the ice arm
+
+**Survives** (source and config facts, independent of mu):
+
+- no reward term measures the torso: `energy` excludes it (`LEG_IDX`), `fall`
+  tests the ROOT (`_tilt()`), and only `smooth` (0.01) and `hf` (0.6) see it,
+  both taxing motion
+- `hf` had never been ablated and never appeared in the budget table
+- the C2 label-vs-path selection bug and its fix
+- training is byte-reproducible given (seed, config)
+
+Correction to my own overclaim while writing this up: I said a held lean
+"strictly dominates" a swing. It does not. Torso motion has a direct cost and no
+direct payment, but a swing can still pay indirectly by raising vx or cutting
+falls — as can a lean. The accurate statement is that **the reward is neutral
+about which strategy achieves balance while charging only one of them**.
+
+### Redo (launched 22:44)
+
+`run_gen_v4.sh` = v3 with `--mode e2`. Runtime-verified rather than read off the
+source: `mu_lo=0.1, mu_hi=0.4` samples `[0.126 0.178 0.254 0.261 0.288 0.291
+0.342 0.383]` across 8 resets, and the old kwargs gave 0.71.
+
+Nine arms over three generations — the original eight plus `hf`, which is now
+also written into `ablate_arms.txt` where it should have been from the start:
+
+```
+e2_a   no_track    no_progress  no_swing
+e2_b   no_scrub    no_smooth    no_energy
+e2_c   no_back     no_fall      no_hf
+```
+
+Then `e2_base` (chained): the frozen reward under e2 at seeds 0/1/2. The arms
+had no matched control — `runs/e2/s*` is the two-stage warm-started protocol
+that C7 dropped — so s0 is the control and the three-seed spread gives the
+C1 yardstick to read an ablation delta against.

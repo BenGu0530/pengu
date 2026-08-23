@@ -33,3 +33,9 @@ no_back         back=0.0
 # lunged); included because it bounds how much of the current caution is priced
 # by this term rather than by the settle + e1 fix.
 no_fall         fall=0.0
+
+# --- ADDED 2026-08-22: hf was missing from this list AND from its frozen-baseline
+# header above, while carrying weight 0.6 and costing -0.163/step (second-largest
+# penalty, 15x r_smooth). HF_IDX = hips + TORSO, so it is one of only two terms
+# in the whole reward that the torso appears in -- and the other is smooth (0.01).
+no_hf           hf=0.0

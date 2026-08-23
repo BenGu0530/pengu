@@ -1,0 +1,6 @@
+# Ablation arms, RE-RUN under --mode e2 (mu ~ U(0.1,0.4)), the actual ice arm.
+# The first pass ran --mode gate0 (mu fixed 0.7) and was evaluated at mu 0.1-0.4,
+# so it measured out-of-distribution behaviour and is discarded.
+no_track        track=0.0
+no_progress     progress=0.0
+no_swing        swing=0.0

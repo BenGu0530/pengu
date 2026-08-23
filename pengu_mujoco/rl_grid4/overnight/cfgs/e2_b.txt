@@ -1,0 +1,3 @@
+no_scrub        scrub=0.0
+no_smooth       smooth=0.0
+no_energy       energy=0.0

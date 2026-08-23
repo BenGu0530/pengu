@@ -1,0 +1,5 @@
+no_back         back=0.0
+no_fall         fall=0.0
+# never ablated before: weight 0.6, -0.163/step, and one of only two terms that
+# the torso appears in at all.
+no_hf           hf=0.0
