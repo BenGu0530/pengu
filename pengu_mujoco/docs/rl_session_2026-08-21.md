@@ -328,3 +328,38 @@ possible. Iteration rounds logged here.
     at runs/e2x2hf4/. Round 4b launched with w=0.6, which reproduces
     round-1's proven survivable HT noise tax (-0.14/step) at 5Hz deterrence
     47% (round 1: 54%). Full 2x2 at runs/e2x2hf4b/.
+  - Round 4b cell a1p1 DONE: stand (0/5 all mu, net_fwd ~0). The a1 cell has
+    now stand-locked under every HT-priced variant (r3c w6, r3d w0.6) while
+    it lean-walked under round-1 r3 (all-5-dim w0.5). Note the confound: what
+    changed for a1 between r1 and 4b is (i) cranks untaxed, (ii) HT weight
+    0.5 -> 0.6. Awaiting a2 cells.
+  - Round 4b cell a2p1 DONE (final eval: mu0.1 0.8/0.476, mu0.2 1.0/0.617,
+    mu0.3 0.8/0.189, mu0.4 0.0/0.169 — the strongest eval line of any round;
+    tier 1 only by the mu0.4 miss). Morphology (final, seed 0): the speed is
+    a CRANK-POWERED bounce — mu0.2 vx 0.526 at 3.5 Hz, airborne 42%, torso
+    parked +30; mu0.1 0.289 at 3.55 Hz, airborne 30%, lean -18. Hips do
+    alternate (corr -0.49). Taxing hips+torso pushed the high-frequency work
+    into the only unpriced dimension (cranks) — direct evidence for the
+    pending crank-pricing decision (hardware specs). Frames + video sent.
+  - Round 4b cell a1p0 DONE: stand (0/5 all mu). Pattern held: both a1
+    (narrow-crank) cells stand under HT-priced hf; both a2 cells move via
+    untaxed cranks. a2p0 last.
+  - Round 4b cell a2p0 DONE (final eval: mu0.1 0.8/0.099, mu0.2 1.0/0.476,
+    mu0.3 0.8/0.270, mu0.4 0.2/0.045 — broadest mu coverage of any cell in
+    any round). Morphology (final, seed 0): mu0.3 vx 0.313 at 2.60 Hz,
+    single support 66%, airborne 24%, torso QUIET (RMS 6.3) — the closest
+    morphology to the goal so far; mu0.2 similar at 3.3 Hz; mu0.1 is a
+    37-deg lean shuffle at 0.045. Frames + video sent.
+
+  ROUND 4b SUMMARY (r3d w=0.6: commanded-HF, hips+torso only; finals):
+  | cell | mu0.1 | mu0.2 | mu0.3 | mu0.4 | morphology note |
+  |---|---|---|---|---|---|
+  | a1p1 | 0.0/-0.000 | 0.0/-0.000 | 0.0/-0.000 | 0.0/-0.000 | stand |
+  | a2p1 | 0.8/0.476 | 1.0/0.617 | 0.8/0.189 | 0.0/0.169 | crank-powered bounce 3.5 Hz, airborne 42%, lean +30 |
+  | a1p0 | 0.0/0.003 | 0.0/0.003 | 0.0/0.003 | 0.0/0.002 | stand |
+  | a2p0 | 0.8/0.099 | 1.0/0.476 | 0.8/0.270 | 0.2/0.045 | mu0.3: 2.6 Hz torso-quiet 66% single support |
+  Cross-cell: the narrow-crank (a1) cells stand under every HT-priced hf
+  variant; the wide-crank (a2) cells put the high-frequency work into the
+  unpriced cranks. Both open decisions (crank pricing <- hardware specs;
+  HELD-LEAN ruling) now gate the next reward change. best-ckpt sweep on the
+  a2 cells running (ckpt_sweep_hf4b.log).
