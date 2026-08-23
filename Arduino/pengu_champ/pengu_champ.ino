@@ -71,6 +71,7 @@ bool    wifi_active = false;
 float   home_deg[MOTOR_COUNT];
 unsigned long walk_start_ms = 0, autowait_ms = 0;
 float torso_iErr = 0.0f;
+bool  stream_dbg = false;          // 't' toggles a 5 Hz roll/joint/axis stream (hand-rock test)
 
 const float READY_STEP = 1.0f, READY_STEP_TORSO = 1.5f, ARRIVE_THRESH = 1.0f;
 
@@ -108,12 +109,16 @@ void setup() {
     if (!dxl.ping(id)) { DEBUG_SERIAL.print("No response ID "); DEBUG_SERIAL.println(id); }
     home_deg[i] = dxl.getPresentPosition(id, UNIT_DEGREE);
     dxl.torqueOff(id);
-    dxl.setOperatingMode(id, OP_POSITION);
+    // EXTENDED position: accepts negative / >360 deg goals. In plain OP_POSITION a goal
+    // like home-20 with home near 0 deg is silently REJECTED (suspected hip/torso no-move).
+    dxl.setOperatingMode(id, OP_EXTENDED_POSITION);
     // unlimited profile so 1.67 Hz targets are tracked, not slew-limited
     dxl.writeControlTableItem(PROFILE_VELOCITY, id, 0);
     dxl.writeControlTableItem(PROFILE_ACCELERATION, id, 0);
     dxl.torqueOn(id);
     dxl.setGoalPosition(id, home_deg[i], UNIT_DEGREE);
+    DEBUG_SERIAL.print("ID "); DEBUG_SERIAL.print(id);
+    DEBUG_SERIAL.print(" home = "); DEBUG_SERIAL.println(home_deg[i], 2);
   }
 
   if (!bno.begin()) { DEBUG_SERIAL.println("ERROR: BNO055 not detected."); while (1); }
@@ -168,6 +173,18 @@ void run_walk() {
   dxl.setGoalPosition(XM_LEFT_HIP,    home_deg[idxOf(XM_LEFT_HIP)]    - hipL_deg,  UNIT_DEGREE);
   dxl.setGoalPosition(XM_RIGHT_HIP,   home_deg[idxOf(XM_RIGHT_HIP)]   + hipR_deg,  UNIT_DEGREE);
   dxl.setGoalPosition(XM_TORSO_ROLL,  home_deg[idxOf(XM_TORSO_ROLL)]  + torso_deg, UNIT_DEGREE);
+
+  // 1 Hz debug: what is actually being commanded (catch out-of-range / alpha timing)
+  static unsigned long dbg = 0;
+  if (millis() - dbg > 1000) { dbg = millis();
+    DEBUG_SERIAL.print("t=");      DEBUG_SERIAL.print(t, 1);
+    DEBUG_SERIAL.print(" a=");     DEBUG_SERIAL.print(alpha, 2);
+    DEBUG_SERIAL.print(" hipL->"); DEBUG_SERIAL.print(home_deg[idxOf(XM_LEFT_HIP)] - hipL_deg, 1);
+    DEBUG_SERIAL.print(" hipR->"); DEBUG_SERIAL.print(home_deg[idxOf(XM_RIGHT_HIP)] + hipR_deg, 1);
+    DEBUG_SERIAL.print(" torso->");DEBUG_SERIAL.print(home_deg[idxOf(XM_TORSO_ROLL)] + torso_deg, 1);
+    DEBUG_SERIAL.print(" roll=");  DEBUG_SERIAL.print(imu_roll, 1);
+    DEBUG_SERIAL.print(" axis=");  DEBUG_SERIAL.println(axis, 1);
+  }
 }
 
 void loop() {
@@ -192,6 +209,17 @@ void loop() {
       DEBUG_SERIAL.println("  (rotate torso by hand: same direction -> S_TILT=+1, opposite -> -1)");
       break;
     }
+    case 't': stream_dbg = !stream_dbg;
+      DEBUG_SERIAL.println(stream_dbg ? "stream ON (rock the body by hand)" : "stream OFF");
+      break;
+  }
+
+  static unsigned long strm = 0;
+  if (stream_dbg && millis() - strm > 200) { strm = millis();
+    float J = dxl.getPresentPosition(XM_TORSO_ROLL, UNIT_DEGREE) - home_deg[idxOf(XM_TORSO_ROLL)];
+    DEBUG_SERIAL.print("roll="); DEBUG_SERIAL.print(imu_roll, 1);
+    DEBUG_SERIAL.print(" joint="); DEBUG_SERIAL.print(J, 1);
+    DEBUG_SERIAL.print(" axis="); DEBUG_SERIAL.println(imu_roll - S_TILT * J, 1);
   }
 
   switch (robot_state) {
