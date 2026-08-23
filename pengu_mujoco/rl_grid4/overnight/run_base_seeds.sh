@@ -3,7 +3,11 @@
 #
 # runs/e2/s* are the two-stage warm-started protocol, which C7 dropped, so they
 # are not a matched baseline for single-stage from-scratch + curriculum arms.
-# This trains the frozen reward under --mode e2 at three seeds: s0 is the
+# Mac coordination note 2026-08-22: seed 0 is a byte-duplicate of Mac's
+# runs/e2x2hf4b/a1p1 (r3d), already trained and evaled there (stand, 0/5 all mu),
+# and training is byte-deterministic given (seed, config), so s0 is dropped.
+# Seeds 1/2/3 here pool with Mac's s0 for a 4-seed spread. This trains the
+# frozen reward under --mode e2:
 # matched control, s0/s1/s2 together give the seed spread C1 asks for, so an
 # ablation delta can be read against it instead of against nothing.
 set -u
@@ -14,7 +18,7 @@ OUT="overnight/$GEN"
 mkdir -p "$OUT/frames" "$OUT/logs"
 echo "=== $GEN  $(date '+%F %T') ==="
 pids=()
-for s in 0 1 2; do
+for s in 1 2 3; do
   ( nice -n 10 "$PY" -u train_grid4.py --mode e2 --seed "$s" --curriculum \
       --steps 3000000 --n-envs 4 --name "overnight/$GEN/base_s$s" \
       > "$OUT/logs/base_s$s.train.log" 2>&1 ) &
@@ -22,7 +26,7 @@ for s in 0 1 2; do
 done
 for p in "${pids[@]}"; do wait "$p"; done
 echo "  training done $(date '+%T')"
-for s in 0 1 2; do
+for s in 1 2 3; do
   name="base_s$s"; rd="runs/overnight/$GEN/$name"
   [ -f "$rd/ckpts/final.zip" ] || { echo "  $name: no final.zip"; continue; }
   nice -n 10 "$PY" -u eval_ckpt_sweep.py "$rd" --repeats 3 > "$OUT/logs/$name.sweep.log" 2>&1

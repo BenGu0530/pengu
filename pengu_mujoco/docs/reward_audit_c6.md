@@ -138,3 +138,57 @@ A Gate-0-period capability knob chosen for topple-robustness, then frozen.
 Not tested here: whether some *other* gait inside the a1 band earns as much as
 c6 does outside it. That is the question that decides whether the band is
 costing anything, and it is not answered by this audit.
+
+---
+
+## Convergence with the Mac's Round 4b (added after pulling `89afdb9`)
+
+This audit reached the a1 band from the reward side; the Mac reached it from the
+training side, independently, on the same day.
+
+`rl_session_2026-08-21.md` defines **`a2` = crank `0.0 +- 1.9`**. Checked against
+the measurement in section 4:
+
+```
+c6 needs crank ctrl   [0.000, +1.833]
+a1 band  [-1.80, -0.60]   contains c6: NO  (disjoint)
+a2 band  [-1.90, +1.90]   contains c6: YES (fully)
+```
+
+Round 4b finals under the same reward version this audit used (r3d, hf w=0.6):
+
+| cell | mu0.1 | mu0.2 | mu0.3 | mu0.4 | morphology |
+|---|---|---|---|---|---|
+| a1p1 | 0.0/-0.000 | 0.0/-0.000 | 0.0/-0.000 | 0.0/-0.000 | stand |
+| a1p0 | 0.0/0.003 | 0.0/0.003 | 0.0/0.003 | 0.0/0.002 | stand |
+| a2p1 | 0.8/0.476 | 1.0/0.617 | 0.8/0.189 | 0.0/0.169 | crank bounce 3.5 Hz |
+| a2p0 | 0.8/0.099 | 1.0/0.476 | 0.8/0.270 | 0.2/0.045 | mu0.3 2.6 Hz, torso RMS 6.3 |
+
+**Every a1 cell stands at every mu; both a2 cells move.** The Mac's calibration
+of the same hf term independently puts c6 at 4% of positive reward against 13%
+for an a2 walker and 29-78% for the cheats — the same near-zero hf cost measured
+here as -0.025/step.
+
+So the band that excludes c6 is also the band in which nothing walks, by two
+separate routes.
+
+### What this means for the 9 ablation arms now running
+
+`e2_a/b/c` are in the **a1** band, whose baseline (`a1p1`, = this machine's
+`e2_base` s0 per the Mac's coordination note) scores **0/5 at every mu,
+net_fwd ~ 0.000**. An ablation table read as "which term matters for walking"
+is not readable against a baseline that does not walk.
+
+One arm is still pointed at a live question. `rl_session_2026-08-21.md:331`
+records the a1 stand-lock with an explicit confound:
+
+> The a1 cell has now stand-locked under every HT-priced variant (r3c w6,
+> r3d w0.6) while it lean-walked under round-1 r3 (all-5-dim w0.5). Note the
+> confound: what changed for a1 between r1 and 4b is (i) cranks untaxed,
+> (ii) HT weight 0.5 -> 0.6.
+
+`no_hf` (hf=0.0, a1 band) isolates (ii): if a1 walks with the hf tax removed,
+the stand-lock is priced by hf rather than by the crank-tax change.
+
+Open for Ben: whether the remaining ablation arms should be re-run in a2.
+Not acted on — the queue is left running (working agreement 2).
