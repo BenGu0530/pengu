@@ -21,6 +21,7 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
+#include <WiFiNINA.h>
 
 using namespace ControlTableItem;
 #define DEBUG_SERIAL Serial
@@ -28,11 +29,12 @@ using namespace ControlTableItem;
 // ===================== Champion gait (sim units: deg, Hz) =====================
 // Hardware-safe tier: freq 1.67 phi 340 leg 95 hip 24 off 20  (K5 net 0.376, straight)
 // Faster tier (swap in after it walks): 1.85 / 280 / 95 / 28 / 10 (K5 net 0.444)
-float p_legFreq  = 1.67f;              // [Hz]
-float p_legAmpD  = 95.0f;              // [deg] crank amplitude (unipolar)
-float p_hipAmpD  = 24.0f;              // [deg] hip half-rectified swing
-float p_hipPhiD  = 340.0f;             // [deg] hip-vs-leg phase offset
-float p_hipOffD  = 20.0f;              // [deg] symmetric forward-pitch offset
+// old names/units kept so webpage.ino + wireless.ino tabs work unchanged (rad where noted)
+float p_legFreq  = 1.67f;                     // [Hz]
+float p_legAmp   = 95.0f  * PI / 180.0f;      // [rad] crank amplitude (unipolar)
+float p_hipAmp   = 24.0f  * PI / 180.0f;      // [rad] hip half-rectified swing
+float p_hipPhiD  = 340.0f;                    // [deg] hip-vs-leg phase offset
+float p_hipOffD  = 20.0f;                     // [deg] symmetric forward-pitch offset
 
 // torso kappa-PID (sim TorsoKappaPID values)
 float p_kappa = 2.0f, p_kp = 2.0f, p_ki = 0.1f;
@@ -63,6 +65,9 @@ enum RobotState { STATE_IDLE, STATE_READY_SLIDE, STATE_READY_HIP, STATE_READY_TO
 RobotState robot_state = STATE_IDLE;
 
 float   imu_roll = 0, imu_pitch = 0, imu_yaw = 0;
+float   imu_ax = 0, imu_ay = 0, imu_az = 0;
+uint8_t cal_sys = 0, cal_gyro = 0, cal_accel = 0, cal_mag = 0;
+bool    wifi_active = false;
 float   home_deg[MOTOR_COUNT];
 unsigned long walk_start_ms = 0, autowait_ms = 0;
 float torso_iErr = 0.0f;
@@ -114,13 +119,18 @@ void setup() {
   if (!bno.begin()) { DEBUG_SERIAL.println("ERROR: BNO055 not detected."); while (1); }
   bno.setExtCrystalUse(true);
 
-  DEBUG_SERIAL.println("pengu_champ ready. r=Ready w=Walk q=Idle s=SignCheck");
+  begin_wifi();                                  // webpage + /cmd + /data (wireless.ino tab)
+
+  DEBUG_SERIAL.println("pengu_champ ready. r=Ready w=Walk q=Idle s=SignCheck (serial or wifi)");
   if (AUTO_WALK) { robot_state = STATE_READY_SLIDE; DEBUG_SERIAL.println("AUTO: -> READY"); }
 }
 
 void update_imu() {
   imu::Vector<3> e = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+  imu::Vector<3> a = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
+  bno.getCalibration(&cal_sys, &cal_gyro, &cal_accel, &cal_mag);
   imu_yaw = e.x(); imu_roll = e.y(); imu_pitch = e.z();   // same mapping as pengu.ino
+  imu_ax = a.x(); imu_ay = a.y(); imu_az = a.z();
 }
 
 // ===================== WALK: c6 champion =====================
@@ -133,13 +143,15 @@ void run_walk() {
   float phase   = (t > T_RAMP + T_SETTLE) ? 2.0f * PI * p_legFreq * (t - T_RAMP - T_SETTLE) : 0.0f;
 
   // legs: unipolar antiphase  (sim: crank = 0.5*amp*(1+sin))
-  float magL = alpha * 0.5f * p_legAmpD * (1.0f + sinf(phase));
-  float magR = alpha * 0.5f * p_legAmpD * (1.0f + sinf(phase + PI));
+  float A_leg = p_legAmp * 180.0f / PI;
+  float magL = alpha * 0.5f * A_leg * (1.0f + sinf(phase));
+  float magR = alpha * 0.5f * A_leg * (1.0f + sinf(phase + PI));
 
   // hips: half-rectified antiphase + phase offset + symmetric forward offset
+  float A_hip = p_hipAmp * 180.0f / PI;
   float phi = p_hipPhiD * PI / 180.0f;
-  float hipL_deg = off_deg + alpha * p_hipAmpD * max(0.0f, sinf(phase + PI + phi));
-  float hipR_deg = off_deg + alpha * p_hipAmpD * max(0.0f, sinf(phase + phi));
+  float hipL_deg = off_deg + alpha * A_hip * max(0.0f, sinf(phase + PI + phi));
+  float hipR_deg = off_deg + alpha * A_hip * max(0.0f, sinf(phase + phi));
 
   // torso: kappa=2 feedback — target torso WORLD roll = kappa * hip-axis roll
   float J_deg  = dxl.getPresentPosition(XM_TORSO_ROLL, UNIT_DEGREE) - home_deg[idxOf(XM_TORSO_ROLL)];
@@ -162,6 +174,7 @@ void loop() {
   update_imu();
 
   char cmd = 0;
+  if (wifi_active) cmd = update_wifi();          // /cmd?key=X from the webpage
   if (DEBUG_SERIAL.available()) cmd = (char)DEBUG_SERIAL.read();
   switch (cmd) {
     case 'r': robot_state = STATE_READY_SLIDE; DEBUG_SERIAL.println("-> READY"); break;
