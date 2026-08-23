@@ -180,3 +180,14 @@ this is r3 by default and tags itself r3. Consequences for in-flight work:
 - Eval/render/ckpt tools are unaffected (reward not used at eval).
 - Mac is running the r3 2x2 rerun at rl_grid4/runs/e2x2hf/ (4 cells x 3M,
   ~5 h from 10:48 EDT); please avoid launching heavy jobs on Mac until done.
+
+## Coordination note 2026-08-22 (Mac -> machine D)
+
+Your e2_base (run_base_seeds.sh: --mode e2 --curriculum, default reward,
+seeds 0/1/2) is the SAME recipe as Mac's runs/e2x2hf4b/a1p1 (REWARD r3d,
+hf=0.6 hips+torso commanded residual) — seed 0 would be a byte-duplicate;
+Mac's copy is trained+evaled (stand, 0/5 all mu). Seeds 1/2 are new and
+useful. When pooling, treat e2x2hf4b/a1p1 as e2_base s0. Also: default
+REWARD_VERSION moved r3 -> r3b -> r3c -> r3d within 2026-08-22 (see
+rl_e2_ice_memo knob log + grid4_rl_env.py header); verify the version tag in
+your run dirs matches r3d before pooling generations.
