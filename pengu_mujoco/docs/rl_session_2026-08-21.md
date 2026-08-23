@@ -396,3 +396,10 @@ possible. Iteration rounds logged here.
     rule, consistent with machine D's convergence finding. ckpt sweep on
     the ext run launched (ckpt_sweep_ext.log) to select+confirm the true
     best (~4M region). r3d_arm s1-s7 queue auto-started 00:19 EDT.
+  - ext best CONFIRMED (independent seeds 50000): ext@2000k (5M total) =
+    mu0.1 5/5/0.537, mu0.2 5/5/0.602, mu0.3 5/5/0.385, mu0.4 2/5/0.047 —
+    17/20; mu0.1 0.537 EXCEEDS the c6 designed ceiling (0.469), mu0.3
+    0.385 vs c6 0.242. Morphology caveat (2 seeds, deterministic): still
+    the 2.7-3.2 Hz family, airborne 30-41%, mu0.3 shows HELD-LEAN episodes
+    (seed0 roll_mean -44.5); torso joint itself ~4 deg RMS. Speed record,
+    not yet the clean gait. csv: a2p0_ext/eval_bestckpt_confirm.csv.
