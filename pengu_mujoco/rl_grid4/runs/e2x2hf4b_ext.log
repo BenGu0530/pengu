@@ -1,0 +1,16 @@
+[train_grid4] warm-start from rl_grid4/runs/e2x2hf4b/a2p0/ckpts/final.zip
+[train_grid4] e2x2hf4b/a2p0_ext: 3000000 steps x 8 envs -> /Users/ben/Documents/CMU/Robomechanics Lab/PenguMujoco/pengu_mujoco/rl_grid4/runs/e2x2hf4b/a2p0_ext
+[curriculum] vx_cmd start 0.47
+[diag]    250000 steps  ep_len=363 fall=0.53  vx=0.209  hip_diff=15.3deg hip_corr=-0.06  torso_rms=33.2deg roll_rate=102dps stride_asym=-0.108  r_hf=-0.153  sigma_torso=0.273
+[diag]    500000 steps  ep_len=357 fall=0.53  vx=0.215  hip_diff=15.7deg hip_corr=-0.17  torso_rms=34.3deg roll_rate=109dps stride_asym=-0.112  r_hf=-0.148  sigma_torso=0.271
+[diag]    750000 steps  ep_len=325 fall=0.65  vx=0.244  hip_diff=15.8deg hip_corr=-0.06  torso_rms=34.2deg roll_rate=121dps stride_asym=-0.098  r_hf=-0.149  sigma_torso=0.267
+[diag]   1000000 steps  ep_len=345 fall=0.58  vx=0.230  hip_diff=16.0deg hip_corr=-0.06  torso_rms=35.4deg roll_rate=112dps stride_asym=-0.112  r_hf=-0.151  sigma_torso=0.258
+[diag]   1250000 steps  ep_len=334 fall=0.59  vx=0.247  hip_diff=16.3deg hip_corr=-0.02  torso_rms=37.2deg roll_rate=114dps stride_asym=-0.117  r_hf=-0.144  sigma_torso=0.255
+[diag]   1500000 steps  ep_len=405 fall=0.38  vx=0.237  hip_diff=16.0deg hip_corr=-0.14  torso_rms=33.4deg roll_rate=102dps stride_asym=-0.108  r_hf=-0.139  sigma_torso=0.254
+[diag]   1750000 steps  ep_len=401 fall=0.41  vx=0.277  hip_diff=15.5deg hip_corr=-0.13  torso_rms=34.4deg roll_rate=101dps stride_asym=-0.107  r_hf=-0.140  sigma_torso=0.250
+[diag]   2000000 steps  ep_len=390 fall=0.43  vx=0.256  hip_diff=15.8deg hip_corr=-0.17  torso_rms=34.0deg roll_rate=103dps stride_asym=-0.093  r_hf=-0.139  sigma_torso=0.247
+[diag]   2250000 steps  ep_len=394 fall=0.43  vx=0.293  hip_diff=15.1deg hip_corr=-0.15  torso_rms=34.5deg roll_rate=109dps stride_asym=-0.103  r_hf=-0.137  sigma_torso=0.243
+[diag]   2500000 steps  ep_len=396 fall=0.43  vx=0.285  hip_diff=15.8deg hip_corr=-0.16  torso_rms=36.0deg roll_rate=107dps stride_asym=-0.075  r_hf=-0.136  sigma_torso=0.239
+[diag]   2750000 steps  ep_len=422 fall=0.33  vx=0.309  hip_diff=15.1deg hip_corr=-0.18  torso_rms=35.2deg roll_rate=103dps stride_asym=-0.066  r_hf=-0.129  sigma_torso=0.232
+[diag]   3000000 steps  ep_len=436 fall=0.24  vx=0.286  hip_diff=15.2deg hip_corr=-0.24  torso_rms=35.6deg roll_rate=93dps stride_asym=-0.073  r_hf=-0.123  sigma_torso=0.227
+[train_grid4] done -> /Users/ben/Documents/CMU/Robomechanics Lab/PenguMujoco/pengu_mujoco/rl_grid4/runs/e2x2hf4b/a2p0_ext/ckpts/final.zip

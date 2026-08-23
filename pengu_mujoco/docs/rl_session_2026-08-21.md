@@ -385,3 +385,14 @@ possible. Iteration rounds logged here.
   marginal accounting: torso hf tax 0.013/step vs ~0.70/step speed income
   still unclaimed -> no direct reward brake at current amplitude).
   Seed 0 = e2x2hf4b/a2p0 (best 2000k confirmed 16/20). Pool = 8 seeds.
+  - a2p0_ext probe COMPLETE (+3M -> 6M total, cmd fixed 0.47). Torso
+    recruitment answer: amplitude grew to ~4-4.5 deg RMS (~20 deg p2p) by
+    3.5-4M then PLATEAUED; deterministic mu0.3 vx peaked at 4.0M (0.553,
+    single rollout) then entered the fast/fragile oscillation (0.198 /
+    0.337 / 0.031 / -0.064 at 4.5/5/5.5/6M) — the 6M final is WORSE than
+    the 3M final. Marginal accounting at 3M had shown no direct reward
+    brake (torso hf tax 0.013/step vs ~0.70/step unclaimed speed income);
+    the post-4M limiter is the within-run attractor oscillation + stopping
+    rule, consistent with machine D's convergence finding. ckpt sweep on
+    the ext run launched (ckpt_sweep_ext.log) to select+confirm the true
+    best (~4M region). r3d_arm s1-s7 queue auto-started 00:19 EDT.
