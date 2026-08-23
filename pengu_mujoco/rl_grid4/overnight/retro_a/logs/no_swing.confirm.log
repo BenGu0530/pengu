@@ -1,0 +1,6 @@
+  mu=0.1  pass=1.0  net_fwd mean=0.119 min=0.063  torso_rms med=32.5deg
+  mu=0.2  pass=1.0  net_fwd mean=0.110 min=0.064  torso_rms med=32.9deg
+  mu=0.3  pass=1.0  net_fwd mean=0.243 min=0.178  torso_rms med=34.0deg
+  mu=0.4  pass=1.0  net_fwd mean=0.188 min=0.115  torso_rms med=31.8deg
+[ckpts] tier 3 walk, torso ACTIVE (med RMS 32.6deg >= 5.0)
+wrote overnight/retro_a/no_swing.eval.csv (20 trials)

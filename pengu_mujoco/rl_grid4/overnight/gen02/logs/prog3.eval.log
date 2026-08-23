@@ -1,0 +1,16 @@
+  mu=0.1  pass=0.0  net_fwd mean=0.000 min=-0.000  torso_rms med=7.0deg
+  mu=0.2  pass=0.0  net_fwd mean=-0.000 min=-0.000  torso_rms med=5.1deg
+/home/rml2/Documents/ben_gu/ben_pengu/pengu/pengu_mujoco/.sweep_venv/lib/python3.13/site-packages/numpy/_core/fromnumeric.py:4270: RuntimeWarning: Degrees of freedom <= 0 for slice
+  return _methods._var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+/home/rml2/Documents/ben_gu/ben_pengu/pengu/pengu_mujoco/.sweep_venv/lib/python3.13/site-packages/numpy/_core/_methods.py:178: RuntimeWarning: invalid value encountered in divide
+  arrmean = um.true_divide(arrmean, div, out=arrmean,
+/home/rml2/Documents/ben_gu/ben_pengu/pengu/pengu_mujoco/.sweep_venv/lib/python3.13/site-packages/numpy/_core/_methods.py:211: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+/home/rml2/Documents/ben_gu/ben_pengu/pengu/pengu_mujoco/.sweep_venv/lib/python3.13/site-packages/numpy/_core/fromnumeric.py:3862: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+/home/rml2/Documents/ben_gu/ben_pengu/pengu/pengu_mujoco/.sweep_venv/lib/python3.13/site-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+  mu=0.3  pass=0.0  net_fwd mean=0.001 min=-0.000  torso_rms med=nandeg
+  mu=0.4  pass=0.0  net_fwd mean=0.085 min=-0.002  torso_rms med=nandeg
+[ckpts] tier 1 no-walk (zero standing on torso claims)
+wrote overnight/gen02/prog3.eval.csv (20 trials)

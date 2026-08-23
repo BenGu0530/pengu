@@ -1,0 +1,17 @@
+  runs/overnight/gen02/prog3    250k: pass  0/8  net_fwd +0.071
+  runs/overnight/gen02/prog3    500k: pass  0/8  net_fwd +0.000
+  runs/overnight/gen02/prog3    750k: pass  0/8  net_fwd +0.000
+  runs/overnight/gen02/prog3   1000k: pass  0/8  net_fwd +0.000
+  runs/overnight/gen02/prog3   1250k: pass  0/8  net_fwd +0.044
+  runs/overnight/gen02/prog3   1500k: pass  0/8  net_fwd +0.079
+  runs/overnight/gen02/prog3   1750k: pass  0/8  net_fwd -0.015
+  runs/overnight/gen02/prog3   2000k: pass  0/8  net_fwd -0.000
+  runs/overnight/gen02/prog3   2250k: pass  0/8  net_fwd +0.000
+  runs/overnight/gen02/prog3   2500k: pass  0/8  net_fwd -0.000
+  runs/overnight/gen02/prog3   2750k: pass  0/8  net_fwd +0.076
+  runs/overnight/gen02/prog3   3000k: pass  0/8  net_fwd +0.000
+  runs/overnight/gen02/prog3   final: pass  0/8  net_fwd +0.001
+[runs/overnight/gen02/prog3] best=1500k (pass 0, nf 0.0785) vs final (pass 0, nf 0.0014) -> runs/overnight/gen02/prog3/ckpt_sweep.csv
+
+=== best-vs-final summary ===
+runs/overnight/gen02/prog3: best 1500k pass 0 (final 0, delta +0), net_fwd 0.0785 vs 0.0014

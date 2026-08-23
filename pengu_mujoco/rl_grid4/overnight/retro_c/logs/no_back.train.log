@@ -1,4 +1,4 @@
-[train_grid4] overnight/gen02/back0: 3000000 steps x 4 envs -> /home/rml2/Documents/ben_gu/ben_pengu/pengu/pengu_mujoco/rl_grid4/runs/overnight/gen02/back0
+[train_grid4] overnight/retro_c/no_back: 3000000 steps x 4 envs -> /home/rml2/Documents/ben_gu/ben_pengu/pengu/pengu_mujoco/rl_grid4/runs/overnight/retro_c/no_back
 [curriculum] vx_cmd start 0.12
 [diag]    250000 steps  ep_len=124 fall=0.98  vx=0.001  hip_diff=10.0deg hip_corr=+0.32  torso_rms=24.3deg roll_rate=109dps stride_asym=+0.040  r_hf=-0.165  sigma_torso=0.350
 [diag]    500000 steps  ep_len=283 fall=0.68  vx=0.023  hip_diff=10.3deg hip_corr=+0.40  torso_rms=35.4deg roll_rate=103dps stride_asym=+0.144  r_hf=-0.154  sigma_torso=0.337
@@ -17,4 +17,4 @@
 [diag]   2500000 steps  ep_len=371 fall=0.48  vx=0.105  hip_diff=11.9deg hip_corr=+0.25  torso_rms=34.2deg roll_rate=107dps stride_asym=+0.118  r_hf=-0.150  sigma_torso=0.278
 [diag]   2750000 steps  ep_len=378 fall=0.46  vx=0.086  hip_diff=12.0deg hip_corr=+0.21  torso_rms=34.8deg roll_rate=108dps stride_asym=+0.104  r_hf=-0.157  sigma_torso=0.270
 [diag]   3000000 steps  ep_len=349 fall=0.56  vx=0.159  hip_diff=13.2deg hip_corr=+0.26  torso_rms=39.7deg roll_rate=127dps stride_asym=+0.138  r_hf=-0.163  sigma_torso=0.266
-[train_grid4] done -> /home/rml2/Documents/ben_gu/ben_pengu/pengu/pengu_mujoco/rl_grid4/runs/overnight/gen02/back0/ckpts/final.zip
+[train_grid4] done -> /home/rml2/Documents/ben_gu/ben_pengu/pengu/pengu_mujoco/rl_grid4/runs/overnight/retro_c/no_back/ckpts/final.zip

@@ -1,0 +1,6 @@
+  mu=0.1  pass=0.0  net_fwd mean=0.005 min=0.004  torso_rms med=69.5deg
+  mu=0.2  pass=0.0  net_fwd mean=0.005 min=0.005  torso_rms med=66.4deg
+  mu=0.3  pass=0.0  net_fwd mean=0.006 min=0.005  torso_rms med=66.3deg
+  mu=0.4  pass=0.0  net_fwd mean=0.006 min=0.006  torso_rms med=65.5deg
+[ckpts] tier 1 no-walk (zero standing on torso claims)
+wrote overnight/retro_c/no_fall.eval.csv (20 trials)

@@ -1,0 +1,17 @@
+  runs/overnight/retro_b/no_smooth    250k: pass  0/8  net_fwd -0.000
+  runs/overnight/retro_b/no_smooth    500k: pass  0/8  net_fwd +0.000
+  runs/overnight/retro_b/no_smooth    750k: pass  0/8  net_fwd +0.003
+  runs/overnight/retro_b/no_smooth   1000k: pass  1/8  net_fwd +0.075
+  runs/overnight/retro_b/no_smooth   1250k: pass  4/8  net_fwd +0.043
+  runs/overnight/retro_b/no_smooth   1500k: pass  2/8  net_fwd +0.022
+  runs/overnight/retro_b/no_smooth   1750k: pass  0/8  net_fwd +0.002
+  runs/overnight/retro_b/no_smooth   2000k: pass  0/8  net_fwd +0.047
+  runs/overnight/retro_b/no_smooth   2250k: pass  1/8  net_fwd +0.083
+  runs/overnight/retro_b/no_smooth   2500k: pass  0/8  net_fwd +0.002
+  runs/overnight/retro_b/no_smooth   2750k: pass  0/8  net_fwd +0.001
+  runs/overnight/retro_b/no_smooth   3000k: pass  1/8  net_fwd +0.007
+  runs/overnight/retro_b/no_smooth   final: pass  1/8  net_fwd +0.017
+[runs/overnight/retro_b/no_smooth] best=1250k (pass 4, nf 0.0435) vs final (pass 1, nf 0.0173) -> runs/overnight/retro_b/no_smooth/ckpt_sweep.csv
+
+=== best-vs-final summary ===
+runs/overnight/retro_b/no_smooth: best 1250k pass 4 (final 1, delta +3), net_fwd 0.0435 vs 0.0173

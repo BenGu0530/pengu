@@ -1,0 +1,23 @@
+
+=== retro_b ===
+cand              vtail  vswg  fall  eplen   roll  rollμ  |μ|/R  rate   hipc   asym  sing  ePass  eNfwd
+-------------------------------------------------------------------------------------------------------
+no_scrub          0.080 0.059  0.64    321   23.3    2.1   0.09    35   0.37  0.124  0.66   0.40  0.046   unstable
+no_smooth         0.119 0.087  0.93    198   21.0   -8.7   0.41    28   0.13  0.129  0.65   0.35  0.036   STATIC-TORSO,unstable
+no_energy         0.207 0.092  0.80    271   54.0  -15.8   0.29    18   0.38  0.158  0.59   0.00  0.007   STATIC-TORSO,FAKE-TORSO,unstable
+
+reward budget at the last diag row (per step):
+cand                 track  progress      back    energy     swing     scrub    smooth        hf      fall  pos_sum     net
+no_energy            0.227     0.264    -0.108     0.000     0.108    -0.171    -0.009    -0.179    -0.057    0.598   0.074
+no_scrub             0.225     0.165    -0.132    -0.005     0.091     0.000    -0.011    -0.141    -0.047    0.481   0.145
+no_smooth            0.215     0.238    -0.128    -0.005     0.094    -0.173     0.000    -0.154    -0.080    0.547   0.006
+
+HELD-LEAN     |roll_mean|/roll_RMS > 0.7 -- torso parked to one side, not swinging.
+              This is the failure that reads as a success in the summary numbers.
+STATIC-TORSO  high roll RMS but roll RATE < 30 deg/s -- leaning, barely moving.
+FAKE-TORSO    high roll RMS in eval but net_fwd < 0.03 -- the exact false positive
+              Ben flagged: reads as strong torso use, goes nowhere.
+ASYM          |stride_asym| > 0.25 -- one leg taking much longer strides, i.e.
+              curving or compensating for a held lean.
+unstable      vswing > 0.05 over the last 1M steps; the vtail is a draw, not a value.
+Frames: overnight/<gen>/frames/<cand>_strip.png  (t = 3, 6, 9 s stacked)

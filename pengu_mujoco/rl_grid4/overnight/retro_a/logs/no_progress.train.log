@@ -1,0 +1,23 @@
+[train_grid4] overnight/retro_a/no_progress: 3000000 steps x 4 envs -> /home/rml2/Documents/ben_gu/ben_pengu/pengu/pengu_mujoco/rl_grid4/runs/overnight/retro_a/no_progress
+[curriculum] vx_cmd start 0.12
+[diag]    250000 steps  ep_len=164 fall=0.91  vx=-0.041  hip_diff=9.6deg hip_corr=+0.22  torso_rms=20.2deg roll_rate=93dps stride_asym=+0.027  sigma_torso=0.362
+[diag]    500000 steps  ep_len=352 fall=0.48  vx=0.020  hip_diff=7.8deg hip_corr=+0.52  torso_rms=34.1deg roll_rate=102dps stride_asym=+0.090  sigma_torso=0.356
+[curriculum] 600000 steps -> vx_cmd 0.17 (survival gate)
+[curriculum] 625000 steps -> vx_cmd 0.22 (survival gate)
+[curriculum] 650000 steps -> vx_cmd 0.27 (survival gate)
+[diag]    750000 steps  ep_len=276 fall=0.62  vx=0.031  hip_diff=6.8deg hip_corr=+0.71  torso_rms=43.8deg roll_rate=113dps stride_asym=+0.191  sigma_torso=0.359
+[diag]   1000000 steps  ep_len=254 fall=0.73  vx=0.050  hip_diff=7.8deg hip_corr=+0.67  torso_rms=41.3deg roll_rate=127dps stride_asym=+0.219  sigma_torso=0.361
+[curriculum] 1100000 steps -> vx_cmd 0.32 (survival gate)
+[curriculum] 1125000 steps -> vx_cmd 0.37 (survival gate)
+[curriculum] 1150000 steps -> vx_cmd 0.42 (survival gate)
+[curriculum] 1175000 steps -> vx_cmd 0.47 (survival gate)
+[diag]   1250000 steps  ep_len=395 fall=0.35  vx=-0.000  hip_diff=8.8deg hip_corr=+0.46  torso_rms=33.8deg roll_rate=88dps stride_asym=+0.274  sigma_torso=0.364
+[diag]   1500000 steps  ep_len=203 fall=0.81  vx=0.068  hip_diff=10.0deg hip_corr=+0.64  torso_rms=33.6deg roll_rate=168dps stride_asym=+0.072  sigma_torso=0.357
+[diag]   1750000 steps  ep_len=195 fall=0.92  vx=0.122  hip_diff=10.7deg hip_corr=+0.61  torso_rms=30.4deg roll_rate=156dps stride_asym=+0.000  sigma_torso=0.361
+[diag]   2000000 steps  ep_len=242 fall=0.85  vx=0.156  hip_diff=10.0deg hip_corr=+0.60  torso_rms=31.7deg roll_rate=156dps stride_asym=-0.071  sigma_torso=0.357
+[diag]   2250000 steps  ep_len=333 fall=0.57  vx=0.143  hip_diff=8.9deg hip_corr=+0.61  torso_rms=29.7deg roll_rate=137dps stride_asym=-0.080  sigma_torso=0.356
+[diag]   2500000 steps  ep_len=346 fall=0.57  vx=0.162  hip_diff=8.5deg hip_corr=+0.68  torso_rms=33.6deg roll_rate=141dps stride_asym=-0.106  sigma_torso=0.362
+[diag]   2750000 steps  ep_len=328 fall=0.61  vx=0.164  hip_diff=8.4deg hip_corr=+0.65  torso_rms=31.6deg roll_rate=126dps stride_asym=-0.103  sigma_torso=0.363
+[curriculum] 2850000 steps -> vx_cmd 0.47 (survival gate)
+[diag]   3000000 steps  ep_len=392 fall=0.38  vx=0.094  hip_diff=8.4deg hip_corr=+0.52  torso_rms=26.3deg roll_rate=98dps stride_asym=-0.062  sigma_torso=0.361
+[train_grid4] done -> /home/rml2/Documents/ben_gu/ben_pengu/pengu/pengu_mujoco/rl_grid4/runs/overnight/retro_a/no_progress/ckpts/final.zip

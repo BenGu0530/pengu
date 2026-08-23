@@ -234,3 +234,131 @@ The clean test is an intervention, not another correlation: hold the torso
 actuator fixed and retrain (a capability ablation, no reward change), or
 compare against the arm's own low-eff_kappa checkpoints. Recorded, not run —
 the queue is on the assigned C2 retrofit.
+
+---
+
+## Incident 2 — the C2 selection step silently did nothing (v2 harness)
+
+`eval_ckpt_sweep.py` prints a **label**:
+
+```
+[runs/overnight/retro_a/no_track] best=2000k (pass 2, nf 0.0331) vs final (pass 0, nf 0.0052)
+```
+
+`run_gen_v2.sh` did `ck=$(grep -oE "best=[^ ]+" | cut -d= -f2)` and then `[ -f "$ck" ]`,
+which can never succeed for the string `2000k`, so every generation fell back to
+`final.zip`. All of `retro_a/*.selected_ckpt.txt` contained `.../ckpts/final.zip`.
+**The C2 protocol was not in effect for retro_a/b/c or gen02.**
+
+The sweep itself was fine — `ckpt_sweep.csv` holds the full per-checkpoint table —
+so `fixup_c2.sh` re-read it, picked by `(n_pass, mean_net_fwd)`, and re-ran only the
+confirm and render. No retraining. `run_gen_v3.sh` maps label -> path
+(`2000k` -> `ckpt_2000000_steps.zip`) and now WARNS when it cannot resolve instead of
+falling back silently.
+
+Selected checkpoints, none of which was final:
+
+```
+no_track 2000k   no_progress 2500k   no_swing 2500k
+no_scrub 2000k   no_smooth   1250k   no_energy 2000k
+no_back  2750k   no_fall     1250k
+back0    2750k   back05      2750k   prog3     1500k
+```
+
+Lesson taken: validate a harness on one case before queueing a batch behind it.
+
+## Training is deterministic given (seed, config)
+
+`retro_c/no_back` and `gen02/back0` are the same config (`back=0.0`, seed 0) launched
+26 min apart as separate processes. Their `policy.pth` and `policy.optimizer.pth` are
+**byte-identical**; `diag.csv` is byte-identical; the eval CSVs differ only in the
+`ckpt` path column. Only the sb3 `data` member (metadata) differs.
+
+Two consequences. The `unstable` flag (vswing) is measuring **within-run oscillation**,
+not run-to-run scatter — C1's spread is between-seed plus within-run, with no third
+source. And the duplicate cost ~25 min of compute: `back0` was already an ablation arm
+under the name `no_back`, and I did not notice when writing gen02. `gen02/back0` is
+excluded from all counts below.
+
+## C2 retrofit — the 8 ablation arms + gen02 (confirmation numbers)
+
+Selected by frozen eval (3 reps), confirmed on independent trial seeds
+(`--trial-seed-base 50000`, 5 reps, mu 0.1/0.2/0.3/0.4, 20 trials each).
+
+| arm | roll_mean | rate | ePass | eNfwd | flags |
+|---|---|---|---|---|---|
+| `no_back` | **-30.4** | 48 | 0.90 | **0.321** | HELD-LEAN, unstable |
+| `no_progress` | -20.9 | 40 | 0.70 | 0.205 | HELD-LEAN, unstable |
+| `no_swing` | -10.4 | 67 | **1.00** | 0.165 | unstable |
+| `prog3` | +6.5 | 109 | 0.00 | 0.114 | unstable |
+| `no_scrub` | +2.1 | 35 | 0.40 | 0.046 | unstable |
+| `back05` | -1.9 | 34 | 0.25 | 0.044 | unstable, ASYM |
+| `no_smooth` | -8.7 | 28 | 0.35 | 0.036 | STATIC-TORSO, unstable |
+| `no_track` | +2.2 | 52 | 0.20 | 0.029 | FAKE-TORSO, unstable |
+| `no_energy` | -15.8 | 18 | 0.00 | 0.007 | STATIC-TORSO, FAKE-TORSO |
+| `no_fall` | +19.1 | 15 | 0.00 | 0.005 | STATIC-TORSO, FAKE-TORSO |
+
+Across the 10 arms, `corr(|roll_mean|, net_fwd) = +0.650` and
+`corr(roll_rate, net_fwd) = +0.371`. Arm-level, n=10, and the arms differ in reward,
+so this is not a controlled comparison.
+
+`no_back` per-trial, the arm with both the best speed and the deepest lean:
+
+```
+mu 0.1   -39.4   +6.3  -24.6   -3.8  -21.5     nfwd 0.344  pass 1.00
+mu 0.2   -39.4  -30.7  -14.9  -25.8  -39.5          0.388       1.00
+mu 0.3   -29.1  -38.9  -34.3  -39.4  -37.9          0.398       1.00
+mu 0.4       -  -43.2      -  -43.1  -47.7          0.154       0.60
+```
+
+Negative in **17 of 18** scored trials, and the lean deepens monotonically with mu.
+RMS 34.3 against mean -30.4 gives a swing of sqrt(34.3^2 - 30.4^2) = **15.9 deg about
+a -30 deg offset** — a real oscillation riding on a large held lean, which is why
+`STATIC-TORSO` (rate 48 dps) does not fire and only `HELD-LEAN` does. This is the
+gait Ben described: *"the torso leaning one side and the leg is compensating all the
+time to make it walk, from data it looks good as fast."* It is the top-scoring arm
+of the night.
+
+## Mechanism — nothing in the reward can tell a held lean from a swing
+
+Reading the reward source rather than the results:
+
+| term | weight | reads the torso? |
+|---|---|---|
+| `track`, `progress`, `back` | 0.8 / 1.0 / 2.0 | no — base vx only |
+| `swing`, `scrub` | 1.0 / 0.8 | no — legs and feet |
+| `fall` | 10.0 | **no** — `_tilt()` is the ROOT body (`grid4_rl_env.py:514`) |
+| `energy` | 0.0005 | **no** — `f[LEG_IDX]*v[LEG_IDX]`, "torso EXCLUDED" (line 468) |
+| `smooth` | 0.01 | yes, but taxes action CHANGE |
+| `hf` | **0.6** | yes, `HF_IDX` = hips+torso, taxes commanded HF residual |
+
+So the torso is an unpriced actuator in one direction only: **holding it at a lean
+costs nothing, moving it is taxed twice, and no term pays for either.** The fall test
+watches the root, so a torso parked at -45 deg world roll never terminates an episode.
+A held lean does not merely tie with a swing under this reward — it strictly dominates.
+
+That bounds the whole search. Within the brief ("tune existing weights, even to zero,
+no new terms"), no weight can reward torso swinging, because no term measures it. The
+only reachable move is to stop taxing it.
+
+**And `hf` had never been measured.** It is absent from `ablate_arms.txt` (both the arm
+list and its frozen-baseline header) and was absent from the budget table in
+`report_gen.sh`, so it never appeared in any generation report I produced — while being
+**-0.163/step on `no_back`, the second-largest penalty in the budget and 15x r_smooth**.
+`report_gen.sh` now prints `hf` and a `net` column. Adding `net` immediately shows
+`no_progress` at **-0.094/step** and `no_track` at -0.064/step: both survive ~390 steps
+while accruing negative reward every step, because falling costs -10 once.
+
+### gen03 — measuring the term that was never measured (launched 21:23)
+
+| candidate | change |
+|---|---|
+| `no_hf` | `hf=0.0` |
+| `hf02` | `hf=0.2` |
+| `hf0_sm0` | `hf=0.0 smooth=0.0` (all torso-motion tax removed) |
+
+Prediction, stated before the run: removing the tax should NOT by itself produce a
+swing, because nothing rewards one. If the lean survives at `hf=0`, that is evidence
+the lean is load-bearing for the gait rather than a pricing artifact — and the
+question stops being a reward-weight question, which is a result for Ben to judge
+rather than something to tune around.

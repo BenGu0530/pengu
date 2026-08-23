@@ -69,14 +69,14 @@ for r in sorted(rows, key=lambda r: -(r[13] if r[13]==r[13] else -1)):
           + ("   " + ",".join(flags) if flags else ""))
 
 print("\nreward budget at the last diag row (per step):")
-comp = ["r_track","r_progress","r_back","r_energy","r_swing","r_scrub","r_smooth","r_fall"]
-print(f"{'cand':<16}" + "".join(f"{c.replace('r_',''):>10}" for c in comp) + f"{'pos_sum':>9}")
+comp = ["r_track","r_progress","r_back","r_energy","r_swing","r_scrub","r_smooth","r_hf","r_fall"]
+print(f"{'cand':<16}" + "".join(f"{c.replace('r_',''):>10}" for c in comp) + f"{'pos_sum':>9}{'net':>8}")
 for r in rows:
     L = r[14]
     v = {c: num(L, c) for c in comp}
     pos = sum(x for x in v.values() if x == x and x > 0)
     print(f"{r[0]:<16}" + "".join(f"{v[c]:>10.3f}" if v[c]==v[c] else f"{'-':>10}" for c in comp)
-          + f"{pos:>9.3f}")
+          + f"{pos:>9.3f}{sum(x for x in v.values() if x==x):>8.3f}")
 
 print("""
 HELD-LEAN     |roll_mean|/roll_RMS > 0.7 -- torso parked to one side, not swinging.

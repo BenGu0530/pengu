@@ -1,0 +1,21 @@
+# gen03 -- the term that was never ablated.
+#
+# Mechanism found after the C2 retrofit (11 arms, frames + per-trial columns):
+# NO reward term reads the torso. `energy` explicitly excludes it (LEG_IDX,
+# grid4_rl_env.py:468); `fall` tests the ROOT roll, not the torso (line 514);
+# track/progress/back/swing/scrub never touch it. The only two terms that see
+# the torso -- `hf` (0.6, HF_IDX = hips+torso) and `smooth` (0.01, all dims) --
+# both tax MOTION. So holding the torso at a lean is free and swinging it is
+# taxed, with nothing paying for the swing either way.
+#
+# r_hf is -0.163/step on no_back, the second-largest penalty in the budget and
+# 15x r_smooth -- and it was absent from ablate_arms.txt AND from the budget
+# table, so it has never been measured. These arms measure it.
+#
+# Prediction: removing the tax does NOT by itself produce a swing (nothing
+# rewards one), so if the lean persists at hf=0 that is evidence the lean is
+# load-bearing for the gait rather than a pricing artifact.
+
+no_hf           hf=0.0
+hf02            hf=0.2
+hf0_sm0         hf=0.0 smooth=0.0
