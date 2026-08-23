@@ -29,15 +29,16 @@ using namespace ControlTableItem;
 #define DEBUG_SERIAL Serial
 
 // ===================== Champion gait (sim units: deg, Hz) =====================
-// Ice champion (mu=0.1): freq 1.80 phi 260 leg 125 hip 20 off 50 (K5 net 0.169, head 0.99)
-//   plateau member: freq 1.79-1.97 all pass — 1.80 chosen for hardware headroom
+// Ice champion, MODERATE 30-deg lean (mu=0.1): freq 1.80 phi 270 leg 125 hip 28 off 30
+//   (K5 net 0.125 min 0.121, head 0.999, nbhd 1.00 plateau) — 26% slower than the
+//   extreme off=50 solution (net 0.169), the price of the milder posture.
 // mu=0.3 tier: 1.87 / 280 / 115 / 28 / off 20 (K5 net 0.246, head 1.00, plateau 2/2)
 // old names/units kept so webpage.ino + wireless.ino tabs work unchanged (rad where noted)
 float p_legFreq  = 1.80f;                     // [Hz]
 float p_legAmp   = 125.0f * PI / 180.0f;      // [rad] crank amplitude (unipolar)
-float p_hipAmp   = 20.0f  * PI / 180.0f;      // [rad] hip half-rectified swing
-float p_hipPhiD  = 260.0f;                    // [deg] hip-vs-leg phase offset
-float p_hipOffD  = 50.0f;                     // [deg] symmetric forward-pitch offset
+float p_hipAmp   = 28.0f  * PI / 180.0f;      // [rad] hip half-rectified swing
+float p_hipPhiD  = 270.0f;                    // [deg] hip-vs-leg phase offset
+float p_hipOffD  = 30.0f;                     // [deg] symmetric forward-pitch offset
 
 // torso kappa-PID (sim TorsoKappaPID values)
 float p_kappa = 0.0f, p_kp = 2.0f, p_ki = 0.1f;   // kappa=0: torso counter-rotates to stay world-upright
@@ -74,6 +75,8 @@ bool    wifi_active = false;
 float   home_deg[MOTOR_COUNT];
 unsigned long walk_start_ms = 0, autowait_ms = 0;
 float torso_iErr = 0.0f;
+float roll_ref = 0.0f;             // IMU roll reference, re-homed during the settle window
+bool  roll_homed = false;          //   (BNO055 euler drifts after the big lean; Ben 2026-08-23)
 bool  stream_dbg = false;          // 't' toggles a 5 Hz roll/joint/axis stream (hand-rock test)
 
 const float READY_STEP = 1.0f, READY_STEP_TORSO = 1.5f, ARRIVE_THRESH = 1.0f;
@@ -161,10 +164,20 @@ void run_walk() {
   float hipL_deg = off_deg + alpha * A_hip * max(0.0f, sinf(phase + PI + phi));
   float hipR_deg = off_deg + alpha * A_hip * max(0.0f, sinf(phase + phi));
 
-  // torso: kappa=2 feedback — target torso WORLD roll = kappa * hip-axis roll
+  // IMU re-home: average roll during the settle window (robot still, torso at home);
+  // everything below uses roll RELATIVE to that reference -> drift/mount offset cancelled
+  if (t > T_RAMP && t < T_RAMP + T_SETTLE)
+    roll_ref = 0.98f * roll_ref + 0.02f * imu_roll;
+  if (!roll_homed && t >= T_RAMP + T_SETTLE) {
+    roll_homed = true;
+    DEBUG_SERIAL.print("IMU re-homed: roll_ref = "); DEBUG_SERIAL.println(roll_ref, 2);
+  }
+  float rollRel = imu_roll - roll_ref;
+
+  // torso feedback — target torso WORLD roll = kappa * hip-axis roll (kappa=0: hold level)
   float J_deg  = dxl.getPresentPosition(XM_TORSO_ROLL, UNIT_DEGREE) - home_deg[idxOf(XM_TORSO_ROLL)];
-  float axis   = imu_roll - S_TILT * J_deg;
-  float err    = p_kappa * axis - imu_roll;
+  float axis   = rollRel - S_TILT * J_deg;
+  float err    = p_kappa * axis - rollRel;
   torso_iErr   = constrain(torso_iErr + err * 0.02f, -20.0f, 20.0f);
   float torso_deg = alpha * constrain(
       (p_kappa - 1.0f) * axis / S_TILT + p_kp * err + p_ki * torso_iErr,
@@ -185,7 +198,7 @@ void run_walk() {
     DEBUG_SERIAL.print(" hipL->"); DEBUG_SERIAL.print(home_deg[idxOf(XM_LEFT_HIP)] - hipL_deg, 1);
     DEBUG_SERIAL.print(" hipR->"); DEBUG_SERIAL.print(home_deg[idxOf(XM_RIGHT_HIP)] + hipR_deg, 1);
     DEBUG_SERIAL.print(" torso->");DEBUG_SERIAL.print(home_deg[idxOf(XM_TORSO_ROLL)] + torso_deg, 1);
-    DEBUG_SERIAL.print(" roll=");  DEBUG_SERIAL.print(imu_roll, 1);
+    DEBUG_SERIAL.print(" roll=");  DEBUG_SERIAL.print(rollRel, 1);
     DEBUG_SERIAL.print(" axis=");  DEBUG_SERIAL.println(axis, 1);
   }
 }
@@ -200,7 +213,7 @@ void loop() {
     case 'r': robot_state = STATE_READY_SLIDE; DEBUG_SERIAL.println("-> READY"); break;
     case 'w':
       if (robot_state == STATE_IDLE) {
-        walk_start_ms = millis(); torso_iErr = 0;
+        walk_start_ms = millis(); torso_iErr = 0; roll_ref = 0; roll_homed = false;
         robot_state = STATE_WALK; DEBUG_SERIAL.println("-> WALK (staged start)");
       } else DEBUG_SERIAL.println("Go READY first.");
       break;
@@ -255,7 +268,7 @@ void loop() {
       break;
     case STATE_AUTO_WAIT:
       if (millis() - autowait_ms > (unsigned long)(AUTO_WAIT * 1000)) {
-        walk_start_ms = millis(); torso_iErr = 0;
+        walk_start_ms = millis(); torso_iErr = 0; roll_ref = 0; roll_homed = false;
         robot_state = STATE_WALK; DEBUG_SERIAL.println("AUTO -> WALK");
       }
       break;
