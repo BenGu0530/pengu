@@ -403,3 +403,20 @@ possible. Iteration rounds logged here.
     the 2.7-3.2 Hz family, airborne 30-41%, mu0.3 shows HELD-LEAN episodes
     (seed0 roll_mean -44.5); torso joint itself ~4 deg RMS. Speed record,
     not yet the clean gait. csv: a2p0_ext/eval_bestckpt_confirm.csv.
+
+- r3d_arm (kept recipe, seeds 1-7) running log (final.zip evals, pre-selection):
+  | seed | mu0.1 | mu0.2 | mu0.3 | mu0.4 | total |
+  | s0(=e2x2hf4b/a2p0, best2000k confirmed) | 1.0/0.391 | 1.0/0.262 | 0.6/0.117 | 0.6/0.075 | 16/20 conf |
+  | s1 final | 0.8/0.487 | 1.0/0.553 | 1.0/0.293 | 0.0/0.012 | 14/20 |
+  | s2 final | 0.6/0.366 | 1.0/0.559 | 1.0/0.363 | 1.0/0.067 | 18/20 TIER 3 |
+  | s3 final | 0.6/0.062 | 0.2/0.048 | 0.2/0.018 | 0.0/0.015 | 4/20 (weak seed; late stand-drift, tail recovery at 3M) |
+  | s4 final | 0.4/0.450 | 0.8/0.351 | 0.8/0.100 | 1.0/0.092 | 15/20 |
+  | s5 final | 0.8/0.457 | 1.0/0.470 | 0.8/0.207 | 1.0/0.133 | 18/20 TIER 3 |
+  | s6 final | 0.0/0.003 | 0.0/0.003 | 0.0/0.012 | 0.0/0.003 | 0/20 (rocking-stand, ASYM +0.22 in training) |
+  | s7 final | 0.8/0.364 | 1.0/0.661 | 0.8/0.413 | 0.4/0.052 | 15/20 (mu0.2 0.661 = speed record) |
+
+  ARM COMPLETE (8 seeds, finals pre-selection): pass totals 16*,14,18,4,15,18,0,15
+  (*s0 = confirmed best-ckpt figure; others final.zip). 6/8 seeds walk
+  (>=14/20), 2 failures (s3 weak, s6 rocking-stand). Both tier-3 lines
+  (s2, s5) pass mu0.4 outright. Per-seed ckpt sweep launched for the
+  best-ckpt + confirmation pass (ckpt_sweep_arm.log).
