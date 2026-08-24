@@ -457,3 +457,11 @@ possible. Iteration rounds logged here.
   - clamp-native retrain probe launched (kept recipe seed 0, runs/sv1_probe/).
   Next: P2 (HELD-LEAN / straight) discussion with Ben; then P1 with the
   clamp-corrected field.
+  - sv1-NATIVE retrain probe (kept recipe, seed 0, 3M): frozen eval final
+    0.8/0.419, 1.0/0.533, 0.8/0.165, 0.6/0.062 = 16/20 TIER 3 without ckpt
+    selection — equal to the best sv0 seeds. Morphology (deterministic,
+    mu0.1): vx 0.401 at 2.60 Hz, single support 70%, airborne 24%, hips
+    alternating (corr -0.51), torso lean component -17 deg, joint RMS 2.7.
+    vs the sv0 counterpart (same recipe/seed: 0.307 at 3.25 Hz): training
+    INSIDE the honest actuation is both faster and lower-frequency. Residual
+    gaps to goal: lean component, airborne 24-40%, mu0.3+ weak.
