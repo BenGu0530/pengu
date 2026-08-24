@@ -1,0 +1,7 @@
+# T1 -- Ben's two asks, both yes/no, at the band S0 measured as least-bad (a2).
+# Control is NOT re-run: S0's `a2` IS (a2 band, straight=0, shape=reward) at
+# seed 0, and training is byte-deterministic given (seed, config).
+#   S0 a2 reference:  ePass 0.00  eNfwd 0.056  net -0.018  roll_mean +54.6 HELD-LEAN
+str03   --crank-band 0.0 1.9 --rw straight=0.3
+str10   --crank-band 0.0 1.9 --rw straight=1.0
+pen     --crank-band 0.0 1.9 --shape penalty --rw fall=250

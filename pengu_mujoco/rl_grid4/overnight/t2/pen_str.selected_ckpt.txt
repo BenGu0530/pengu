@@ -1,0 +1,1 @@
+runs/overnight/t2/pen_str/ckpts/ckpt_1000000_steps.zip

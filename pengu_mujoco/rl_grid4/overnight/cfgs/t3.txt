@@ -1,0 +1,4 @@
+# T3 -- seed spread. C1: a single run's number is a draw, not a measurement.
+pen_str_s1 --crank-band 0.0 1.9 --shape penalty --rw fall=250 straight=0.3 --seed 1
+pen_str_s2 --crank-band 0.0 1.9 --shape penalty --rw fall=250 straight=0.3 --seed 2
+str_s2     --crank-band 0.0 1.9 --rw straight=0.3 --seed 2

@@ -1,0 +1,5 @@
+# T2 -- built from T1's confirmation numbers by drive_prog2.sh.
+# straight=0.3 carried forward as the better of 0.3 / 1.0.
+pen_str  --crank-band 0.0 1.9 --shape penalty --rw fall=250 straight=0.3
+pen_s1   --crank-band 0.0 1.9 --shape penalty --rw fall=250 --seed 1
+str_s1   --crank-band 0.0 1.9 --rw straight=0.3 --seed 1
