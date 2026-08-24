@@ -549,3 +549,20 @@ possible. Iteration rounds logged here.
     ~3.05 Hz THROUGH the 2.5 Hz 2nd-order filter (|H| 0.58 there) — soft
     rolloff partially amplitude-compensated again; a hard cap would need a
     steeper filter. Run: runs/p4_cmd07/s0.
+  - P4 ext (s0 +3M at cmd 0.70 held): deterministic mu0.1 per ckpt:
+    3.5M 0.370 (tj 2.0deg, cmd_std 0.266, 2.90Hz) -> 4.5M 0.492 (2.2deg,
+    0.217, 2.55Hz) -> 6.0M 0.461 (2.9deg, 0.306, 2.55Hz). Under sustained
+    full demand: speed reaches 0.46-0.49 (past the c6 ceiling WITH the
+    2.5Hz cap, on pure ice), torso keeps growing but slowly (1.8 -> 3.0 deg
+    RMS, p2p to 12 deg), frequency locks at 2.55 Hz, eff-kappa stays in
+    the 0.5-0.9 passive-follow band. Training tail 0.416-0.432 with fall
+    0.19-0.30 and hip_corr -0.65 (all-time strongest).
+  - P4 3-run wrap (best-ckpt + independent-seed confirm, mu0.1 x5):
+    s0_ext@3.5M: 5/5 / 0.638 (min 0.633) — ties the all-time record 0.646
+    WITH the 2.5 Hz cap + sv1 + mu0.1-only; tier 3-lean (frac 1.00, 24.6).
+    s1@final: 5/5 / 0.324 (3-lean 0.80). s2@2750k: 5/5 / 0.449 (3-lean
+    0.60; its final had drifted to 1/5 — stopping rule again). All three
+    seeds confirm 5/5 at mu0.1: the P4 recipe is seed-reliable on ice.
+    Every confirmed walker is tier 3-LEAN under eval jitter (RMS 24-29,
+    lean frac 0.6-1.0): the mild-lean posture is the eval-robust strategy
+    across the whole family. Frequency equilibrium 2.55 Hz under the cap.

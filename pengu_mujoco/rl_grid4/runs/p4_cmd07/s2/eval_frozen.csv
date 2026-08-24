@@ -1,0 +1,6 @@
+ckpt,rep,mu,survived,pass,net_fwd,heading_align,torso_roll_rms_deg,torso_roll_mean_deg,torso_roll_rate_rms_dps,root_roll_rms_deg,eff_kappa,single_frac,hip_diff_rms_deg,hip_corr
+runs/p4_cmd07/s2/ckpts/final.zip,0,0.1,1,0,0.0305,0.9852,16.64,-16.34,16.2,4.68,1.95,0.111,1.48,0.818
+runs/p4_cmd07/s2/ckpts/final.zip,1,0.1,1,0,0.0258,0.9872,18.24,-18.07,14.2,4.83,1.714,0.088,1.32,0.849
+runs/p4_cmd07/s2/ckpts/final.zip,2,0.1,0,0,0.0,0.0,nan,nan,,nan,,0.0,4.8,0.542
+runs/p4_cmd07/s2/ckpts/final.zip,3,0.1,1,0,0.0294,0.9831,18.58,-18.36,15.6,6.04,1.848,0.108,1.48,0.835
+runs/p4_cmd07/s2/ckpts/final.zip,4,0.1,1,1,0.2725,0.9855,23.82,8.28,52.0,8.59,2.452,0.573,10.77,-0.567

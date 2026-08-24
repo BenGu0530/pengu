@@ -1,0 +1,27 @@
+[train_grid4] p4_cmd07/s2: 3000000 steps x 8 envs -> /Users/ben/Documents/CMU/Robomechanics Lab/PenguMujoco/pengu_mujoco/rl_grid4/runs/p4_cmd07/s2
+[curriculum] vx_cmd start 0.12
+[diag]    250000 steps  ep_len=158 fall=0.86  vx=-0.028  hip_diff=8.5deg hip_corr=+0.17  torso_rms=10.7deg roll_rate=66dps stride_asym=-0.012  r_hf=-0.166  r_dutybal=-0.011  sigma_torso=0.347
+[diag]    500000 steps  ep_len=350 fall=0.45  vx=0.029  hip_diff=9.4deg hip_corr=+0.42  torso_rms=26.2deg roll_rate=71dps stride_asym=-0.075  r_hf=-0.148  r_dutybal=-0.021  sigma_torso=0.336
+[curriculum] 700000 steps -> vx_cmd 0.17 (survival gate)
+[curriculum] 725000 steps -> vx_cmd 0.22 (survival gate)
+[diag]    750000 steps  ep_len=364 fall=0.44  vx=0.034  hip_diff=10.1deg hip_corr=+0.32  torso_rms=25.3deg roll_rate=73dps stride_asym=+0.003  r_hf=-0.148  r_dutybal=-0.006  sigma_torso=0.329
+[curriculum] 850000 steps -> vx_cmd 0.27 (survival gate)
+[diag]   1000000 steps  ep_len=334 fall=0.56  vx=0.064  hip_diff=12.7deg hip_corr=+0.08  torso_rms=24.4deg roll_rate=85dps stride_asym=+0.014  r_hf=-0.154  r_dutybal=-0.004  sigma_torso=0.317
+[diag]   1250000 steps  ep_len=361 fall=0.48  vx=0.084  hip_diff=13.8deg hip_corr=-0.09  torso_rms=24.0deg roll_rate=82dps stride_asym=+0.010  r_hf=-0.158  r_dutybal=-0.003  sigma_torso=0.309
+[curriculum] 1375000 steps -> vx_cmd 0.32 (survival gate)
+[curriculum] 1400000 steps -> vx_cmd 0.37 (survival gate)
+[diag]   1500000 steps  ep_len=373 fall=0.43  vx=0.112  hip_diff=14.5deg hip_corr=-0.14  torso_rms=25.2deg roll_rate=77dps stride_asym=-0.063  r_hf=-0.165  r_dutybal=-0.003  sigma_torso=0.301
+[curriculum] 1625000 steps -> vx_cmd 0.42 (survival gate)
+[diag]   1750000 steps  ep_len=387 fall=0.42  vx=0.172  hip_diff=16.5deg hip_corr=-0.27  torso_rms=24.9deg roll_rate=86dps stride_asym=-0.147  r_hf=-0.174  r_dutybal=-0.003  sigma_torso=0.297
+[curriculum] 1850000 steps -> vx_cmd 0.47 (speed gate)
+[diag]   2000000 steps  ep_len=381 fall=0.43  vx=0.244  hip_diff=16.6deg hip_corr=-0.28  torso_rms=25.6deg roll_rate=88dps stride_asym=-0.104  r_hf=-0.181  r_dutybal=-0.002  sigma_torso=0.293
+[curriculum] 2100000 steps -> vx_cmd 0.52 (speed gate)
+[curriculum] 2175000 steps -> vx_cmd 0.57 (speed gate)
+[curriculum] 2200000 steps -> vx_cmd 0.62 (survival gate)
+[diag]   2250000 steps  ep_len=407 fall=0.33  vx=0.289  hip_diff=17.0deg hip_corr=-0.36  torso_rms=22.8deg roll_rate=92dps stride_asym=-0.049  r_hf=-0.186  r_dutybal=-0.002  sigma_torso=0.290
+[diag]   2500000 steps  ep_len=377 fall=0.43  vx=0.311  hip_diff=18.0deg hip_corr=-0.41  torso_rms=21.0deg roll_rate=106dps stride_asym=+0.028  r_hf=-0.195  r_dutybal=-0.002  sigma_torso=0.285
+[curriculum] 2600000 steps -> vx_cmd 0.67 (survival gate)
+[curriculum] 2625000 steps -> vx_cmd 0.70 (survival gate)
+[diag]   2750000 steps  ep_len=404 fall=0.31  vx=0.337  hip_diff=18.7deg hip_corr=-0.51  torso_rms=17.6deg roll_rate=101dps stride_asym=+0.078  r_hf=-0.199  r_dutybal=-0.002  sigma_torso=0.275
+[diag]   3000000 steps  ep_len=374 fall=0.41  vx=0.319  hip_diff=18.7deg hip_corr=-0.46  torso_rms=16.9deg roll_rate=100dps stride_asym=+0.101  r_hf=-0.190  r_dutybal=-0.002  sigma_torso=0.266
+[train_grid4] done -> /Users/ben/Documents/CMU/Robomechanics Lab/PenguMujoco/pengu_mujoco/rl_grid4/runs/p4_cmd07/s2/ckpts/final.zip
