@@ -1,0 +1,17 @@
+  rl_grid4/runs/r3e_probe/s0    250k: pass  0/12  net_fwd -0.000
+  rl_grid4/runs/r3e_probe/s0    500k: pass  0/12  net_fwd -0.000
+  rl_grid4/runs/r3e_probe/s0    750k: pass  0/12  net_fwd -0.000
+  rl_grid4/runs/r3e_probe/s0   1000k: pass  0/12  net_fwd +0.000
+  rl_grid4/runs/r3e_probe/s0   1250k: pass  6/12  net_fwd +0.205
+  rl_grid4/runs/r3e_probe/s0   1500k: pass  6/12  net_fwd +0.162
+  rl_grid4/runs/r3e_probe/s0   1750k: pass  4/12  net_fwd +0.142
+  rl_grid4/runs/r3e_probe/s0   2000k: pass  6/12  net_fwd +0.140
+  rl_grid4/runs/r3e_probe/s0   2250k: pass  2/12  net_fwd +0.095
+  rl_grid4/runs/r3e_probe/s0   2500k: pass  9/12  net_fwd +0.251
+  rl_grid4/runs/r3e_probe/s0   2750k: pass  2/12  net_fwd +0.031
+  rl_grid4/runs/r3e_probe/s0   3000k: pass 10/12  net_fwd +0.128
+  rl_grid4/runs/r3e_probe/s0   final: pass 10/12  net_fwd +0.132
+[rl_grid4/runs/r3e_probe/s0] best=final (pass 10, nf 0.1321) vs final (pass 10, nf 0.1321) -> rl_grid4/runs/r3e_probe/s0/ckpt_sweep.csv
+
+=== best-vs-final summary ===
+rl_grid4/runs/r3e_probe/s0: best final pass 10 (final 10, delta +0), net_fwd 0.1321 vs 0.1321

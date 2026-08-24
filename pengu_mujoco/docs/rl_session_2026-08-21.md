@@ -482,3 +482,12 @@ possible. Iteration rounds logged here.
   suicide preflight into its branch (would refuse any --no-slew train run);
   moved back under shape=penalty. r3e probe launched (kept recipe + sv1 +
   dutybal, seed 0, runs/r3e_probe/).
+  - r3e probe DONE (kept recipe + sv1 + dutybal, seed 0): final eval
+    0.6/0.047, 1.0/0.225, 0.8/0.130, 1.0/0.106 — tier line now prints the
+    S1 split: "3-lean, lean-trial frac 0.76" (mild lean correctly labeled).
+    dutybal worked as designed: a heavy-sway/one-sided burst at 1.25-1.5M
+    (torso 52 deg, tax -0.048) was pruned back to duty symmetry (-0.005)
+    while KEEPING the sway; no heavy lean anywhere. Contact structure is
+    the best of any run: airborne 15-16%, double support 16-17% (vs 24-40%
+    / 3-6% pre-dutybal); mu0.4 walks at 2.20 Hz. mu0.1 final is weak
+    (0.047) — ckpt sweep running. P1 next: energy x20 A/B proposed.
