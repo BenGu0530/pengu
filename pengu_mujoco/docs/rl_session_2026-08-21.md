@@ -491,3 +491,14 @@ possible. Iteration rounds logged here.
     the best of any run: airborne 15-16%, double support 16-17% (vs 24-40%
     / 3-6% pre-dutybal); mu0.4 walks at 2.20 Hz. mu0.1 final is weak
     (0.047) — ckpt sweep running. P1 next: energy x20 A/B proposed.
+  - P1 energy x20 A/B (kept recipe + sv1 + dutybal + energy=0.01, seed 0):
+    final eval 0.8/0.384, 1.0/0.547, 0.8/0.324, 0.4/0.086 vs r3e's
+    0.6/0.047, 1.0/0.225, 0.8/0.130, 1.0/0.106 — energy pricing did NOT
+    slow it down; it sped it up dramatically while keeping 2.2-2.75 Hz.
+    mu0.3 slice: 0.367 at 2.20 Hz with torso QUIET (RMS 8.0) = 151% of the
+    c6 mu0.3 ceiling (0.242). Costs: mu0.4 regressed (0.4 pass), mild lean
+    back at mu0.1/0.2 (mean 28-35, tier 3-lean class, reported not priced).
+    Reading (mechanism, not verdict): high-energy gaits are the bouncy/
+    draggy ones; making energy non-trivial pushes optimization toward
+    efficient push-off walking, and efficient and fast point the same way
+    on this body.
