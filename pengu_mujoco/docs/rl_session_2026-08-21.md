@@ -440,3 +440,20 @@ possible. Iteration rounds logged here.
   with 17-40% airborne and mixed lean episodes, not the 2 Hz clean gait
   (that remains a2p0-3M@2000k's mu0.3 slice). csvs per seed:
   runs/r3d_arm/s*/{ckpt_sweep.csv,eval_bestckpt_confirm.csv}.
+
+- P3 RESOLVED (2026-08-23, Ben): all five actuators are XM430-W350; the
+  crank pricing question became an execution-honesty fix. sv1 slew clamp
+  @4.82 rad/s (12 V no-load) implemented across env+tools (--no-slew =
+  legacy; bit-repro verified). Numbers:
+  - designed replay under sv1: c6 mu0.1 0.374 (-6% vs sv0 0.397), mu0.3
+    -0.008 with 2/3 falls (sv0: 0.087); c3 replay does not walk through the
+    RL-env probe at mu0.1 in either mode (its 0.1636 is a sweep-protocol
+    number, not comparable here).
+  - RL champions zero-shot under sv1 (confirm seeds): a2p0@2000k 16/20
+    (0.390 mu0.1), s4@2000k 17/20 (0.492), s5@final 15/20 (0.522),
+    s7@2750k 17/20 (0.597 mu0.1, 0.580 mu0.2). The learned family is
+    nearly clamp-invariant: its speed does not depend on the illegal
+    overspeed region.
+  - clamp-native retrain probe launched (kept recipe seed 0, runs/sv1_probe/).
+  Next: P2 (HELD-LEAN / straight) discussion with Ben; then P1 with the
+  clamp-corrected field.

@@ -36,6 +36,8 @@ def main():
     ap.add_argument("--repeats", type=int, default=3)
     ap.add_argument("--mus", default="0.1,0.2,0.3,0.4")
     ap.add_argument("--crank-band", nargs=2, type=float, default=None)
+    ap.add_argument("--no-slew", action="store_true",
+                    help="disable the sv1 servo slew clamp (legacy sv0 repro)")
     a = ap.parse_args()
 
     summary = []
@@ -53,6 +55,8 @@ def main():
                    z, "--repeats", str(a.repeats), "--mus", a.mus, "--out", out]
             if a.crank_band:
                 cmd += ["--crank-band", str(a.crank_band[0]), str(a.crank_band[1])]
+            if a.no_slew:
+                cmd += ["--no-slew"]
             subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL)
             with open(out) as f:

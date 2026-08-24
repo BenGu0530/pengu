@@ -27,6 +27,8 @@ def main():
     ap.add_argument("--out", default=None)
     ap.add_argument("--crank-band", nargs=2, type=float, default=None,
                     metavar=("MID", "HALF"))
+    ap.add_argument("--no-slew", action="store_true",
+                    help="disable the sv1 servo slew clamp (legacy sv0 repro)")
     a = ap.parse_args()
 
     import imageio
@@ -34,8 +36,9 @@ def main():
     from grid4_rl_env import Grid4RLEnv
 
     model = PPO.load(a.ckpt, device="cpu")
+    kw = dict(slew_vmax=0.0) if a.no_slew else {}
     env = Grid4RLEnv(eval_mode=True, mu_fixed=a.mu, episode_s=a.dur, seed=a.seed,
-                     crank_band=tuple(a.crank_band) if a.crank_band else None)
+                     crank_band=tuple(a.crank_band) if a.crank_band else None, **kw)
     obs, _ = env.reset(seed=a.seed)
 
     W, H = 640, 480

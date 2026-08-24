@@ -51,6 +51,19 @@ COM_SLIDE = 0.00873       # m, expected apply_com_variant slide on the native bo
 VX_CMD = 0.47             # m/s
 ALPHA = 0.2               # action filter (capability knob, freezes after Gate 0)
 STALL_TORQUE = 4.1        # N*m, XM430 forcerange
+# Execution-layer version log:
+# sv0 (implicit): position targets teleport; no servo speed limit. Every
+#     overspeed gait (5 Hz mincing, 3 Hz crank bounce, c6's own cranks at
+#     max 8.4 rad/s) lived in this gap.
+# sv1 (2026-08-23, Ben): applied-target slew clamp at the XM430-W350 no-load
+#     speed, 46 rpm @ 12 V = 4.82 rad/s (ROBOTIS e-manual; the XML forcerange
+#     +-4.1 N*m is the same table's 12 V stall torque, so the model is 12 V-
+#     calibrated throughout). Models the servo's Profile Velocity behavior in
+#     position mode. Known residual: MuJoCo joint transients can still exceed
+#     the limit briefly (kp=50 spring dynamics); the clamp bounds the TARGET
+#     trajectory. Designed baselines are re-scored under the same clamp.
+SLEW_VERSION = "sv1"
+SERVO_VMAX = 4.82         # rad/s, XM430-W350 no-load @ 12 V
 
 # Reward version log (analysis in docs/rl_e2_ice_memo.md):
 # v1: progress 4*max(0,vx), fall -5. Outcome: lunge local optimum -- the dash
@@ -183,7 +196,7 @@ class Grid4RLEnv(gym.Env):
                  filter_alpha=ALPHA, action_delay=1,
                  obs_noise=True, init_jitter=True,
                  rand_gains=False, push=False, w_smooth=None, rw=None,
-                 crank_band=None, shape="reward"):
+                 crank_band=None, shape="reward", slew_vmax=SERVO_VMAX):
         # crank_band=(mid, half): override the a1 crank action band. a2 probe
         # (reward audit 2026-08-21): (0.0, 1.9) — symmetric band covering both
         # the c6 designed gait's command domain [0,+1.83] (inexpressible under
@@ -226,6 +239,7 @@ class Grid4RLEnv(gym.Env):
         self.mu_fixed, self.mu_jitter = mu_fixed, float(mu_jitter)
         self.alpha = float(filter_alpha)
         self.delay = int(action_delay)
+        self.slew_vmax = float(slew_vmax) if slew_vmax else 0.0   # sv1; 0 = legacy sv0
         self.obs_noise = bool(obs_noise)
         self.init_jitter = bool(init_jitter)
         self.rand_gains = bool(rand_gains)
@@ -407,6 +421,7 @@ class Grid4RLEnv(gym.Env):
         a0 = np.clip((ctrl0 - self.ctrl_mid) / self.ctrl_half, -1.0, 1.0)
         self.act_filt = a0.astype(np.float64)
         self.act_filt2 = a0.astype(np.float64)    # r3c: cascade for executed-HF pricing
+        self._applied_prev = ctrl0.astype(np.float64)   # sv1 slew clamp state
         self.last_action = a0.astype(np.float32)
         self._queue = collections.deque([ctrl0.copy()] * self.delay, maxlen=self.delay + 1)
 
@@ -446,6 +461,14 @@ class Grid4RLEnv(gym.Env):
             applied = self._queue.popleft()
         else:
             applied = target
+        if self.slew_vmax:
+            # sv1: servo Profile Velocity. The XM430-W350 tracks position
+            # targets at a bounded velocity; the sim previously let targets
+            # teleport, which is where every overspeed gait lived.
+            lim = self.slew_vmax * self.control_dt
+            applied = self._applied_prev + np.clip(applied - self._applied_prev,
+                                                   -lim, lim)
+            self._applied_prev = applied.copy()
         d.ctrl[self.aid] = applied
 
         t = self.step_i * self.control_dt

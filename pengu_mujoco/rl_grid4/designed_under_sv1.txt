@@ -1,0 +1,9 @@
+=== designed baselines under sv1 clamp (4.82 rad/s) vs sv0 (no limit) ===
+c6/k2 mu=0.1 sv1: vx +0.374 (per-seed ['+0.377', '+0.377', '+0.368']) falls 0/3
+c6/k2 mu=0.1 sv0: vx +0.397 (per-seed ['+0.448', '+0.368', '+0.375']) falls 0/3
+c6/k2 mu=0.3 sv1: vx -0.008 (per-seed ['-0.009', '+0.038', '-0.052']) falls 2/3
+c6/k2 mu=0.3 sv0: vx +0.087 (per-seed ['+0.113', '+0.072', '+0.075']) falls 1/3
+c3/k0 mu=0.1 sv1: vx -0.054 (per-seed ['-0.055', '-0.053', '-0.055']) falls 0/3
+c3/k0 mu=0.1 sv0: vx -0.052 (per-seed ['-0.054', '-0.060', '-0.042']) falls 0/3
+c3/k0 mu=0.3 sv1: vx +0.020 (per-seed ['+0.080', '-0.086', '+0.064']) falls 3/3
+c3/k0 mu=0.3 sv0: vx +0.168 (per-seed ['+0.182', '+0.216', '+0.105']) falls 3/3

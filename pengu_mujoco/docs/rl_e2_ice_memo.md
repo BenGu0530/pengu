@@ -106,6 +106,21 @@ torso neutrality is NOT touched by any entry):
   kept: gate0_s0_nosettle (v1, no settle), gate0_s0 (v1, settle, cut at 1.1M).
 
 Knob change log:
+- 2026-08-23 (EXECUTION sv0 -> sv1, model-honesty amendment, Ben's P3 ruling):
+  applied position targets are slew-clamped at the XM430-W350 no-load speed,
+  46 rpm @ 12 V = 4.82 rad/s (ROBOTIS e-manual; the XML forcerange +-4.1 N*m
+  is the same table's 12 V stall torque, so 12 V is the model's calibration
+  point). This models the servo's Profile Velocity behavior in position mode;
+  previously targets could teleport, which is where every overspeed gait
+  lived (5 Hz mincing: hips/torso slew over the limit 56-81% of steps; c6's
+  own cranks: 60-69% over, max 8.4 rad/s). All tools default to sv1;
+  --no-slew reproduces legacy sv0 bit-for-bit (verified on a recorded
+  rollout). Run tags append "sv1"; sv0 and sv1 pools must not be mixed.
+  Measured impact: designed c6 replay mu0.1 -6% (0.397 -> 0.374), mu0.3
+  0.087 -> -0.008 (2/3 falls); confirmed RL champions nearly unchanged
+  (a2p0@2000k 16/20 -> 16/20, s7@2750k 17/20 -> 17/20 with mu0.1 0.646 ->
+  0.597) — the learned policies barely used the illegal region.
+
 - 2026-08-22 (REWARD r2 -> r3, declared amendment: hf high-frequency action
   penalty, w=0.5). The no-penalty e2x2 cells converged to ~5 Hz aerial
   mincing (hip-diff zero-crossing ~5 Hz, 42% airborne, 2% double support;

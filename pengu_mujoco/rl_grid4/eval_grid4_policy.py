@@ -129,6 +129,8 @@ def main():
     ap.add_argument("--crank-band", nargs=2, type=float, default=None,
                     metavar=("MID", "HALF"),
                     help="must match the band the policy was trained with")
+    ap.add_argument("--no-slew", action="store_true",
+                    help="disable the sv1 servo slew clamp (legacy sv0 repro)")
     a = ap.parse_args()
     mus = [float(x) for x in a.mus.split(",")]
 
@@ -141,8 +143,10 @@ def main():
         per_mu_pass = {}
         torso_rmss = []
         for mu in mus:
+            kw = dict(slew_vmax=0.0) if a.no_slew else {}
             env = Grid4RLEnv(eval_mode=True, mu_fixed=mu, episode_s=a.dur, seed=0,
-                             crank_band=tuple(a.crank_band) if a.crank_band else None)
+                             crank_band=tuple(a.crank_band) if a.crank_band else None,
+                             **kw)
             trials = []
             for rep in range(a.repeats):
                 r = run_trial(model, env, mu, trial_seed=a.trial_seed_base + 1000 * rep + int(mu * 100), dur=a.dur)

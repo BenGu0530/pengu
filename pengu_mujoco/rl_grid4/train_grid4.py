@@ -87,6 +87,8 @@ def main():
     ap.add_argument("--name", default=None,
                     help="run dir name under --out (e.g. e2/s0/stageA); "
                          "overrides the auto version tag")
+    ap.add_argument("--no-slew", action="store_true",
+                    help="disable the sv1 servo slew clamp (legacy sv0 repro)")
     ap.add_argument("--out", default=os.path.join(_HERE, "runs"))
     a = ap.parse_args()
     if a.smoke:
@@ -113,6 +115,8 @@ def main():
         env_kwargs.update(crank_band=tuple(a.crank_band))
     if a.shape != "reward":
         env_kwargs.update(shape=a.shape)
+    if a.no_slew:
+        env_kwargs.update(slew_vmax=0.0)
         # suicide preflight. With every term <= 0, an agent that cannot yet walk
         # bleeds the floor each step; if a single -fall is cheaper than the
         # discounted remaining bleed, dying is optimal and the run is wasted.
@@ -135,7 +139,7 @@ def main():
     else:
         env_kwargs.update(mu_lo=0.1, mu_hi=0.4)
 
-    from grid4_rl_env import REWARD_VERSION, ACTION_VERSION
+    from grid4_rl_env import REWARD_VERSION, ACTION_VERSION, SLEW_VERSION
     # e1 (capability knob, 2026-08-21): log_std_init 0 -> -1.0. Probe: a
     # zero-mean policy under exploration noise survives 0.7 s at sigma 0.85
     # but the robot is open-loop unstable at ANY sigma (2.7 s even at 0.15),
@@ -149,6 +153,7 @@ def main():
     tag = a.name or (
         f"{a.mode}_{REWARD_VERSION}{'ns' if a.no_smooth else ''}{rwtag}"
         f"{ACTION_VERSION}{EXPLORATION_VERSION}"
+        + ("" if a.no_slew else SLEW_VERSION)
         + ("c2" if a.curriculum else "") + ("_w" if a.init_from else "")
         + (f"_mu{a.mu_fixed:g}" if a.mu_fixed is not None and a.mode != "gate0" else "")
         + f"_s{a.seed}"

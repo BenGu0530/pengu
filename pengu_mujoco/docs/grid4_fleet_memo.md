@@ -191,3 +191,13 @@ useful. When pooling, treat e2x2hf4b/a1p1 as e2_base s0. Also: default
 REWARD_VERSION moved r3 -> r3b -> r3c -> r3d within 2026-08-22 (see
 rl_e2_ice_memo knob log + grid4_rl_env.py header); verify the version tag in
 your run dirs matches r3d before pooling generations.
+
+## ANNOUNCEMENT 2026-08-23 (Mac): EXECUTION layer sv0 -> sv1 (servo slew clamp)
+
+grid4_rl_env now clamps applied position targets at 4.82 rad/s (XM430-W350
+no-load @ 12 V; models Profile Velocity). Default ON for train/eval/render/
+score/ckpt-sweep; `--no-slew` reproduces legacy sv0 exactly. New train runs
+tag themselves `sv1`. Do NOT pool sv0 and sv1 runs. Designed baselines are
+being re-scored under sv1 (see rl_session memo); legacy numbers stay archived
+as sv0. If a generation is mid-flight when you pull this, finish it as sv0
+(its processes hold the old code) and launch the next one under sv1.

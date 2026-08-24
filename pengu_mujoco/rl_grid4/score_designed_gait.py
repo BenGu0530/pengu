@@ -63,10 +63,11 @@ def window_means(ep0, n0, ep1, n1):
     return {k: (ep1[k] - ep0.get(k, 0.0)) / n for k in ep1}
 
 
-def run_designed(mu, seed):
+def run_designed(mu, seed, no_slew=False):
     gc = set_c6_params()
+    kw = dict(slew_vmax=0.0) if no_slew else {}
     env = Grid4RLEnv(eval_mode=True, mu_fixed=mu, episode_s=DUR, seed=seed,
-                     filter_alpha=1.0, action_delay=0)
+                     filter_alpha=1.0, action_delay=0, **kw)
     # probe condition: full-range mapping so the designed ctrl is expressible
     cr = env.model.actuator_ctrlrange[env.aid]
     env.ctrl_mid = cr.mean(axis=1)
@@ -131,10 +132,11 @@ def run_designed(mu, seed):
     return out
 
 
-def run_policy(ckpt, mu, seed):
+def run_policy(ckpt, mu, seed, no_slew=False):
     from stable_baselines3 import PPO
     model = PPO.load(ckpt, device="cpu")
-    env = Grid4RLEnv(eval_mode=True, mu_fixed=mu, episode_s=DUR, seed=seed)
+    kw = dict(slew_vmax=0.0) if no_slew else {}
+    env = Grid4RLEnv(eval_mode=True, mu_fixed=mu, episode_s=DUR, seed=seed, **kw)
     obs, _ = env.reset(seed=seed)
     walk_snap = None
     ep = {}
@@ -180,14 +182,16 @@ def main():
                                          "ckpts", "final.zip"))
     ap.add_argument("--seeds", type=int, default=3)
     ap.add_argument("--skip-policy", action="store_true")
+    ap.add_argument("--no-slew", action="store_true",
+                    help="disable the sv1 servo slew clamp (legacy sv0 repro)")
     a = ap.parse_args()
     for mu in (0.1, 0.3):
         print(f"== mu={mu} ==")
         for s in range(a.seeds):
-            print(fmt(run_designed(mu, seed=s), f"c6 designed (seed {s})"))
+            print(fmt(run_designed(mu, seed=s, no_slew=a.no_slew), f"c6 designed (seed {s})"))
         if not a.skip_policy:
             for s in range(a.seeds):
-                print(fmt(run_policy(a.policy, mu, seed=s), f"learned s2 (seed {s})"))
+                print(fmt(run_policy(a.policy, mu, seed=s, no_slew=a.no_slew), f"learned s2 (seed {s})"))
 
 
 if __name__ == "__main__":
