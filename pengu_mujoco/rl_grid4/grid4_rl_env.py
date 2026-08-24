@@ -119,7 +119,11 @@ SERVO_VMAX = 4.82         # rad/s, XM430-W350 no-load @ 12 V
 #     and is reported (tier 3-lean) but not priced. Deadzone 0.25 exempts
 #     the clean floor; <1 s of single-support samples pays nothing (no
 #     early-noise tax, standers pay nothing -> no suicide gradient).
-REWARD_VERSION = "r3e"
+# v3f: energy REMOVED (weight 0), Ben 2026-08-24. The energy x20 A/B showed
+#     pricing energy sped the walker up (mu0.2 0.547, mu0.3 0.367 at 2.2 Hz)
+#     rather than slowing it; Ben's ruling is to drop the term entirely.
+#     dutybal and hf unchanged; torso remains untouched by every term.
+REWARD_VERSION = "r3f"
 DUTYBAL_DEADZONE = 0.25
 DUTYBAL_MIN_SUB = 50          # substeps of single support before the term arms
 HF_IDX = [i for i in range(len(gc.ACTUATORS)) if i not in
@@ -133,7 +137,7 @@ RW_DEFAULT = {
     "sigma2":   0.02,     # kernel variance: exp(-(vx-cmd)^2 / sigma2), sigma ~ 0.14
     "progress": 1.0,      # W_PROGRESS, forward driver (v1 used 4.0)
     "back":     2.0,      # backward penalty gain
-    "energy":   0.0005,   # torso EXCLUDED
+    "energy":   0.0,      # REMOVED (r3f, Ben 2026-08-24); was 0.0005, torso EXCLUDED
     "swing":    1.0,      # stepping prior, clipped at swing_cap
     "swing_cap": 0.6,
     "scrub":    0.8,      # stance slip

@@ -502,3 +502,16 @@ possible. Iteration rounds logged here.
     draggy ones; making energy non-trivial pushes optimization toward
     efficient push-off walking, and efficient and fast point the same way
     on this body.
+
+- P1 ruling (Ben, 2026-08-24): energy REMOVED entirely (r3f: weight 0.0005
+  -> 0). rml2 recovery dropped from scope. The kappa-direction question
+  takes priority: eff-kappa regression (torso world roll ~ hip-axis roll,
+  deterministic, walk window) on five quiet-torso walkers:
+  p1_energy mu0.3 +0.62 (joint slope -0.10), a2p0@2000k mu0.3 +0.47
+  (-0.28), r3e mu0.4 +1.20 (-0.16), sv1 mu0.1 +0.19 (+0.04), s7@2750k
+  mu0.1 +0.35 (+0.05); correlations all POSITIVE (+0.37..+0.58). Reading
+  frame: kappa0 needs joint slope -1 (none observed); rigid follow = eff 1
+  joint 0; kappa2 = eff 2 joint +1. The emergent family sits at eff-kappa
+  0.2-1.2 with a nearly PASSIVE torso joint - "discounted rigid follow",
+  leaning WITH the axis (kappa2 side), never world-upright; the fastest
+  walkers have the lowest eff-kappa (0.19/0.35).
