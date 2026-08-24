@@ -89,6 +89,11 @@ def main():
                          "overrides the auto version tag")
     ap.add_argument("--no-slew", action="store_true",
                     help="disable the sv1 servo slew clamp (legacy sv0 repro)")
+    ap.add_argument("--cmd-fc", type=float, default=None,
+                    help="sv2 command bandwidth cap: 2nd-order LPF cutoff in Hz "
+                         "on the filtered action (firmware-replicable). Tag f<fc>.")
+    ap.add_argument("--cmd-cap", type=float, default=0.47,
+                    help="curriculum vx_cmd cap (default 0.47, the c6 ceiling)")
     ap.add_argument("--out", default=os.path.join(_HERE, "runs"))
     a = ap.parse_args()
     if a.smoke:
@@ -132,6 +137,8 @@ def main():
                 f"{_need:.0f}. Dying would beat living. Set --rw fall=<bigger>.")
     if a.no_slew:
         env_kwargs.update(slew_vmax=0.0)
+    if a.cmd_fc:
+        env_kwargs.update(cmd_fc_hz=a.cmd_fc)
     if a.mu_fixed is not None:
         env_kwargs.update(mu_fixed=a.mu_fixed)
     elif a.mode == "gate0":
@@ -154,6 +161,8 @@ def main():
         f"{a.mode}_{REWARD_VERSION}{'ns' if a.no_smooth else ''}{rwtag}"
         f"{ACTION_VERSION}{EXPLORATION_VERSION}"
         + ("" if a.no_slew else SLEW_VERSION)
+        + (f"f{a.cmd_fc:g}" if a.cmd_fc else "")
+        + (f"cap{a.cmd_cap:g}" if a.cmd_cap != 0.47 else "")
         + ("c2" if a.curriculum else "") + ("_w" if a.init_from else "")
         + (f"_mu{a.mu_fixed:g}" if a.mu_fixed is not None and a.mode != "gate0" else "")
         + f"_s{a.seed}"
@@ -242,11 +251,13 @@ def main():
         c1: at low cmd the kernel tail pays ~0.4/step at vx=0, so standing is
         profitable and the vx gate never fires; raising cmd moves the kernel
         away from zero (receding carrot). Cap 0.47 (the experiment command)."""
-        CHECK, WINDOW, CMD0, STEP, CAP = 25_000, 100, 0.12, 0.05, 0.47
+        CHECK, WINDOW, CMD0, STEP = 25_000, 100, 0.12, 0.05
+        CAP = None  # set from --cmd-cap at construction
 
 
-        def __init__(self, cmd0=None):
+        def __init__(self, cmd0=None, cap=0.47):
             super().__init__()
+            self.CAP = float(cap)
             self.cmd = self.CMD0 if cmd0 is None else float(cmd0)
             self._eps = []
             self._next = self.CHECK
@@ -280,7 +291,7 @@ def main():
                               flush=True)
             return True
 
-    curric = Curriculum(a.cmd0) if a.curriculum else None
+    curric = Curriculum(a.cmd0, cap=a.cmd_cap) if a.curriculum else None
     callbacks = [Diag()] + ([curric] if curric else [])
     if not a.smoke:
         callbacks.append(CheckpointCallback(

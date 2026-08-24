@@ -515,3 +515,18 @@ possible. Iteration rounds logged here.
   0.2-1.2 with a nearly PASSIVE torso joint - "discounted rigid follow",
   leaning WITH the axis (kappa2 side), never world-upright; the fastest
   walkers have the lowest eff-kappa (0.19/0.35).
+
+- P4 probe launched (Ben's package, 2026-08-24): (i) sv2 command bandwidth
+  cap — 2nd-order Butterworth fc=2.5 Hz on the filtered action, a TRUE
+  amplitude-independent frequency limit (firmware-replicable digital
+  filter; measured |H|: 1.77 Hz 0.90, 2.2 Hz 0.79, 3.5 Hz 0.45, 5 Hz
+  0.23; off-path bit-identical); (ii) curriculum cap raised 0.47 -> 0.70
+  (--cmd-cap; kernel center follows vx_cmd) — pushes demanded speed past
+  the confirmed frontier (0.49-0.65) to test "torso is recruited when the
+  legs saturate"; (iii) training mu fixed at 0.1 (Ben: mu set reduced to
+  0.1 only; frozen eval still characterizes all four mus). Recipe r3f +
+  sv1. Readout: torso joint amplitude x vx as cmd climbs past 0.5.
+  Hypothesis ledger going in: marginal accounting says speed incentive was
+  never the binding constraint (~0.7/step unclaimed); fastest walkers had
+  the LOWEST eff-kappa; this probe is the strong-form test. Run:
+  runs/p4_cmd07/s0.

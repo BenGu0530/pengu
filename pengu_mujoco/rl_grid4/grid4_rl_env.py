@@ -64,6 +64,15 @@ STALL_TORQUE = 4.1        # N*m, XM430 forcerange
 #     trajectory. Designed baselines are re-scored under the same clamp.
 SLEW_VERSION = "sv1"
 SERVO_VMAX = 4.82         # rad/s, XM430-W350 no-load @ 12 V
+# sv2 addition (2026-08-24, Ben): optional COMMAND BANDWIDTH cap - 2nd-order
+# Butterworth low-pass on the filtered action before the ctrl mapping. Unlike
+# sv1 (velocity = amplitude x frequency), this is a true amplitude-
+# independent frequency limit; the identical digital filter can run in the
+# robot firmware, so it is an enforceable hardware constraint, not shaping.
+# fc=2.5 Hz keeps the 1.77-2.2 Hz walking band (>=89% gain) and kills the
+# bounce band (3.5 Hz -> 45%, 5 Hz -> 20%). Off by default (cmd_fc_hz=None);
+# runs using it tag "f<fc>".
+CMD_FC_DEFAULT = None
 
 # Reward version log (analysis in docs/rl_e2_ice_memo.md):
 # v1: progress 4*max(0,vx), fall -5. Outcome: lunge local optimum -- the dash
@@ -214,7 +223,8 @@ class Grid4RLEnv(gym.Env):
                  filter_alpha=ALPHA, action_delay=1,
                  obs_noise=True, init_jitter=True,
                  rand_gains=False, push=False, w_smooth=None, rw=None,
-                 crank_band=None, shape="reward", slew_vmax=SERVO_VMAX):
+                 crank_band=None, shape="reward", slew_vmax=SERVO_VMAX,
+                 cmd_fc_hz=CMD_FC_DEFAULT):
         # crank_band=(mid, half): override the a1 crank action band. a2 probe
         # (reward audit 2026-08-21): (0.0, 1.9) — symmetric band covering both
         # the c6 designed gait's command domain [0,+1.83] (inexpressible under
@@ -258,6 +268,15 @@ class Grid4RLEnv(gym.Env):
         self.alpha = float(filter_alpha)
         self.delay = int(action_delay)
         self.slew_vmax = float(slew_vmax) if slew_vmax else 0.0   # sv1; 0 = legacy sv0
+        self.cmd_fc_hz = float(cmd_fc_hz) if cmd_fc_hz else 0.0   # sv2 freq cap
+        if self.cmd_fc_hz:
+            # 2nd-order Butterworth low-pass, bilinear transform @ 50 Hz
+            wc = math.tan(math.pi * self.cmd_fc_hz * 0.02)
+            k1 = math.sqrt(2.0) * wc
+            k2 = wc * wc
+            den = 1.0 + k1 + k2
+            self._bq_b = np.array([k2, 2 * k2, k2]) / den
+            self._bq_a = np.array([2 * (k2 - 1.0), 1.0 - k1 + k2]) / den
         self.obs_noise = bool(obs_noise)
         self.init_jitter = bool(init_jitter)
         self.rand_gains = bool(rand_gains)
@@ -440,6 +459,9 @@ class Grid4RLEnv(gym.Env):
         self.act_filt = a0.astype(np.float64)
         self.act_filt2 = a0.astype(np.float64)    # r3c: cascade for executed-HF pricing
         self._applied_prev = ctrl0.astype(np.float64)   # sv1 slew clamp state
+        if self.cmd_fc_hz:
+            self._bq_x = [a0.astype(np.float64).copy(), a0.astype(np.float64).copy()]
+            self._bq_y = [a0.astype(np.float64).copy(), a0.astype(np.float64).copy()]
         self.last_action = a0.astype(np.float32)
         self._queue = collections.deque([ctrl0.copy()] * self.delay, maxlen=self.delay + 1)
 
@@ -475,7 +497,15 @@ class Grid4RLEnv(gym.Env):
         d = self.data
         a = np.clip(np.asarray(action, dtype=np.float64), -1.0, 1.0)
         self.act_filt = (1.0 - self.alpha) * self.act_filt + self.alpha * a
-        target = self.ctrl_mid + self.act_filt * self.ctrl_half
+        _cmd = self.act_filt
+        if self.cmd_fc_hz:
+            _y = (self._bq_b[0] * self.act_filt + self._bq_b[1] * self._bq_x[0]
+                  + self._bq_b[2] * self._bq_x[1]
+                  - self._bq_a[0] * self._bq_y[0] - self._bq_a[1] * self._bq_y[1])
+            self._bq_x = [self.act_filt.copy(), self._bq_x[0]]
+            self._bq_y = [_y.copy(), self._bq_y[0]]
+            _cmd = _y
+        target = self.ctrl_mid + _cmd * self.ctrl_half
         if self.delay > 0:
             self._queue.append(target.copy())
             applied = self._queue.popleft()
