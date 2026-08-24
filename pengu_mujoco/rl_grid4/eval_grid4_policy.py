@@ -131,6 +131,8 @@ def main():
                     help="must match the band the policy was trained with")
     ap.add_argument("--no-slew", action="store_true",
                     help="disable the sv1 servo slew clamp (legacy sv0 repro)")
+    ap.add_argument("--cmd-fc", type=float, default=None,
+                    help="sv2 command bandwidth cap in Hz; must match training")
     a = ap.parse_args()
     mus = [float(x) for x in a.mus.split(",")]
 
@@ -145,6 +147,8 @@ def main():
         all_pass_trials = []
         for mu in mus:
             kw = dict(slew_vmax=0.0) if a.no_slew else {}
+            if a.cmd_fc:
+                kw["cmd_fc_hz"] = a.cmd_fc
             env = Grid4RLEnv(eval_mode=True, mu_fixed=mu, episode_s=a.dur, seed=0,
                              crank_band=tuple(a.crank_band) if a.crank_band else None,
                              **kw)

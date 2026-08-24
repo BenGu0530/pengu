@@ -29,6 +29,8 @@ def main():
                     metavar=("MID", "HALF"))
     ap.add_argument("--no-slew", action="store_true",
                     help="disable the sv1 servo slew clamp (legacy sv0 repro)")
+    ap.add_argument("--cmd-fc", type=float, default=None,
+                    help="sv2 command bandwidth cap in Hz; must match training")
     a = ap.parse_args()
 
     import imageio
@@ -37,6 +39,8 @@ def main():
 
     model = PPO.load(a.ckpt, device="cpu")
     kw = dict(slew_vmax=0.0) if a.no_slew else {}
+    if a.cmd_fc:
+        kw["cmd_fc_hz"] = a.cmd_fc
     env = Grid4RLEnv(eval_mode=True, mu_fixed=a.mu, episode_s=a.dur, seed=a.seed,
                      crank_band=tuple(a.crank_band) if a.crank_band else None, **kw)
     obs, _ = env.reset(seed=a.seed)

@@ -530,3 +530,22 @@ possible. Iteration rounds logged here.
   never the binding constraint (~0.7/step unclaimed); fastest walkers had
   the LOWEST eff-kappa; this probe is the strong-form test. Run:
   runs/p4_cmd07/s0.
+  - P4 probe COMPLETE (cmd cap 0.70 / sv2 fc 2.5 Hz / mu 0.1-only, 3M).
+    Contract note: sv2 (like crank-band) must accompany the policy at eval;
+    --cmd-fc added to eval/render/sweep after the mismatch made final look
+    like a stander (0.000 across the board without the filter; 0.376 with).
+    Frozen eval (with fc): mu0.1 0.8/0.376, mu0.2 1.0/0.140, mu0.3-0.4 0/5
+    (mu0.1-only specialist by design). Torso recruitment readout as cmd
+    climbed (deterministic mu0.1 per ckpt):
+      cmd 0.37: vx 0.147, torso joint RMS 1.5 deg (cmd_std 0.085)
+      cmd 0.47: vx 0.214, 0.9 deg (0.133)
+      cmd 0.70: vx 0.338, 1.8 deg / 7.3 p2p (0.229), eff_k +1.21
+    i.e. crossing the frontier roughly DOUBLED torso command activity
+    (0.133 -> 0.229 std) and speed rose 0.214 -> 0.338, but the absolute
+    torso amplitude stays small (1.8 deg RMS vs c6's designed +-24) — the
+    policy buys speed mostly with legs plus a small kappa~1.2 follow.
+    Training tail was the strongest ever recorded (vx 0.326, fall 0.29,
+    hip_corr -0.48 WITH exploration noise). Frequency: final walks at
+    ~3.05 Hz THROUGH the 2.5 Hz 2nd-order filter (|H| 0.58 there) — soft
+    rolloff partially amplitude-compensated again; a hard cap would need a
+    steeper filter. Run: runs/p4_cmd07/s0.
