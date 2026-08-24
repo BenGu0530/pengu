@@ -115,8 +115,6 @@ def main():
         env_kwargs.update(crank_band=tuple(a.crank_band))
     if a.shape != "reward":
         env_kwargs.update(shape=a.shape)
-    if a.no_slew:
-        env_kwargs.update(slew_vmax=0.0)
         # suicide preflight. With every term <= 0, an agent that cannot yet walk
         # bleeds the floor each step; if a single -fall is cheaper than the
         # discounted remaining bleed, dying is optimal and the run is wasted.
@@ -132,6 +130,8 @@ def main():
             raise SystemExit(
                 f"[preflight] REFUSING: fall={_w['fall']:g} <= suicide breakeven "
                 f"{_need:.0f}. Dying would beat living. Set --rw fall=<bigger>.")
+    if a.no_slew:
+        env_kwargs.update(slew_vmax=0.0)
     if a.mu_fixed is not None:
         env_kwargs.update(mu_fixed=a.mu_fixed)
     elif a.mode == "gate0":
@@ -168,7 +168,7 @@ def main():
     class Diag(BaseCallback):
         EVERY = 250_000 if not a.smoke else 10_000
         COMP = ["r_track", "r_progress", "r_back", "r_energy", "r_swing",
-                "r_scrub", "r_smooth", "r_hf", "r_fall", "vx"]
+                "r_scrub", "r_smooth", "r_hf", "r_straight", "r_dutybal", "r_fall", "vx"]
 
         def __init__(self):
             super().__init__()
@@ -231,6 +231,7 @@ def main():
                   f"roll_rate={row['torso_roll_rate_rms_dps']:.0f}dps "
                   f"stride_asym={row['stride_asym']:+.3f}  "
                   f"r_hf={row['r_hf']:+.3f}  "
+                  f"r_dutybal={row['r_dutybal']:+.3f}  "
                   f"sigma_torso={row['sigma_torso']:.3f}", flush=True)
 
     class Curriculum(BaseCallback):

@@ -142,6 +142,7 @@ def main():
         model = PPO.load(ckpt, device="cpu")
         per_mu_pass = {}
         torso_rmss = []
+        all_pass_trials = []
         for mu in mus:
             kw = dict(slew_vmax=0.0) if a.no_slew else {}
             env = Grid4RLEnv(eval_mode=True, mu_fixed=mu, episode_s=a.dur, seed=0,
@@ -157,6 +158,7 @@ def main():
             pr = np.mean([t["pass"] for t in trials])
             per_mu_pass[mu] = pr
             torso_rmss += [t["torso_roll_rms_deg"] for t in trials if t["pass"]]
+            all_pass_trials += [t for t in trials if t["pass"]]
             nf = [t["net_fwd"] for t in trials]
             print(f"  mu={mu:.1f}  pass={pr:.1f}  net_fwd mean={np.mean(nf):.3f} "
                   f"min={np.min(nf):.3f}  torso_rms med="
@@ -166,9 +168,22 @@ def main():
             tier = "1 no-walk (zero standing on torso claims)"
         else:
             med = float(np.median(torso_rmss)) if torso_rmss else 0.0
-            tier = (f"3 walk, torso ACTIVE (med RMS {med:.1f}deg >= {a.torso_thresh})"
-                    if med >= a.torso_thresh else
-                    f"2 walk, torso silent (med RMS {med:.1f}deg < {a.torso_thresh})")
+            if med >= a.torso_thresh:
+                # S1 split (Ben 2026-08-23): a torso PARKED at an angle has
+                # |roll_mean| ~ RMS with a low roll rate; a waddle has
+                # mean ~ 0. Tier 3 is only a torso-mechanism claim when the
+                # roll is actually oscillating, so lean and sway are never
+                # pooled. Trial-level flag, majority over passing trials.
+                lean_flags = [
+                    abs(t["torso_roll_mean_deg"]) / max(t["torso_roll_rms_deg"], 1e-6) > 0.7
+                    for t in all_pass_trials]
+                frac_lean = float(np.mean(lean_flags)) if lean_flags else 0.0
+                sub = "LEAN (parked torso)" if frac_lean > 0.5 else "SWAY (oscillating)"
+                tier = (f"3-{'lean' if frac_lean > 0.5 else 'sway'} walk, torso "
+                        f"{sub}, med RMS {med:.1f}deg >= {a.torso_thresh}, "
+                        f"lean-trial frac {frac_lean:.2f}")
+            else:
+                tier = f"2 walk, torso silent (med RMS {med:.1f}deg < {a.torso_thresh})"
         print(f"[{os.path.basename(os.path.dirname(ckpt))}] tier {tier}", flush=True)
 
     base = os.path.dirname(os.path.abspath(a.ckpts[0]))

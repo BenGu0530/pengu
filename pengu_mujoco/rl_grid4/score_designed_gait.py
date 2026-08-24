@@ -34,7 +34,7 @@ T_HOLD, T_TRANSITION = 5.0, 4.0
 WALK_FROM = T_HOLD + T_TRANSITION + 2.0     # sweep SETTLE convention: 11 s
 DUR = 24.0
 COMP = ["r_track", "r_progress", "r_back", "r_energy", "r_swing",
-        "r_scrub", "r_smooth", "r_hf", "r_fall", "vx"]
+        "r_scrub", "r_smooth", "r_hf", "r_dutybal", "r_fall", "vx"]
 
 
 def set_c6_params():

@@ -465,3 +465,20 @@ possible. Iteration rounds logged here.
     vs the sv0 counterpart (same recipe/seed: 0.307 at 3.25 Hz): training
     INSIDE the honest actuation is both faster and lower-frequency. Residual
     gaps to goal: lean component, airborne 24-40%, mu0.3+ weak.
+
+- P2 RESOLVED (2026-08-23, Ben): HELD-LEAN ruled a cheat, but direct torso
+  penalties rejected (would disturb emergence) and the straight stride proxy
+  FAILED calibration (ice slip noise: every walker pays 0.5-0.7/step, no
+  separation - straight stays 0 permanently). Ben's balance intuition
+  ("penalize legs compensating for a parked torso") calibrated as three
+  leg/path estimators: duty-balance separates HEAVY lean (-53: 0.474) from
+  clean (0.206) at 2.3x; mild lean (15-20 deg) has no leg-level signal
+  anywhere and is REPORTED, not priced. Decisions: (a) REWARD r3e = r3d +
+  dutybal = -0.3 * max(0, |dutyL-dutyR|/(dutyL+dutyR) - 0.25), armed after
+  1 s of single-support samples; calibration: heavy lean -0.054/step (32%
+  of its income), mild/clean <= 0.007, stander 0. (b) eval tier 3 split
+  into 3-lean / 3-sway (|roll_mean|/RMS > 0.7 majority vote). Also fixed:
+  the --no-slew CLI insertion had accidentally captured the penalty-shape
+  suicide preflight into its branch (would refuse any --no-slew train run);
+  moved back under shape=penalty. r3e probe launched (kept recipe + sv1 +
+  dutybal, seed 0, runs/r3e_probe/).

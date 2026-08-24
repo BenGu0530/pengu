@@ -108,7 +108,20 @@ SERVO_VMAX = 4.82         # rad/s, XM430-W350 no-load @ 12 V
 #     c6 4%, noise -0.236/step (round-1's empirically survivable level).
 #     Executed-accel variant rejected offline: broadband noise accel (0.033)
 #     exceeds the 5 Hz cheat's (0.025) -> any deterrent w suicides.
-REWARD_VERSION = "r3d"
+# v3e: r3d + dutybal (P2 ruling, Ben 2026-08-23). HELD-LEAN (torso parked
+#     30-53 deg as a static counterweight) is ruled a cheat. Direct torso
+#     penalties are off-limits (would disturb emergence) and the straight
+#     stride-asymmetry proxy failed calibration (ice slip noise: every
+#     walker pays 0.5-0.7, no separation). Ben's balance intuition
+#     calibrated three leg/path-level estimators; single-support DUTY
+#     imbalance separates HEAVY lean (-53 deg: 0.474) from clean walkers
+#     (0.206) at 2.3x, while mild lean (15-20 deg) has no leg-level signal
+#     and is reported (tier 3-lean) but not priced. Deadzone 0.25 exempts
+#     the clean floor; <1 s of single-support samples pays nothing (no
+#     early-noise tax, standers pay nothing -> no suicide gradient).
+REWARD_VERSION = "r3e"
+DUTYBAL_DEADZONE = 0.25
+DUTYBAL_MIN_SUB = 50          # substeps of single support before the term arms
 HF_IDX = [i for i in range(len(gc.ACTUATORS)) if i not in
           (gc.ACTUATORS.index("crank1-R"), gc.ACTUATORS.index("crank1-L"))]
 # Frozen r2 reward weights. Every one is overridable per-run via
@@ -133,6 +146,7 @@ RW_DEFAULT = {
                           # "let torso use emerge" contract while removing the
                           # payoff for a one-sided lean: a torso parked to one
                           # side makes the legs take unequal strides.
+    "dutybal":  0.3,      # single-support L/R duty imbalance past deadzone (r3e)
     "hf":       0.6,      # commanded-HF residual, hips+torso only (r3d; see log)
                           # w=1.0 probe (e2x2hf4, 500k) dash-suicided: HT noise
                           # tax -0.28..-0.32/step made survival net-negative
@@ -432,7 +446,7 @@ class Grid4RLEnv(gym.Env):
         self._push_force = np.zeros(3)
         self._ep = {k: 0.0 for k in
                     ("r_track", "r_progress", "r_back", "r_energy", "r_swing",
-                     "r_scrub", "r_smooth", "r_hf", "r_straight", "r_fall", "vx")}
+                     "r_scrub", "r_smooth", "r_hf", "r_straight", "r_dutybal", "r_fall", "vx")}
         self._torso_roll_sq = 0.0
         self._torso_roll_sum = 0.0   # DC component: separates a steady lean from a waddle
         self._torso_roll_prev = self.torso_roll()
@@ -445,6 +459,8 @@ class Grid4RLEnv(gym.Env):
         self._stride = {b: [] for b in self.foot_bids}
         self._last_stride = {b: None for b in self.foot_bids}
         self._single = 0
+        self._dutyL = 0
+        self._dutyR = 0
         self._sub = 0
         # left-right alternation stats: running sums of hip-L/hip-R angles
         self._hip = np.zeros(6)          # n, sx, sy, sxx, syy, sxy
@@ -501,6 +517,11 @@ class Grid4RLEnv(gym.Env):
             con = self._foot_contacts()
             if sum(con.values()) == 1:
                 self._single += 1
+                _bids = sorted(con)
+                if con[_bids[0]]:
+                    self._dutyL += 1
+                else:
+                    self._dutyR += 1
             self._sub += 1
             root_xy = d.xpos[self.root][:2]
             for b in self.foot_bids:
@@ -544,6 +565,12 @@ class Grid4RLEnv(gym.Env):
             r_straight = -w["straight"] * float(min(_asym, 1.0))
         else:
             r_straight = 0.0
+        _dsum = self._dutyL + self._dutyR
+        if w.get("dutybal") and _dsum >= DUTYBAL_MIN_SUB:
+            _bal = abs(self._dutyL - self._dutyR) / _dsum
+            r_dutybal = -w["dutybal"] * max(0.0, _bal - DUTYBAL_DEADZONE)
+        else:
+            r_dutybal = 0.0
         r_smooth = -self.w_smooth * float(np.sum((a - self.last_action.astype(np.float64)) ** 2))
         # r3d: commanded residual (round-1 form), hips+torso only; hf_scale
         # is 1 on those dims in both bands (same ctrlrange), kept for safety.
@@ -562,7 +589,7 @@ class Grid4RLEnv(gym.Env):
             r_progress = w["progress"] * (min(max(vx, 0.0), self.vx_cmd) - self.vx_cmd)
             r_swing = w["swing"] * (float(np.clip(swing_rate, 0.0, w["swing_cap"])) - w["swing_cap"])
         reward = (r_track + r_progress + r_back + r_energy + r_swing
-                  + r_scrub + r_smooth + r_hf + r_straight)
+                  + r_scrub + r_smooth + r_hf + r_straight + r_dutybal)
 
         roll, pitch_t = self._tilt()
         z = float(d.xpos[self.root][2])
@@ -587,6 +614,7 @@ class Grid4RLEnv(gym.Env):
                        ("r_swing", r_swing), ("r_scrub", r_scrub),
                        ("r_smooth", r_smooth), ("r_hf", r_hf),
                        ("r_straight", r_straight),
+                       ("r_dutybal", r_dutybal),
                        ("r_fall", r_fall), ("vx", vx)):
             self._ep[k] += val
 
