@@ -74,6 +74,7 @@ float torso_iErr = 0.0f;
 bool  stream_dbg = false;          // 't' toggles a 5 Hz roll/joint/axis stream (hand-rock test)
 
 const float READY_STEP = 1.0f, READY_STEP_TORSO = 1.5f, ARRIVE_THRESH = 1.0f;
+const float HIP_REST_DEG = 10.0f;   // rest lean: hips 10 deg forward or the robot tips backward
 
 int idxOf(uint8_t id) {
   for (int i = 0; i < MOTOR_COUNT; i++) if (MOTOR_IDS[i] == id) return i;
@@ -85,6 +86,11 @@ float shortestDelta(float cur, float tgt) {
   while (d < -180.0f) d += 360.0f;
   return d;
 }
+float zeroExtended(float cur) {       // extended-coord value of physical 0 nearest to cur
+  float phys = fmod(cur, 360.0f); if (phys < 0) phys += 360.0f;
+  return cur - ((phys > 180.0f) ? phys - 360.0f : phys);
+}
+
 void stepMotorToward(uint8_t id, float target, float step) {
   float cur = dxl.getPresentPosition(id, UNIT_DEGREE);
   float phys = fmod(cur, 360.0f); if (phys < 0) phys += 360.0f;
@@ -108,7 +114,7 @@ void setup() {
     uint8_t id = MOTOR_IDS[i];
     if (!dxl.ping(id)) { DEBUG_SERIAL.print("No response ID "); DEBUG_SERIAL.println(id); }
     float boot_deg = dxl.getPresentPosition(id, UNIT_DEGREE);
-    home_deg[i] = 0.0f;               // convention: Dynamixel ABSOLUTE ZERO = neutral pose
+    home_deg[i] = zeroExtended(boot_deg);   // absolute zero, in this motor's extended coords
     dxl.torqueOff(id);
     // EXTENDED position: accepts negative / >360 deg goals. In plain OP_POSITION a goal
     // like home-20 with home near 0 deg is silently REJECTED (suspected hip/torso no-move).
@@ -145,7 +151,7 @@ void run_walk() {
   float t = (millis() - walk_start_ms) / 1000.0f;
 
   // staged start: ramp hip_off -> settle -> blend the oscillation in
-  float off_deg = p_hipOffD * constrain(t / T_RAMP, 0.0f, 1.0f);
+  float off_deg = HIP_REST_DEG + (p_hipOffD - HIP_REST_DEG) * constrain(t / T_RAMP, 0.0f, 1.0f);
   float alpha   = constrain((t - T_RAMP - T_SETTLE) / T_BLEND, 0.0f, 1.0f);
   float phase   = (t > T_RAMP + T_SETTLE) ? 2.0f * PI * p_legFreq * (t - T_RAMP - T_SETTLE) : 0.0f;
 
@@ -214,6 +220,21 @@ void loop() {
     case 't': stream_dbg = !stream_dbg;
       DEBUG_SERIAL.println(stream_dbg ? "stream ON (rock the body by hand)" : "stream OFF");
       break;
+    case 'p': {                                    // motor health report
+      for (int i = 0; i < MOTOR_COUNT; i++) {
+        uint8_t id = MOTOR_IDS[i];
+        bool ok = dxl.ping(id);
+        float pos = dxl.getPresentPosition(id, UNIT_DEGREE);
+        int32_t hwerr = dxl.readControlTableItem(HARDWARE_ERROR_STATUS, id);
+        int32_t tq    = dxl.readControlTableItem(TORQUE_ENABLE, id);
+        DEBUG_SERIAL.print("ID "); DEBUG_SERIAL.print(id);
+        DEBUG_SERIAL.print(ok ? "  ping OK" : "  PING FAIL");
+        DEBUG_SERIAL.print("  pos="); DEBUG_SERIAL.print(pos, 1);
+        DEBUG_SERIAL.print("  torque="); DEBUG_SERIAL.print(tq);
+        DEBUG_SERIAL.print("  hwErr="); DEBUG_SERIAL.println(hwerr);   // 0 = healthy
+      }
+      break;
+    }
   }
 
   static unsigned long strm = 0;
@@ -230,24 +251,21 @@ void loop() {
       stepMotorToward(XM_LEFT_SLIDE,  0.0f, READY_STEP);
       stepMotorToward(XM_RIGHT_SLIDE, 0.0f, READY_STEP);
       if (arrivedAt(XM_LEFT_SLIDE, 0.0f) && arrivedAt(XM_RIGHT_SLIDE, 0.0f)) {
-        latchHome(XM_LEFT_SLIDE); latchHome(XM_RIGHT_SLIDE);   // capture zero in extended coords
-        robot_state = STATE_READY_HIP; DEBUG_SERIAL.println("Slides at zero -> hips");
+        robot_state = STATE_READY_HIP; DEBUG_SERIAL.println("Slides at zero -> hips (rest lean)");
       }
       break;
     }
     case STATE_READY_HIP: {
-      stepMotorToward(XM_LEFT_HIP,  0.0f, READY_STEP);
-      stepMotorToward(XM_RIGHT_HIP, 0.0f, READY_STEP);
-      if (arrivedAt(XM_LEFT_HIP, 0.0f) && arrivedAt(XM_RIGHT_HIP, 0.0f)) {
-        latchHome(XM_LEFT_HIP); latchHome(XM_RIGHT_HIP);
-        robot_state = STATE_READY_TORSO; DEBUG_SERIAL.println("Hips at zero -> torso");
+      stepMotorToward(XM_LEFT_HIP,  360.0f - HIP_REST_DEG, READY_STEP);   // L: -10 deg (fwd)
+      stepMotorToward(XM_RIGHT_HIP,  HIP_REST_DEG,          READY_STEP);   // R: +10 deg (fwd)
+      if (arrivedAt(XM_LEFT_HIP, 360.0f - HIP_REST_DEG) && arrivedAt(XM_RIGHT_HIP, HIP_REST_DEG)) {
+        robot_state = STATE_READY_TORSO; DEBUG_SERIAL.println("Hips at rest lean -> torso");
       }
       break;
     }
     case STATE_READY_TORSO:
       stepMotorToward(XM_TORSO_ROLL, 0.0f, READY_STEP_TORSO);
       if (arrivedAt(XM_TORSO_ROLL, 0.0f)) {
-        latchHome(XM_TORSO_ROLL);
         if (AUTO_WALK) { autowait_ms = millis(); robot_state = STATE_AUTO_WAIT;
                          DEBUG_SERIAL.println("READY done -> auto-wait"); }
         else           { robot_state = STATE_IDLE; DEBUG_SERIAL.println("READY done -> IDLE"); }
