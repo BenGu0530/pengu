@@ -43,7 +43,7 @@ float p_hipOffD  = 30.0f;                     // [deg] symmetric forward-pitch o
 // torso kappa-PID (sim TorsoKappaPID values)
 float p_kappa = 0.0f, p_kp = 2.0f, p_ki = 0.1f;   // kappa=0: torso counter-rotates to stay world-upright
 const float TORSO_CLAMP_DEG = 10.0f;   // HARDWARE: torso collides with the legs beyond ~±10 deg
-const float ROLL_HOME_DEG   = -2.0f;   // HARDWARE hardcode: IMU reads -2 when the torso is truly level
+const float ROLL_HOME_DEG   = 1.0f;   // HARDWARE hardcode: IMU reads -2 when the torso is truly level
 float S_TILT = +1.0f;                  // <-- VERIFY (check #1 above)
 
 // staged start (sim-validated: no hip_off step-shove)
@@ -114,7 +114,8 @@ void setup() {
   for (int i = 0; i < MOTOR_COUNT; i++) {
     uint8_t id = MOTOR_IDS[i];
     if (!dxl.ping(id)) { DEBUG_SERIAL.print("No response ID "); DEBUG_SERIAL.println(id); }
-    home_deg[i] = dxl.getPresentPosition(id, UNIT_DEGREE);
+    float boot_deg = dxl.getPresentPosition(id, UNIT_DEGREE);
+    home_deg[i] = 0.0f;               // convention: Dynamixel ABSOLUTE ZERO = neutral pose
     dxl.torqueOff(id);
     // EXTENDED position: accepts negative / >360 deg goals. In plain OP_POSITION a goal
     // like home-20 with home near 0 deg is silently REJECTED (suspected hip/torso no-move).
@@ -123,9 +124,10 @@ void setup() {
     dxl.writeControlTableItem(PROFILE_VELOCITY, id, 0);
     dxl.writeControlTableItem(PROFILE_ACCELERATION, id, 0);
     dxl.torqueOn(id);
-    dxl.setGoalPosition(id, home_deg[i], UNIT_DEGREE);
+    dxl.setGoalPosition(id, boot_deg, UNIT_DEGREE);   // hold boot pose (no snap); READY walks to zero
     DEBUG_SERIAL.print("ID "); DEBUG_SERIAL.print(id);
-    DEBUG_SERIAL.print(" home = "); DEBUG_SERIAL.println(home_deg[i], 2);
+    DEBUG_SERIAL.print(" boot = "); DEBUG_SERIAL.print(boot_deg, 2);
+    DEBUG_SERIAL.println("  (home = absolute 0)");
   }
 
   if (!bno.begin()) { DEBUG_SERIAL.println("ERROR: BNO055 not detected."); while (1); }
@@ -244,26 +246,27 @@ void loop() {
   switch (robot_state) {
     case STATE_IDLE: break;
     case STATE_READY_SLIDE: {
-      stepMotorToward(XM_LEFT_SLIDE,  home_deg[idxOf(XM_LEFT_SLIDE)],  READY_STEP);
-      stepMotorToward(XM_RIGHT_SLIDE, home_deg[idxOf(XM_RIGHT_SLIDE)], READY_STEP);
-      if (arrivedAt(XM_LEFT_SLIDE,  home_deg[idxOf(XM_LEFT_SLIDE)]) &&
-          arrivedAt(XM_RIGHT_SLIDE, home_deg[idxOf(XM_RIGHT_SLIDE)])) {
-        robot_state = STATE_READY_HIP; DEBUG_SERIAL.println("Slides done -> hips");
+      stepMotorToward(XM_LEFT_SLIDE,  0.0f, READY_STEP);
+      stepMotorToward(XM_RIGHT_SLIDE, 0.0f, READY_STEP);
+      if (arrivedAt(XM_LEFT_SLIDE, 0.0f) && arrivedAt(XM_RIGHT_SLIDE, 0.0f)) {
+        latchHome(XM_LEFT_SLIDE); latchHome(XM_RIGHT_SLIDE);   // capture zero in extended coords
+        robot_state = STATE_READY_HIP; DEBUG_SERIAL.println("Slides at zero -> hips");
       }
       break;
     }
     case STATE_READY_HIP: {
-      stepMotorToward(XM_LEFT_HIP,  home_deg[idxOf(XM_LEFT_HIP)],  READY_STEP);
-      stepMotorToward(XM_RIGHT_HIP, home_deg[idxOf(XM_RIGHT_HIP)], READY_STEP);
-      if (arrivedAt(XM_LEFT_HIP,  home_deg[idxOf(XM_LEFT_HIP)]) &&
-          arrivedAt(XM_RIGHT_HIP, home_deg[idxOf(XM_RIGHT_HIP)])) {
-        robot_state = STATE_READY_TORSO; DEBUG_SERIAL.println("Hips done -> torso");
+      stepMotorToward(XM_LEFT_HIP,  0.0f, READY_STEP);
+      stepMotorToward(XM_RIGHT_HIP, 0.0f, READY_STEP);
+      if (arrivedAt(XM_LEFT_HIP, 0.0f) && arrivedAt(XM_RIGHT_HIP, 0.0f)) {
+        latchHome(XM_LEFT_HIP); latchHome(XM_RIGHT_HIP);
+        robot_state = STATE_READY_TORSO; DEBUG_SERIAL.println("Hips at zero -> torso");
       }
       break;
     }
     case STATE_READY_TORSO:
-      stepMotorToward(XM_TORSO_ROLL, home_deg[idxOf(XM_TORSO_ROLL)], READY_STEP_TORSO);
-      if (arrivedAt(XM_TORSO_ROLL, home_deg[idxOf(XM_TORSO_ROLL)])) {
+      stepMotorToward(XM_TORSO_ROLL, 0.0f, READY_STEP_TORSO);
+      if (arrivedAt(XM_TORSO_ROLL, 0.0f)) {
+        latchHome(XM_TORSO_ROLL);
         if (AUTO_WALK) { autowait_ms = millis(); robot_state = STATE_AUTO_WAIT;
                          DEBUG_SERIAL.println("READY done -> auto-wait"); }
         else           { robot_state = STATE_IDLE; DEBUG_SERIAL.println("READY done -> IDLE"); }
