@@ -8,7 +8,7 @@
 # machine -> queue (Phase A config first, Phase B second; edit here to reassign):
 #   naomio : c4 c2 c9 (strongest box, carries the extra Phase-A config)
 #   rml3   : c5 c10          mac : c3 c8 (Mac shares CPU with other projects)
-#   rml2   : c6 c7 (nice 19, 8 shards — shares the box with the RL track)
+#   rml2   : c6 c7 (full CPU — Ben 2026-08-26: sweeping first, RL track paused)
 #   laptop : c1  (weak box: one config; pick up leftovers when done)
 #
 # Per config: initcsv+manifest+shards via run_sweep.sh, grid5 watchdog installed for
@@ -24,7 +24,7 @@ case "$M" in
   naomio) QUEUE="c4 c2 c9" ;;
   rml3)   QUEUE="c5 c10" ;;
   mac)    QUEUE="c3 c8" ;;
-  rml2)   QUEUE="c6 c7"; NICE=19; NSH=8 ;;   # leave headroom for the RL track
+  rml2)   QUEUE="c6 c7" ;;                   # full CPU (sweeping first — Ben)
   laptop) QUEUE="c1" ;;
   *) echo "unknown machine '$M' (mac|rml3|naomio|rml2|laptop)"; exit 2 ;;
 esac

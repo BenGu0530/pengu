@@ -13,12 +13,12 @@ First run auto-builds `.sweep_venv` (mujoco 3.8.x) if missing — same as GRID-4
 | **naomio** (strongest) | c4 → c2 → c9 | `nohup bash grid5/run_machine.sh naomio > results/gait_sweep/machine_naomio.log 2>&1 &` |
 | **rml3** | c5 → c10 | `nohup bash grid5/run_machine.sh rml3   > results/gait_sweep/machine_rml3.log   2>&1 &` |
 | **mac** (shares CPU with other projects) | c3 → c8 | `nohup bash grid5/run_machine.sh mac    > results/gait_sweep/machine_mac.log    2>&1 &` |
-| **rml2** (this box, shares RL) | c6 → c7 | `nohup bash grid5/run_machine.sh rml2   > results/gait_sweep/machine_rml2.log   2>&1 &` |
+| **rml2** (full CPU, sweep first) | c6 → c7 | `nohup bash grid5/run_machine.sh rml2   > results/gait_sweep/machine_rml2.log   2>&1 &` |
 | **laptop** (weak) | c1 | `nohup bash grid5/run_machine.sh laptop > results/gait_sweep/machine_laptop.log 2>&1 &` |
 
 Coverage: Phase A = c1..c6 (one leading on each machine; naomio carries the 6th, c2,
-second in its queue). Phase B = c7..c10 queued behind. rml2 runs `nice 19` with 8
-shards so the RL track keeps headroom. If the laptop finishes c1, point it at
+second in its queue). Phase B = c7..c10 queued behind. rml2 runs full CPU (sweeping
+first — Ben, 2026-08-26). If the laptop finishes c1, point it at
 whatever is still running elsewhere by editing the queue table at the top of
 `grid5/run_machine.sh` (or just `bash grid5/run_sweep.sh <cfg>` — resume is
 by axis-tuple, two machines can even share one config safely IF they use disjoint
