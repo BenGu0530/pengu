@@ -409,14 +409,18 @@ so flag it for the sweep session rather than doing it here. (Lesson 4e.)
 
 ## 10. House style
 
-- Config labels: `c4 (κ=2, COM 1.05)` — never a bare `c4` in a legend.
-- Fixed colors per config across every figure in the package; keep the round-1
-  assignments for c1–c6 (`physics/grid4_support_figs.py:24`) and extend for
-  c7–c10.
+- **Visual encoding is frozen in `docs/grid5/PLOT_STYLE.md`** (Ben, 2026-08-26),
+  implemented as `grid5/analysis/style5.py`: colour + linestyle = gait (κ),
+  marker shape = COM ratio, greyscale twin mandatory. This SUPERSEDES the
+  round-1 per-config colours (`physics/grid4_support_figs.py:24`) — do not
+  reuse them.
+- Config labels: `c4 (κ=2, COM 1.05)` — never a bare `c4` in a legend
+  (`style5.label_for`).
 - Every figure states, in caption or title: **K**, the tier used, and whether the
-  quantity is a mean or a best-of-best.
+  quantity is a mean or a best-of-best — enforced by `style5.finish()`, the
+  mandatory save path for every figure.
 - Missing data is a gap plus a label ("no survivors"), never an implicit zero.
-- `matplotlib.use("Agg")`, `dpi=130`, `tight_layout()`.
+- `matplotlib.use("Agg")`, `dpi=130`, `tight_layout()` (all inside style5).
 - Regenerate `results/grid5_report/REPORT.md` and `INDEX.md` alongside the
   figures; the index carries the caveats so a reader cannot miss them (that is
   what saved the round-1 diagonal note from being lost).

@@ -1,6 +1,15 @@
 # GRID-5 — round-2 co-design sweep: frozen protocol
 
-Status: **code complete & smoke-tested 2026-08-26**; launch pending Ben's go.
+Status: **grid5-v2, relaunched 2026-08-26 (late night)**.
+REVISION v2 (Ben, 2026-08-26): **the map is a PURE DETERMINISTIC sweep** — exact
+nominal mu, no pose jitter, no RNG anywhere, K=1 ("everything fixed, no random
+stuff at sweep — don't contaminate the sweep"). Every row = exact gait parameters
+x exact nominal environment, twice-run bit-identical (verified). DR/robustness
+testing moves ENTIRELY to the post-map champion stage ("add more DR after sweep is
+done and check the champ if it is legit"), to be designed once the map completes;
+grid5/topup_k.py (the v1 jittered merge) is guarded out and refuses to run.
+The v1 jittered partial maps (~half day of c4/c5/c6 rows) are archived under
+results/gait_sweep/old_jittered_v1/ on each machine, never merged.
 Code: `grid5/` (self-contained duplicate of the frozen GRID-4 pipeline @427b701;
 `physics/` and the root modules are the untouched GRID-4 backup — do not edit them).
 
@@ -17,7 +26,8 @@ Code: `grid5/` (self-contained duplicate of the frozen GRID-4 pipeline @427b701;
 | start | fixed hold 5s; hip_off STEP at transition start | **staged**: quiescence hold (max\|qvel\|<0.3, 2–10s) + **rest lean 5 deg** + hip_off **ramps** with alpha | 91.7% of c6 mu0.1 falls were pre-measurement; ramp+lean revives the off>=30 shelf (pass x5 on the c6 subgrid); rest lean >=5 deg -> 100% standing under full DR jitter at every COM incl. 1.40 (which cannot stand at lean 0 at all). Mirrors firmware READY (HIP_REST_DEG) |
 | metrics | 12 cols | **+19 ext cols** (fall timing/phase, dual-criterion slip, cone/GRF, lateral, COT, torso-IMU) | slip/roll boundary, COT tracks, failure-mode decomposition (Ben 2026-08-26) |
 | manifest | none | **manifest.json per CSV; consumers refuse on mismatch** | lessons_2026-08-25 §5h |
-| DR / K / gates / execution layer | — | **unchanged** (mu ±5% rel, jitter yaw±5/pitch±3/lat±1cm, seeds, K=1 map + topup K=5, pass = surv ∧ head>0.5 ∧ net>0.05; no slew/no cmd filter) | comparability with GRID-4; DR necessity evidence in project log 2026-08-26 |
+| DR | jittered K=1 map (mu ±5%, pose jitter) + topup K=5 | **NONE in the map (v2)** — deterministic rows; DR only at the post-map champion stage | Ben 2026-08-26: uncontaminated per-row numbers; champion legitimacy checked with DR afterwards |
+| gates / execution layer | — | unchanged (pass = surv ∧ head>0.5 ∧ net>0.05; no slew/no cmd filter) | comparability with GRID-4 |
 
 Rows per config: 80 x 31 x 6 x 6 x 6 x 4 mu = **2,142,720** (1.18x GRID-4).
 All raw records are saved; pass tiers are recomputed post-hoc (surv-only / pass /
@@ -83,8 +93,9 @@ Aggregation over K: nan-mean (fall_phase: count tally). COT selection uses cot_n
 2. three INDEPENDENT champion tracks, top-20 each:
    T-speed (net_fwd_mean desc) | T-cot (cot_net asc) | T-slip (slip_ratio2 asc),
    the latter two with floor net_fwd >= 50% of that cell's T-speed #1;
-3. union -> topup K=5 (`grid5/topup_k.py`);
-4. confirmation on independent seeds (+50000 offset, 5 reps) — reportable numbers;
+3. union -> champion DR stage (jittered repeats; exact design fixed post-map —
+   `grid5/topup_k.py` v1 merge is guarded out until then);
+4. confirmation on independent seeds — reportable numbers (post-map design);
 5. champion neighborhood fine scan (hip_off ±5 @1 deg, freq ±0.02 @0.005, others ±1
    grid step); champions ranked by neighborhood mean, annotated spike/plateau.
 

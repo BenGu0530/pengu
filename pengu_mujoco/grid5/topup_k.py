@@ -31,6 +31,17 @@ import grid5_sweep as g5                       # sets the grid5 protocol switche
 
 assert gs.EXTENDED_METRICS and gs.STAGED_START and gc.RAMP_HIP_OFFSET
 
+# ------------------------------------------------------------------ grid5-v2 GUARD
+# The grid5-v2 map is DETERMINISTIC (no jitter, K=1). This script's merge math
+# (reuse map r=0 as jittered draw 0, add r=1..4) belonged to the jittered-map v1
+# design and NO LONGER APPLIES. The champion DR/robustness stage will be designed
+# after the map completes (Ben, 2026-08-26: "add more DR after sweep is done and
+# check the champ if it is legit — don't contaminate the sweep"). Refusing loudly
+# instead of producing a plausible wrong merge (lessons_2026-08-25 §5c).
+raise SystemExit("topup_k.py is DISABLED under grid5-v2 (deterministic map): the "
+                 "champion DR stage replaces this merge and is designed post-map. "
+                 "See docs/grid5_design.md.")
+
 TARGET_K = int(os.environ.get("TARGET_K", "5"))
 BASE_K = 1                                   # merge math below assumes the base ran r=0 only
 EXT_NUM = [k for k in g5.EXT_AGG if k != "fall_phase"]

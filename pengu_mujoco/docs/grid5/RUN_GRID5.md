@@ -8,7 +8,16 @@ protocol and all evidence: `docs/grid5_design.md`. Planning memo:
 plot-only session): `docs/grid5/PLOT_GRID5.md`. All sweep code lives in `grid5/` (the GRID-4
 pipeline in `physics/` is the untouched backup — never edit it).
 
-## 1. Deployment status (launched 2026-08-26, night)
+## 0. PROTOCOL REVISION grid5-v2 (2026-08-26, late night)
+
+The map is now a PURE DETERMINISTIC sweep (Ben): exact nominal mu, no pose jitter,
+no RNG, K=1 — twice-run bit-identical. The first launch (v1, jittered rows) was
+killed after ~half a day; its partial CSVs are archived in
+`results/gait_sweep/old_jittered_v1/` on each machine and must never be merged
+(the manifest protocol tag enforces this). DR happens only at the post-map
+champion stage. Deploy commands below are unchanged.
+
+## 1. Deployment status (relaunched 2026-08-26 under grid5-v2)
 
 | machine | queue | status |
 |---|---|---|
@@ -31,7 +40,8 @@ From the repo root `pengu_mujoco/` on branch `friction-experiments`:
 
 First run auto-builds `.sweep_venv` (mujoco 3.8.x, pinned) if missing — takes a
 few minutes, then shards start. Nothing else to configure: shard count defaults
-to cores-2; DR_K=1 (the map protocol); the manifest is written automatically.
+to cores-2; trials are deterministic (grid5-v2, K=1); the manifest is written
+automatically.
 
 What the one line does, per config in the queue:
 initcsv + `manifest.json` -> N shards (`run_sweep.sh`, resume-safe by axis-tuple)
@@ -82,9 +92,9 @@ memo BEFORE pushing it.
 - "manifest missing — run initcsv first": the CSV exists but its manifest.json
   does not (e.g. copied by hand). Run `CONFIG=<cfg> python grid5/grid5_sweep.py
   initcsv` from `grid5/`, or re-run the machine line.
-- "MANIFEST MISMATCH ... refusing to write": the process settings (K, slip
-  constants, mujoco version) differ from the artifact's manifest. Do NOT force —
-  fix the environment (usually a stray DR_K env var or wrong mujoco).
+- "MANIFEST MISMATCH ... refusing to write": the process settings (protocol, K,
+  slip constants, mujoco version) differ from the artifact's manifest. Do NOT
+  force — fix the environment (wrong mujoco, or a stale v1 CSV: archive it).
 - CSV with no header: resume silently recovers 0 rows and re-runs everything —
   the launcher and watchdog refuse to run on a header-less CSV; repair per
   `docs/grid4_fleet_memo.md` pre-flight 4 (same trap as GRID-4).
@@ -96,9 +106,9 @@ memo BEFORE pushing it.
 
 ## 7. After the maps (not yet started)
 
-Per config: hot-region topup K=1->5 (`grid5/topup_k.py`, resume-safe, shardable),
-then the frozen selection chain (three champion tracks T-speed/T-cot/T-slip,
-+50000-seed confirmation, neighborhood fine scan) via `grid5/grid5_select.py`
-(to be written before analysis begins — see grid5_design.md for the frozen
-procedure). Robust-region reporting is four-tier: surv-only / pass / strict
+Per config: the champion DR stage (jittered repeats on selected rows; exact design
+fixed AFTER the map completes — `grid5/topup_k.py`'s v1 merge is guarded out until
+then), then the selection chain (three champion tracks T-speed/T-cot/T-slip,
+independent-seed confirmation, neighborhood fine scan) via `grid5/grid5_select.py`
+(to be written before analysis begins — see grid5_design.md). Robust-region reporting is four-tier: surv-only / pass / strict
 heading>=0.9 / clean-pass slip<=0.05, all recomputable from the saved records.

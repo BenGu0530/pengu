@@ -19,12 +19,16 @@ Differences from GRID-4 (physics/grid4_sweep.py, protocol a22f80b):
   METRICS  EXT_FIELDS appended: fall timing/phase, dual-criterion slip, cone/GRF,
            lateral drift/velocity, positive-work COT, torso-IMU orientation.
   MANIFEST manifest.json written at initcsv; consumers must refuse on mismatch.
+  DR       NONE in the map (grid5-v2, Ben 2026-08-26): every trial is DETERMINISTIC —
+           exact nominal mu, no pose jitter, no RNG, K=1. "Don't contaminate the
+           sweep." DR/robustness testing happens ONLY at the post-map champion stage
+           (designed after the map completes).
 
 usage (run from grid5/ so the local module copies win):
   CONFIG=c1 python grid5_sweep.py count|initcsv
   CONFIG=c1 N_SHARDS=10 SHARD_ID=3 python grid5_sweep.py
-env: CONFIG=c1..c10; GRID5_SMOKE=1 -> tiny grid; DR_K -> repeats (default 1 for the
-map, staged-K topup to 5 afterwards, same as GRID-4's amendment).
+env: CONFIG=c1..c10; GRID5_SMOKE=1 -> tiny grid. K is fixed at 1 (deterministic
+trials — repeats would be identical).
 """
 import os, sys, csv, json, hashlib, subprocess
 os.environ["PENGU_MODEL"] = "1.31"          # base = models/pengu1_31 for every config
@@ -58,9 +62,7 @@ CONFIG = os.environ.get("CONFIG", "c1").lower()
 assert CONFIG in CONFIGS, f"CONFIG={CONFIG!r} (want c1..c10)"
 KAPPA, COM_TARGET = CONFIGS[CONFIG]
 
-K = int(os.environ.get("DR_K", "1"))
-MU_JIT = 0.05                          # relative: mu * U(1-MU_JIT, 1+MU_JIT)
-YAW_DEG, PITCH_DEG, LAT_M = 5.0, 3.0, 0.01
+K = 1                                  # deterministic map: repeats would be identical
 NET_MIN, HEAD_MIN = 0.05, 0.5          # slip is recorded, NOT a pass gate
 SMOKE = os.environ.get("GRID5_SMOKE", "") == "1"
 
@@ -151,7 +153,7 @@ def write_manifest(outdir, csv_path, n_rows):
     except Exception:
         commit = "unknown"
     man = dict(
-        protocol="grid5-v1",
+        protocol="grid5-v2",
         config=CONFIG, kappa=KAPPA, com_target=COM_TARGET,
         base_model=os.path.relpath(xml_abs, _ROOT),
         base_model_md5=hashlib.md5(open(os.path.join(os.path.dirname(xml_abs),
@@ -162,8 +164,8 @@ def write_manifest(outdir, csv_path, n_rows):
               [("freq", FREQS), ("hip_phi", HIP_PHIS), ("leg_amp", LEG_AMPS),
                ("hip_amp", HIP_AMPS), ("hip_off", HIP_OFFS), ("mu", MUS)]},
         rows=n_rows, K=K,
-        dr=dict(mu_jit_rel=MU_JIT, yaw_deg=YAW_DEG, pitch_deg=PITCH_DEG, lat_m=LAT_M,
-                seed="(cell_index*len(MUS)+mu_index)*100+repeat"),
+        dr=dict(map="deterministic: exact nominal mu, no pose jitter, no RNG, K=1 "
+                    "(grid5-v2, Ben 2026-08-26 — champion-stage DR designed post-map)"),
         start=dict(staged=True, quiet_qvel=gs.QUIET_QVEL,
                    quiet_min_t=gs.QUIET_MIN_T, quiet_max_t=gs.QUIET_MAX_T,
                    rest_lean_deg=REST_LEAN_DEG, ramp_hip_offset=True,
@@ -187,7 +189,7 @@ def check_manifest(outdir, csv_path):
     if not os.path.exists(mpath):
         raise SystemExit(f"manifest missing: {mpath} — run initcsv first")
     man = json.load(open(mpath))
-    want = dict(protocol="grid5-v1", config=CONFIG, K=K,
+    want = dict(protocol="grid5-v2", config=CONFIG, K=K,
                 mujoco_version=mujoco.__version__)
     for k, v in want.items():
         if man.get(k) != v:
@@ -240,7 +242,7 @@ def main():
           f"done={len(done)}/{n_rows}  K={K}  shard={shard_id}/{n_shards}")
     print(f"# start: staged quiet<{gs.QUIET_QVEL} rest_lean={gc.STAND_HIP_DEG}deg "
           f"ramp_off={gc.RAMP_HIP_OFFSET}  slip: eps={gs.SLIP_CONE_EPS} v0={gs.SLIP_V0} "
-          f"c={gs.SLIP_C}  ext={gs.EXTENDED_METRICS}")
+          f"c={gs.SLIP_C}  ext={gs.EXTENDED_METRICS}  DR=NONE(deterministic map)")
     f = open(csv_path, "a", newline=""); w = csv.DictWriter(f, fieldnames=fields)
     n_mine = 0
     row = None      # progress print below must survive resume (all-done cells skip the mu loop)
@@ -258,11 +260,10 @@ def main():
             ext = {k: [] for k in EXT_AGG if k != "fall_phase"}
             phase_tally = {}
             for r in range(K):
-                rng = np.random.default_rng((i * len(MUS) + mi) * 100 + r)
-                gs.FLOOR_MU = float(mu0) * float(rng.uniform(1 - MU_JIT, 1 + MU_JIT))
-                gs.POSE_JITTER = {"yaw": np.radians(rng.uniform(-YAW_DEG, YAW_DEG)),
-                                  "pitch": np.radians(rng.uniform(-PITCH_DEG, PITCH_DEG)),
-                                  "lat": float(rng.uniform(-LAT_M, LAT_M))}
+                # grid5-v2: PURE deterministic trial — exact nominal mu, no jitter,
+                # no RNG. DR enters only at the post-map champion stage.
+                gs.FLOOR_MU = float(mu0)
+                gs.POSE_JITTER = None
                 gs.CONDITION["hip_off"] = hip_off
                 rr = gs.run_trial(model, data, ids, dict(p0))
                 sv = int(rr["survived"]); nf = rr["net_fwd_speed"]

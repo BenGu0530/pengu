@@ -15,7 +15,7 @@ cd "$(dirname "$0")/.."                                   # repo root pengu_mujo
 JOB="${1:-c1}"
 case "$JOB" in
   c[1-9]|c10)  export CONFIG="$JOB" ; TAGN="grid5_$JOB" ; SCRIPT=grid5/grid5_sweep.py
-               export DR_K="${DR_K:-1}"   # staged-K: map at K=1, topup to K=5 afterwards
+               # grid5-v2: map is deterministic, K fixed at 1 in grid5_sweep.py (no DR_K)
                CSV="results/gait_sweep/sweep_grid5_${JOB}_freq_hip_phi_leg_amp_hip_amp_hip_off_mu.csv" ;;
   *) echo "usage: bash grid5/run_sweep.sh [c1..c10] [n_shards]"; exit 2 ;;
 esac
