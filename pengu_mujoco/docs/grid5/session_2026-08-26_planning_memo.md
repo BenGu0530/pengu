@@ -173,3 +173,24 @@ needs. Demo video: `results/grid5_probes/imu_frame_demo.mp4`.
 - Sim kappa-PID rate (1 kHz) vs firmware (50 Hz) gain-equivalence probe.
 - EXP raw outputs of today's probes live in the session scratch only; the numbers
   are recorded here and in `docs/grid5_design.md`.
+
+---
+
+## Addendum (2026-08-26, late night): protocol revision grid5-v2 — deterministic map
+
+After reviewing what "DR at K=1" actually means per row (each row = exact gait
+params x ONE random draw of mu±5% + pose jitter; no pure run anywhere), Ben ruled:
+**"everything fixed, no random stuff at sweep — don't contaminate the sweep."**
+
+- The map is now a PURE DETERMINISTIC sweep: exact nominal mu, no pose jitter, no
+  RNG, K=1. Verified bit-identical across two full smoke runs.
+- DR/robustness testing moves entirely to the post-map champion stage ("add more
+  DR after sweep is done and check the champ if it is legit"), design fixed once
+  the map completes. `grid5/topup_k.py` (v1 jittered merge) is guarded out.
+- Manifest protocol bumped to grid5-v2; v1 artifacts are refused by every consumer.
+- All three running machines (rml2 c6, rml3 c5, naomio c4) were killed, their
+  ~half-day v1 partials archived to `results/gait_sweep/old_jittered_v1/`, and
+  relaunched under v2 the same night. mac (c3->c8) and laptop (c1) deploy
+  unchanged — a fresh pull is already v2.
+- Post-map test candidates recorded: champion DR repeats (form TBD), deterministic
+  nominal-mu reference eval, independent-seed confirmation.

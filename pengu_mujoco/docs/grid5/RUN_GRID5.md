@@ -21,11 +21,17 @@ champion stage. Deploy commands below are unchanged.
 
 | machine | queue | status |
 |---|---|---|
-| naomio (32 cores) | c4 -> c2 -> c9 | RUNNING (c4, 30 shards) |
-| rml2 (16 cores) | c6 -> c7 | RUNNING (c6, 14 shards; measured ~51k rows/h -> ~41 h/config) |
-| rml3 (16 cores) | c5 -> c10 | RUNNING (c5, 14 shards) |
+| naomio (32 cores) | c4 -> c2 -> c9 | RUNNING v2 (c4, 30 shards; relaunched after the v1 kill) |
+| rml2 (16 cores) | c6 -> c7 | RUNNING v2 (c6, 14 shards; v1 measured ~51k rows/h -> ~41 h/config) |
+| rml3 (16 cores) | c5 -> c10 | RUNNING v2 (c5, 14 shards) |
 | mac | c3 -> c8 | TO DEPLOY (Ben) |
 | laptop | c1 | TO DEPLOY (Ben) |
+
+All three running machines were killed and relaunched under grid5-v2 on 2026-08-26
+(late night); their v1 partials sit in `results/gait_sweep/old_jittered_v1/`.
+Verify any machine is on v2 with:
+`grep -m1 "DR=NONE" results/gait_sweep/grid5_<cfg>_run.log` (must print) and
+`"protocol": "grid5-v2"` in the CSV's manifest.json.
 
 Phase A = c1..c6 (leading config on every machine + c2 second on naomio);
 Phase B = c7..c10 queued behind. Queues advance automatically on `.done`.
@@ -42,6 +48,17 @@ First run auto-builds `.sweep_venv` (mujoco 3.8.x, pinned) if missing — takes 
 few minutes, then shards start. Nothing else to configure: shard count defaults
 to cores-2; trials are deterministic (grid5-v2, K=1); the manifest is written
 automatically.
+
+**If this machine ever ran the v1 (jittered) launch** — mac/laptop normally have
+NOT, so skip this — clean up BEFORE relaunching, or resume will silently keep the
+contaminated rows:
+
+    touch results/gait_sweep/WATCHDOG_OFF
+    pkill -f 'run_machine[.]sh' ; pkill -f 'grid5_sweep[.]py'
+    mkdir -p results/gait_sweep/old_jittered_v1
+    mv results/gait_sweep/sweep_grid5_c*_* results/gait_sweep/machine_*.log \
+       results/gait_sweep/grid5_c*_run.log results/gait_sweep/old_jittered_v1/
+    rm -f results/gait_sweep/WATCHDOG_OFF
 
 What the one line does, per config in the queue:
 initcsv + `manifest.json` -> N shards (`run_sweep.sh`, resume-safe by axis-tuple)
