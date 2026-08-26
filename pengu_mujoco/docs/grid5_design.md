@@ -20,8 +20,8 @@ Code: `grid5/` (self-contained duplicate of the frozen GRID-4 pipeline @427b701;
 | configs | 6 (kappa{0,2} x COM{1.05,1.20,1.31}) | **10** (+ COM 1.10, 1.40 -> c7..c10) | Ben 2026-08-26; 1.20->1.31 order-of-magnitude cliff |
 | freq | 1.00–2.00 @0.01 (101) | **1.21–2.00 (80)** | no top-20 champion below 1.21 in any (config,mu) (c6@0.7: 2/20 only) |
 | hip_phi | 0–350 @10 (36) | **FULL 36 (v2.1)** — the earlier {150..190} trim was dropped | trim evidence came from the jittered + step-start GRID-4 protocol (proven to kill whole strata); Ben 2026-08-26: measure the full circle cleanly. freq trim stays (champion-physics rationale) |
-| leg_amp | 85..125 (5) | **85..135 (6)** | top-20 edge-saturated at 125 (20/20 in several cells) |
-| hip_amp | 12..28 (5) | **12..32 (6)** | top-20 edge-saturated at 28 |
+| leg_amp | 85..125 (5) | **65..165 @10 (11, v2.2)** | high edge: top-20 saturated at 125 and geometry shows stroke headroom (135=79%, 165=97% of the 50 mm rail); low edge: c5/c6 passer density peaks at 85 and the low-amplitude/COT band starts there (65 = 9.3 mm, just above contact noise) |
+| hip_amp | 12..28 (5) | **8..32 @4 (7, v2.2)** | high edge: top-20 saturated at 28; low edge 8 deg = ~13 mm swing, low-amplitude/COT band |
 | hip_off | 10..50 (5) | **0..50 (6)** | high-COM champions sat on the off=10 edge; no 60+ (Ben: hardware-meaningless lean) |
 | start | fixed hold 5s; hip_off STEP at transition start | **staged**: quiescence hold (max\|qvel\|<0.3, 2–10s) + **rest lean 5 deg** + hip_off **ramps** with alpha | 91.7% of c6 mu0.1 falls were pre-measurement; ramp+lean revives the off>=30 shelf (pass x5 on the c6 subgrid); rest lean >=5 deg -> 100% standing under full DR jitter at every COM incl. 1.40 (which cannot stand at lean 0 at all). Mirrors firmware READY (HIP_REST_DEG) |
 | metrics | 12 cols | **+19 ext cols** (fall timing/phase, dual-criterion slip, cone/GRF, lateral, COT, torso-IMU) | slip/roll boundary, COT tracks, failure-mode decomposition (Ben 2026-08-26) |
@@ -29,10 +29,10 @@ Code: `grid5/` (self-contained duplicate of the frozen GRID-4 pipeline @427b701;
 | DR | jittered K=1 map (mu ±5%, pose jitter) + topup K=5 | **NONE in the map (v2)** — deterministic rows; DR only at the post-map champion stage | Ben 2026-08-26: uncontaminated per-row numbers; champion legitimacy checked with DR afterwards |
 | gates / execution layer | — | unchanged (pass = surv ∧ head>0.5 ∧ net>0.05; no slew/no cmd filter) | comparability with GRID-4 |
 
-Rows per config: 80 x 36 x 6 x 6 x 6 x 4 mu = **2,488,320** (1.37x GRID-4).
-(v2.1, 2026-08-26: hip_phi restored to the full circle mid-run — deterministic v2
-rows have no seed/index dependence, so completed rows stay valid and resume simply
-adds the new cells.)
+Rows per config: 80 x 36 x 11 x 7 x 6 x 4 mu = **5,322,240** (2.93x GRID-4).
+(v2.1: hip_phi restored to the full circle; v2.2: leg_amp 65-165, hip_amp 8-32 —
+both mid-run: deterministic v2 rows have no seed/index dependence, completed rows
+stay valid and resume simply adds the new cells.)
 All raw records are saved; pass tiers are recomputed post-hoc (surv-only / pass /
 strict heading>=0.9 / clean-pass = pass ∧ slip_ratio2<=0.05).
 

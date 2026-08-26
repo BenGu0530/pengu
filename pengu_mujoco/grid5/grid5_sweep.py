@@ -14,7 +14,8 @@ Differences from GRID-4 (physics/grid4_sweep.py, protocol a22f80b):
            hip_phi FULL 360 deg (the v1 trim of {150..190} was dropped 2026-08-26:
            its "no passers" evidence came from the jittered + step-start GRID-4
            protocol, which provably killed whole parameter strata);
-           leg_amp/hip_amp extended one step up (edge-saturated top-20 in GRID-4);
+           leg_amp 65-165 @10 (v2.2: full useful slider stroke, 9.3-48.7 mm of
+           50 mm) and hip_amp 8-32 @4 (v2.2: down into the low-amplitude/COT band);
            hip_off 0..50 (high-COM champions sat on the off=10 edge; no 60+, Ben).
   START    staged: quiescence-gated hold (max|qvel|<0.3, 2-10 s) with a 5 deg stand
            rest lean, then hip_off RAMPS in with the transition alpha (firmware READY
@@ -79,8 +80,11 @@ else:
     HIP_PHIS = np.round(np.arange(0.0, 350.01, 10.0), 1)          # 36 (full circle;
     #   the {150..190} trim was dropped 2026-08-26 — its GRID-4 evidence is start-
     #   protocol-contaminated; grid5-v2 measures the full circle cleanly)
-    LEG_AMPS = np.array([85.0, 95.0, 105.0, 115.0, 125.0, 135.0])  # 6
-    HIP_AMPS = np.array([12.0, 16.0, 20.0, 24.0, 28.0, 32.0])      # 6
+    LEG_AMPS = np.round(np.arange(65.0, 165.01, 10.0), 1)          # 11 (v2.2: 65-165,
+    #   low end 65 = 9.3 mm stroke (just above contact noise, slow/COT territory),
+    #   high end 165 = 48.7 mm = 97% of the 50 mm slider rail)
+    HIP_AMPS = np.array([8.0, 12.0, 16.0, 20.0, 24.0, 28.0, 32.0]) # 7 (v2.2: +8 deg
+    #   = ~13 mm fore-aft swing, low-amplitude/COT territory)
     HIP_OFFS = np.array([0.0, 10.0, 20.0, 30.0, 40.0, 50.0])       # 6
     MUS      = np.array([0.1, 0.3, 0.5, 0.7])                      # 4
 

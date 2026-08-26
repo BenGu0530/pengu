@@ -18,8 +18,9 @@ killed after ~half a day; its partial CSVs are archived in
 champion stage. Deploy commands below are unchanged.
 v2.1 (same night): hip_phi restored to the FULL 360-deg circle (the {150..190}
 trim's evidence was contaminated by the GRID-4 start protocol); rows/config are
-now 2,488,320. Completed v2 rows stay valid — machines just pull and restart, and
-resume adds the new phi cells.
+now 2,488,320. v2.2 (2026-08-26): leg_amp 65-165 @10 and hip_amp 8-32 @4 ->
+5,322,240 rows/config (~2.9x GRID-4). Completed v2/v2.1 rows stay valid — machines
+just pull and restart, and resume adds the new cells.
 
 ## 1. Deployment status (relaunched 2026-08-26 under grid5-v2)
 
@@ -77,7 +78,7 @@ configs are skipped, partial configs resume exactly where every machine left off
 
     tail -f results/gait_sweep/machine_<name>.log      # queue log (config-level)
     tail -f results/gait_sweep/grid5_<cfg>_run.log     # shard log (cell progress)
-    wc -l results/gait_sweep/sweep_grid5_<cfg>_*.csv   # rows done; full = 2,488,321 incl. header (v2.1, full hip_phi circle)
+    wc -l results/gait_sweep/sweep_grid5_<cfg>_*.csv   # rows done; full = 5,322,241 incl. header (v2.2: full phi circle, leg 65-165, hip 8-32)
 
 Throughput anchor (measured on rml2, 14 shards): ~51,000 rows/h -> ~41 h per
 config; naomio at 30 shards should run roughly 2x that. Watchdog activity:
