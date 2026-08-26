@@ -1,0 +1,17 @@
+  runs/overnight/a_recipe/r3f_s0    250k: pass  0/8  net_fwd -0.001
+  runs/overnight/a_recipe/r3f_s0    500k: pass  0/8  net_fwd +0.000
+  runs/overnight/a_recipe/r3f_s0    750k: pass  0/8  net_fwd +0.000
+  runs/overnight/a_recipe/r3f_s0   1000k: pass  0/8  net_fwd +0.000
+  runs/overnight/a_recipe/r3f_s0   1250k: pass  0/8  net_fwd -0.055
+  runs/overnight/a_recipe/r3f_s0   1500k: pass  0/8  net_fwd -0.094
+  runs/overnight/a_recipe/r3f_s0   1750k: pass  0/8  net_fwd +0.000
+  runs/overnight/a_recipe/r3f_s0   2000k: pass  0/8  net_fwd +0.000
+  runs/overnight/a_recipe/r3f_s0   2250k: pass  0/8  net_fwd -0.000
+  runs/overnight/a_recipe/r3f_s0   2500k: pass  0/8  net_fwd +0.001
+  runs/overnight/a_recipe/r3f_s0   2750k: pass  0/8  net_fwd +0.000
+  runs/overnight/a_recipe/r3f_s0   3000k: pass  0/8  net_fwd +0.000
+  runs/overnight/a_recipe/r3f_s0   final: pass  0/8  net_fwd +0.000
+[runs/overnight/a_recipe/r3f_s0] best=2500k (pass 0, nf 0.0007) vs final (pass 0, nf 0.0) -> runs/overnight/a_recipe/r3f_s0/ckpt_sweep.csv
+
+=== best-vs-final summary ===
+runs/overnight/a_recipe/r3f_s0: best 2500k pass 0 (final 0, delta +0), net_fwd 0.0007 vs 0.0
