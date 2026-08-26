@@ -1,0 +1,18 @@
+# base rows: 1524017
+# TOPUP c1 (kappa=0.0 com=1.0500) K 1->5  selected=130 done=0 shard=1/2
+# topup done
+# base rows: 1524017
+# TOPUP c1 (kappa=0.0 com=1.0500) K 1->5  selected=130 done=0 shard=0/2
+# topup done
+# base rows: 1524017
+# TOPUP c1 (kappa=0.0 com=1.0500) K 1->5  selected=130 done=54 shard=0/2
+# topup done
+# base rows: 1524017
+# TOPUP c1 (kappa=0.0 com=1.0500) K 1->5  selected=130 done=54 shard=1/2
+# topup done
+# base rows: 1818000
+# TOPUP c1 (kappa=0.0 com=1.0500) K 1->5  selected=130 done=54 shard=1/2
+# topup done
+# base rows: 1818000
+# TOPUP c1 (kappa=0.0 com=1.0500) K 1->5  selected=130 done=54 shard=0/2
+# topup done
