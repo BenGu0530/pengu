@@ -1,4 +1,4 @@
-# GRID-5 fleet launch — one line per machine
+# GRID-5 fleet launch — quick card (full operations guide: RUN_GRID5.md)
 
 Prereq (every machine): repo cloned, on the working branch, then just:
 
