@@ -19,7 +19,7 @@ Code: `grid5/` (self-contained duplicate of the frozen GRID-4 pipeline @427b701;
 |---|---|---|---|
 | configs | 6 (kappa{0,2} x COM{1.05,1.20,1.31}) | **10** (+ COM 1.10, 1.40 -> c7..c10) | Ben 2026-08-26; 1.20->1.31 order-of-magnitude cliff |
 | freq | 1.00–2.00 @0.01 (101) | **1.21–2.00 (80)** | no top-20 champion below 1.21 in any (config,mu) (c6@0.7: 2/20 only) |
-| hip_phi | 0–350 @10 (36) | **drop {150..190} (31)** | all-config dead core (<0.4% share, no real champion) |
+| hip_phi | 0–350 @10 (36) | **FULL 36 (v2.1)** — the earlier {150..190} trim was dropped | trim evidence came from the jittered + step-start GRID-4 protocol (proven to kill whole strata); Ben 2026-08-26: measure the full circle cleanly. freq trim stays (champion-physics rationale) |
 | leg_amp | 85..125 (5) | **85..135 (6)** | top-20 edge-saturated at 125 (20/20 in several cells) |
 | hip_amp | 12..28 (5) | **12..32 (6)** | top-20 edge-saturated at 28 |
 | hip_off | 10..50 (5) | **0..50 (6)** | high-COM champions sat on the off=10 edge; no 60+ (Ben: hardware-meaningless lean) |
@@ -29,7 +29,10 @@ Code: `grid5/` (self-contained duplicate of the frozen GRID-4 pipeline @427b701;
 | DR | jittered K=1 map (mu ±5%, pose jitter) + topup K=5 | **NONE in the map (v2)** — deterministic rows; DR only at the post-map champion stage | Ben 2026-08-26: uncontaminated per-row numbers; champion legitimacy checked with DR afterwards |
 | gates / execution layer | — | unchanged (pass = surv ∧ head>0.5 ∧ net>0.05; no slew/no cmd filter) | comparability with GRID-4 |
 
-Rows per config: 80 x 31 x 6 x 6 x 6 x 4 mu = **2,142,720** (1.18x GRID-4).
+Rows per config: 80 x 36 x 6 x 6 x 6 x 4 mu = **2,488,320** (1.37x GRID-4).
+(v2.1, 2026-08-26: hip_phi restored to the full circle mid-run — deterministic v2
+rows have no seed/index dependence, so completed rows stay valid and resume simply
+adds the new cells.)
 All raw records are saved; pass tiers are recomputed post-hoc (surv-only / pass /
 strict heading>=0.9 / clean-pass = pass ∧ slip_ratio2<=0.05).
 

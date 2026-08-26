@@ -9,8 +9,11 @@ Differences from GRID-4 (physics/grid4_sweep.py, protocol a22f80b):
            construction (hardened models/pengu1_31, 2.2724 kg; easytorso inertial COM
            slid at load time, mass-conserving). Baked reference models exist at
            models/pengu1_10 and models/pengu1_40 (verified vs the slide to <1e-10 m).
-  AXES     freq 1.21-2.00 (GRID-4 top-20 had no champion below 1.21);
-           hip_phi drops the all-config dead core {150..190};
+  AXES     freq 1.21-2.00 (GRID-4 top-20 had no champion below 1.21 — a physics
+           rationale, cadence bounds speed, robust to the protocol change);
+           hip_phi FULL 360 deg (the v1 trim of {150..190} was dropped 2026-08-26:
+           its "no passers" evidence came from the jittered + step-start GRID-4
+           protocol, which provably killed whole parameter strata);
            leg_amp/hip_amp extended one step up (edge-saturated top-20 in GRID-4);
            hip_off 0..50 (high-COM champions sat on the off=10 edge; no 60+, Ben).
   START    staged: quiescence-gated hold (max|qvel|<0.3, 2-10 s) with a 5 deg stand
@@ -73,8 +76,9 @@ if SMOKE:
     MUS      = np.array([0.3, 0.7])
 else:
     FREQS    = np.round(np.arange(1.21, 2.0001, 0.01), 3)          # 80
-    HIP_PHIS = np.round(np.array([p for p in np.arange(0.0, 350.01, 10.0)
-                                  if not (150.0 <= p <= 190.0)]), 1)  # 31 (dead core cut)
+    HIP_PHIS = np.round(np.arange(0.0, 350.01, 10.0), 1)          # 36 (full circle;
+    #   the {150..190} trim was dropped 2026-08-26 — its GRID-4 evidence is start-
+    #   protocol-contaminated; grid5-v2 measures the full circle cleanly)
     LEG_AMPS = np.array([85.0, 95.0, 105.0, 115.0, 125.0, 135.0])  # 6
     HIP_AMPS = np.array([12.0, 16.0, 20.0, 24.0, 28.0, 32.0])      # 6
     HIP_OFFS = np.array([0.0, 10.0, 20.0, 30.0, 40.0, 50.0])       # 6
