@@ -4,7 +4,8 @@ What GRID-5 is: the 10-config co-design sweep (kappa{0,2} x COM{1.05,1.10,1.20,
 1.31,1.40}), staged start + extended metrics, 2,142,720 rows/config. The frozen
 protocol and all evidence: `docs/grid5_design.md`. Planning memo:
 `docs/grid5/session_2026-08-26_planning_memo.md`. Quick launch card:
-`docs/grid5/fleet_launch.md`. All sweep code lives in `grid5/` (the GRID-4
+`docs/grid5/fleet_launch.md`. Analysis/plotting brief (separate
+plot-only session): `docs/grid5/PLOT_GRID5.md`. All sweep code lives in `grid5/` (the GRID-4
 pipeline in `physics/` is the untouched backup — never edit it).
 
 ## 1. Deployment status (launched 2026-08-26, night)
