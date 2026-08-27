@@ -29,12 +29,19 @@ DEF_OUT = os.path.join(_ROOT, "results", "grid5_report", "style_ref")
 TOP = 20                     # default; --top overrides (stamped in filename)
 
 
-def speed_track(g, top):
-    """Per mu: (top-20 mean, champion, n passers) from the T-speed ranking."""
+def speed_track(g, top, tier="pass"):
+    """Per mu: (top-N mean, champion, n eligible) from the T-speed ranking.
+    tier 'pass' = pass_rate > 0; tier 'robust' additionally requires the
+    frozen neighborhood test (nbhd-mean pass >= 0.8; freq-edge NaN cells are
+    excluded by construction)."""
+    N = g.nbhd("pass_rate") if tier == "robust" else None
     out = []
     for m in range(len(g.axes["mu"])):
         nf = g["net_fwd_mean"][m]
-        vals = nf[(g["pass_rate"][m] > 0) & np.isfinite(nf)]
+        elig = (g["pass_rate"][m] > 0) & np.isfinite(nf)
+        if N is not None:
+            elig &= np.isfinite(N[m]) & (N[m] >= 0.8)
+        vals = nf[elig]
         if vals.size == 0:
             out.append((np.nan, np.nan, 0))
             continue
@@ -49,6 +56,12 @@ def main():
     ap.add_argument("--round", default="grid4", choices=["grid4", "grid5"])
     ap.add_argument("--configs", nargs="*", default=None)
     ap.add_argument("--top", type=int, default=TOP)
+    ap.add_argument("--tier", default="pass", choices=["pass", "robust"])
+    ap.add_argument("--single", action="store_true",
+                    help="one panel, top-N mean only (no champion panel)")
+    ap.add_argument("--ylim", nargs=2, type=float, default=None)
+    ap.add_argument("--legend-loc", default="upper right",
+                    help="single mode: location of the combined legend")
     ap.add_argument("--out", default=DEF_OUT)
     args = ap.parse_args()
 
@@ -64,17 +77,21 @@ def main():
         sys.exit("no configs loadable")
     load5.compatible(grids.values())
 
-    data = {c: speed_track(g, args.top) for c, g in grids.items()}
+    data = {c: speed_track(g, args.top, args.tier) for c, g in grids.items()}
     mus = next(iter(grids.values())).axes["mu"]
     partial = [c for c, g in grids.items() if not g.complete]
     Ks = {g.K for g in grids.values()}
     commits = {g.commit for g in grids.values() if g.commit}
 
-    fig, axes = plt.subplots(1, 2, figsize=(12.6, 5.2), sharey=True)
-    for ax, col, ttl in zip(
-            axes, (0, 1),
-            (f"top-{args.top} mean (per-μ selection)",
-             "champion (best-of-best)")):
+    if args.single:
+        fig, ax1 = plt.subplots(figsize=(8.2, 5.2))
+        axes = [ax1]
+        panels = [(0, f"top-{args.top} mean (per-μ selection, {args.tier} tier)")]
+    else:
+        fig, axes = plt.subplots(1, 2, figsize=(12.6, 5.2), sharey=True)
+        panels = [(0, f"top-{args.top} mean (per-μ selection)"),
+                  (1, "champion (best-of-best)")]
+    for ax, (col, ttl) in zip(axes, panels):
         for c, g in grids.items():
             k, com = style5.CONFIGS[c]
             ys = [d[col] for d in data[c]]
@@ -93,11 +110,20 @@ def main():
         ax.set_title(ttl, fontsize=10)
         ax.set_xlabel("floor friction μ"); ax.set_xticks(mus); ax.grid(alpha=0.3)
     axes[0].set_ylabel("net_fwd_mean [m/s]")
-    style5.legend_two(axes[0],
-                      coms=sorted({style5.CONFIGS[c][1] for c in grids}),
-                      loc_gait="upper right", loc_com="upper left")
+    if args.ylim:
+        axes[0].set_ylim(*args.ylim)
+    if args.single:
+        style5.legend_combined(axes[0],
+                               coms=sorted({style5.CONFIGS[c][1] for c in grids}),
+                               loc=args.legend_loc)
+    else:
+        style5.legend_two(axes[0],
+                          coms=sorted({style5.CONFIGS[c][1] for c in grids}),
+                          loc_gait="upper right", loc_com="upper left")
 
-    note = "T-speed: eligibility pass_rate>0, ranked by net_fwd_mean, per (config, μ)"
+    note = ("T-speed: eligibility " +
+            ("pass>0 ∧ nbhd≥0.8" if args.tier == "robust" else "pass_rate>0") +
+            ", ranked by net_fwd_mean, per (config, μ)")
     if partial:
         pres = {c: grids[c].present["hip_off"] for c in partial}
         note += "; PARTIAL " + " ".join(
@@ -105,10 +131,13 @@ def main():
     style5.finish(
         fig, os.path.join(args.out, f"speed_vs_mu_{args.round}"
                           + (f"_top{args.top}" if args.top != TOP else "")
+                          + ("_robust" if args.tier == "robust" else "")
                           + ".png"),
         K="/".join(str(k) for k in sorted(Ks)),
-        tier="pass (pass_rate > 0)",
-        stat=f"left: mean of top-{args.top}; right: best-of-best (one cell)",
+        tier=("robust (pass ∧ nbhd ≥ 0.8)" if args.tier == "robust"
+              else "pass (pass_rate > 0)"),
+        stat=(f"mean of top-{args.top} per (config, μ)" if args.single else
+              f"left: mean of top-{args.top}; right: best-of-best (one cell)"),
         note=note,
         commit=commits.pop() if len(commits) == 1 else "")
 

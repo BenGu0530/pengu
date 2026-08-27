@@ -77,6 +77,18 @@ def legend_two(ax, kappas=(0.0, 2.0), coms=(1.05, 1.10, 1.20, 1.31, 1.40),
     return lg, lc
 
 
+def legend_combined(ax, kappas=(0.0, 2.0),
+                    coms=(1.05, 1.10, 1.20, 1.31, 1.40), loc="upper right"):
+    """ONE legend box: gait entries (colour+linestyle) then COM entries
+    (gray marker shapes). Alternative to legend_two for uncluttered axes."""
+    hs = [Line2D([], [], color=GAIT[k]["color"], ls=GAIT[k]["ls"], lw=1.9,
+                 label=GAIT[k]["name"]) for k in kappas]
+    hs += [Line2D([], [], color="0.35", ls="none", marker=COM_MK[c], ms=MS - 2,
+                  mfc="none", mec="0.35", mew=MEW, label=f"COM {c:.2f}")
+           for c in coms]
+    return ax.legend(handles=hs, loc=loc, fontsize=8, framealpha=0.9)
+
+
 def gray_twin(png_path):
     """Write a luma greyscale copy of a saved PNG into a sibling bw/ dir."""
     img = plt.imread(png_path)

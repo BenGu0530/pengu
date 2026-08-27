@@ -159,8 +159,10 @@ def _load_manifest(cfg, rnd):
             f"{cfg}: manifest missing ({p}) — the manifest is a gate, "
             "refusing to load the CSV without it")
     man = json.load(open(p))
-    if man.get("protocol") != "grid5-v1":
+    if man.get("protocol") not in ("grid5-v1", "grid5-v2"):
         raise ValueError(f"{cfg}: unexpected protocol {man.get('protocol')!r}")
+    # v1 and v2 are different experiments (v2 = deterministic map, full phi
+    # circle, wider leg/hip axes); compatible() refuses to mix them on axes.
     if man.get("config") != cfg:
         raise ValueError(f"{cfg}: manifest says config={man.get('config')!r}")
     return man
