@@ -129,6 +129,15 @@ memo BEFORE pushing it.
 - Reassigning queues (e.g. laptop finished c1): edit the queue table at the top
   of `grid5/run_machine.sh`, commit, pull on the target machine, re-run its line.
 
+## 6b. Demo / render output convention (Ben, 2026-08-30)
+
+All demos rendered FROM SWEEP DATA (champion clips, per-config showcase videos,
+trace figures) go to `results/grid5_report/<cfg>/demos/` — mirroring the
+grid4_report layout. `results/grid5_probes/` is reserved for math/validation
+probe outputs only (e.g. the IMU frame demo). Demo videos use TWO camera angles
+(side + front, hstacked) like grid4_demos.py, and champion clips should ship with
+a torso-roll trace figure when kappa != 0.
+
 ## 7. After the maps (not yet started)
 
 Per config: the champion DR stage (jittered repeats on selected rows; exact design
