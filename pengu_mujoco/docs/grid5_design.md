@@ -29,8 +29,9 @@ Code: `grid5/` (self-contained duplicate of the frozen GRID-4 pipeline @427b701;
 | DR | jittered K=1 map (mu ±5%, pose jitter) + topup K=5 | **NONE in the map (v2)** — deterministic rows; DR only at the post-map champion stage | Ben 2026-08-26: uncontaminated per-row numbers; champion legitimacy checked with DR afterwards |
 | gates / execution layer | — | unchanged (pass = surv ∧ head>0.5 ∧ net>0.05; no slew/no cmd filter) | comparability with GRID-4 |
 
-Rows per config: 80 x 36 x 10 x 6 x 6 x 5 mu = **5,184,000** (2.85x GRID-4; v2.4
-adds mu=0.9 — completed 4-mu rows stay valid, resume backfills the 0.9 slice).
+Rows per config: 80 x 36 x 10 x 6 x 6 x 4 mu = **4,147,200** (2.28x GRID-4).
+c6 ONLY: +mu 0.9 (v2.4 high-grip probe) -> 5,184,000 rows; its completed 4-mu rows
+stay valid, resume backfills the 0.9 slice.
 (v2.1: hip_phi restored to the full circle; v2.2/v2.3: leg_amp 75-165, hip_amp
 12-32 — changed mid-run: deterministic v2 rows have no seed/index dependence,
 completed rows stay valid and resume simply adds the new cells.)
