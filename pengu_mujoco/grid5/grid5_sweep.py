@@ -16,7 +16,8 @@ Differences from GRID-4 (physics/grid4_sweep.py, protocol a22f80b):
            protocol, which provably killed whole parameter strata);
            leg_amp 75-165 @10 (v2.3: 12.6-48.7 mm of the 50 mm slider stroke)
            and hip_amp 12-32 @4;
-           hip_off 0..50 (high-COM champions sat on the off=10 edge; no 60+, Ben).
+           hip_off 0..50 (high-COM champions sat on the off=10 edge; no 60+, Ben);
+           mu {0.1,0.3,0.5,0.7,0.9} (v2.4: +0.9 high-grip point).
   START    staged: quiescence-gated hold (max|qvel|<0.3, 2-10 s) with a 5 deg stand
            rest lean, then hip_off RAMPS in with the transition alpha (firmware READY
            behavior). Fixes the GRID-4 hip_off step input that killed high-COM cells.
@@ -85,7 +86,8 @@ else:
     #   65 was dropped 2026-08-26 with hip 8 to save ~22% map time)
     HIP_AMPS = np.array([12.0, 16.0, 20.0, 24.0, 28.0, 32.0])      # 6 (v2.3: 12-32)
     HIP_OFFS = np.array([0.0, 10.0, 20.0, 30.0, 40.0, 50.0])       # 6
-    MUS      = np.array([0.1, 0.3, 0.5, 0.7])                      # 4
+    MUS      = np.array([0.1, 0.3, 0.5, 0.7, 0.9])                 # 5 (v2.4: +0.9
+    #   high-grip end; the floor priority hack makes the floor value the contact mu)
 
 AXNAMES = ["freq", "hip_phi", "leg_amp", "hip_amp", "hip_off", "mu"]
 DR_FIELDS = ["pass_rate", "surv_rate", "net_fwd_mean", "net_fwd_min",

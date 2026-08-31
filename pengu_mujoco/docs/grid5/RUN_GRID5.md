@@ -78,7 +78,7 @@ configs are skipped, partial configs resume exactly where every machine left off
 
     tail -f results/gait_sweep/machine_<name>.log      # queue log (config-level)
     tail -f results/gait_sweep/grid5_<cfg>_run.log     # shard log (cell progress)
-    wc -l results/gait_sweep/sweep_grid5_<cfg>_*.csv   # rows done; full = 4,147,201 incl. header (v2.3: full phi circle, leg 75-165, hip 12-32)
+    wc -l results/gait_sweep/sweep_grid5_<cfg>_*.csv   # rows done; full = 5,184,001 incl. header (v2.4: + mu 0.9; axes leg 75-165, hip 12-32, full phi)
 
 Throughput anchor (measured on rml2, 14 shards): ~51,000 rows/h -> ~41 h per
 config; naomio at 30 shards should run roughly 2x that. Watchdog activity:
