@@ -155,6 +155,43 @@ def _nanmean(vals):
     return round(float(np.mean(a)), 4) if a else float("nan")
 
 
+def _axis_pos(vals):
+    return {round(float(v), 4): i for i, v in enumerate(vals)}
+
+
+def load_done_bitmap(csv_path, n_rows):
+    """Memory-safe resume: 1 bit per (cell,mu) row.
+
+    The inherited tuple-set resume (gs._load_done) costs ~1.3 GB PER SHARD at 3M
+    done rows and OOM-killed naomio's shards on 2026-08-31 (30 shards x 1.3 GB on
+    a 32 GB box). On the deterministic grid every row has a unique integer index
+    (same arithmetic as the sweep loop: cell_index*len(MUS)+mu_index), so done
+    state fits in n_rows/8 bytes (~0.65 MB). Rows not on the current grid are
+    skipped (axis extensions keep old rows valid; they simply match positions).
+    """
+    bm = bytearray((n_rows + 7) // 8)
+    if not os.path.exists(csv_path):
+        return bm, 0
+    P = [_axis_pos(FREQS), _axis_pos(HIP_PHIS), _axis_pos(LEG_AMPS),
+         _axis_pos(HIP_AMPS), _axis_pos(HIP_OFFS), _axis_pos(MUS)]
+    nf, nphi, nleg, nhip, nmu = len(FREQS), len(HIP_PHIS), len(LEG_AMPS), len(HIP_AMPS), len(MUS)
+    cnt = 0
+    with open(csv_path) as f:
+        rd = csv.reader(f)
+        next(rd, None)
+        for row in rd:
+            try:
+                fi = P[0][round(float(row[0]), 4)]; pi = P[1][round(float(row[1]), 4)]
+                li = P[2][round(float(row[2]), 4)]; hi = P[3][round(float(row[3]), 4)]
+                oi = P[4][round(float(row[4]), 4)]; mi = P[5][round(float(row[5]), 4)]
+            except (KeyError, ValueError, IndexError):
+                continue
+            gi = ((((oi * nf + fi) * nphi + pi) * nleg + li) * nhip + hi) * nmu + mi
+            bm[gi >> 3] |= 1 << (gi & 7)
+            cnt += 1
+    return bm, cnt
+
+
 def write_manifest(outdir, csv_path, n_rows):
     """Per-artifact manifest (lessons_2026-08-25 §5h): every option that changes the
     meaning of a row, written at production time. Consumers refuse on mismatch."""
@@ -215,14 +252,14 @@ def check_manifest(outdir, csv_path):
 
 
 def main():
-    combos = list(cells())
-    n_rows = len(combos) * len(MUS)
+    n_cells = len(FREQS) * len(HIP_PHIS) * len(LEG_AMPS) * len(HIP_AMPS) * len(HIP_OFFS)
+    n_rows = n_cells * len(MUS)
     outdir = os.path.join(_ROOT, "results", "gait_sweep"); os.makedirs(outdir, exist_ok=True)
     csv_path = os.path.join(outdir, f"sweep_{TAG}_{'_'.join(AXNAMES)}.csv")
     fields = AXNAMES + DR_FIELDS + EXT_AGG
 
     if len(sys.argv) > 1 and sys.argv[1] == "count":
-        print(f"config={CONFIG} kappa={KAPPA} com={COM_TARGET}  cells={len(combos)}  "
+        print(f"config={CONFIG} kappa={KAPPA} com={COM_TARGET}  cells={n_cells}  "
               f"mus={list(MUS)}  rows={n_rows}  K={K}  trials={n_rows*K}  "
               f"csv={os.path.basename(csv_path)}"); return
     if len(sys.argv) > 1 and sys.argv[1] == "initcsv":
@@ -247,26 +284,26 @@ def main():
     gc.TORSO_CONTROLLER = TorsoKappaPID(model, kappa=KAPPA, measure_after=0.0)
     gc.STAND_HIP_DEG = _lean
 
-    done = gs._load_done(csv_path, AXNAMES)
+    done_bm, done_cnt = load_done_bitmap(csv_path, n_rows)
     # runtime probe (lessons §5i): print what will actually be simulated
     print(f"# GRID5 {CONFIG} (kappa={KAPPA} com={got:.4f} slide={slide*1000:+.2f}mm "
-          f"mass={model.body_mass.sum():.4f}kg)  cells={len(combos)} mus={list(MUS)} "
-          f"done={len(done)}/{n_rows}  K={K}  shard={shard_id}/{n_shards}")
+          f"mass={model.body_mass.sum():.4f}kg)  cells={n_cells} mus={list(MUS)} "
+          f"done={done_cnt}/{n_rows}  K={K}  shard={shard_id}/{n_shards}")
     print(f"# start: staged quiet<{gs.QUIET_QVEL} rest_lean={gc.STAND_HIP_DEG}deg "
           f"ramp_off={gc.RAMP_HIP_OFFSET}  slip: eps={gs.SLIP_CONE_EPS} v0={gs.SLIP_V0} "
           f"c={gs.SLIP_C}  ext={gs.EXTENDED_METRICS}  DR=NONE(deterministic map)")
     f = open(csv_path, "a", newline=""); w = csv.DictWriter(f, fieldnames=fields)
     n_mine = 0
     row = None      # progress print below must survive resume (all-done cells skip the mu loop)
-    for i, combo in enumerate(combos):
+    for i, combo in enumerate(cells()):
         if i % n_shards != shard_id:
             continue
         n_mine += 1
         p0 = dict(zip(AXNAMES[:5], combo))
         hip_off = p0.pop("hip_off")
         for mi, mu0 in enumerate(MUS):
-            key = tuple(round(v, 4) for v in combo) + (round(float(mu0), 4),)
-            if key in done:
+            gi = i * len(MUS) + mi          # same arithmetic as load_done_bitmap
+            if done_bm[gi >> 3] & (1 << (gi & 7)):
                 continue
             surv = []; netf = []; slp = []; hd = []; passes = 0
             ext = {k: [] for k in EXT_AGG if k != "fall_phase"}
@@ -302,7 +339,7 @@ def main():
             row["fall_phase"] = "|".join(f"{k}:{v}" for k, v in sorted(phase_tally.items()))
             w.writerow(row); f.flush()
         if n_mine % 25 == 0 and row is not None:
-            print(f"  [shard{shard_id} cell {i+1}/{len(combos)}] "
+            print(f"  [shard{shard_id} cell {i+1}/{n_cells}] "
                   + " ".join(f"{n}={row[n]}" for n in AXNAMES)
                   + f" | pass={row['pass_rate']} netfwd={row['net_fwd_mean']}")
     f.close()
