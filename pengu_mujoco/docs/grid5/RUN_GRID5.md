@@ -101,8 +101,11 @@ The queue log prints the exact line; in general:
 
     awk 'NF' <csv> > t && mv t <csv>
     gzip -kf <csv>
-    git add -f <csv>.gz <csv-stem>.manifest.json    # results/ and *.csv are gitignored
+    split -b 90m -d <csv>.gz <csv>.gz.part          # v2.3 gz ~174 MB > GitHub's 100 MB cap
+    git add -f <csv>.gz.part* <csv-stem>.manifest.json   # results/ and *.csv are gitignored
     git commit    # message by Ben; CONFIRM THE BRANCH before pushing (friction-experiments)
+
+Reassemble on any machine:  cat <csv>.gz.part* > <csv>.gz && gunzip -k <csv>.gz
 
 Ship the manifest WITH the CSV — grid5 analysis tools refuse a CSV whose manifest
 does not match (protocol, K, slip constants, mujoco version). Fleet rules apply:
