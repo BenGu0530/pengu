@@ -194,3 +194,22 @@ params x ONE random draw of mu±5% + pose jitter; no pure run anywhere), Ben rul
   unchanged — a fresh pull is already v2.
 - Post-map test candidates recorded: champion DR repeats (form TBD), deterministic
   nominal-mu reference eval, independent-seed confirmation.
+
+## Addendum (2026-08-31): the naomio OOM — first real out-of-memory in the project
+
+Symptom: naomio at 30.5/31.8 GB used, swap full, kernel oom_kill eating shards
+(30 -> 22 alive); each shard RSS 1.34 GB. Cause: the inherited `_load_done`
+resume loads EVERY completed row as a Python tuple into a per-shard set —
+~400 B/row x 3M rows x 30 independent processes (no COW sharing; they are nohup
+python, not forks). Cost scales with map fill, so it looked fine at launch and
+detonated at ~3M rows. Not a leak (steady while running, bigger on every
+restart), not page cache, not zombies.
+
+Fix: bitmap resume — every deterministic-grid row has a unique integer index
+(cell_index*len(MUS)+mu_index), done state = 1 bit/row. Measured on the live
+4.6M-row c6 CSV: 22 s load, 0.65 MB bitmap, 83 MB process peak RSS (16x less
+per shard). All three machines rolled onto the fix the same hour; naomio shard
+total 29.3 GB -> 4.9 GB. Rule recorded: per-shard resume state must not scale
+with map size. Side effect to clean at ship time: ~141k duplicate/torn rows in
+naomio's c4 CSV from the oom-kill/watchdog double-write window (bitmap resume
+dedups; the ship-time integrity battery removes them).

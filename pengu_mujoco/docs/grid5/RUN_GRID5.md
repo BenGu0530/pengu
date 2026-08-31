@@ -128,6 +128,13 @@ memo BEFORE pushing it.
   per machine; prefer that.
 - Reassigning queues (e.g. laptop finished c1): edit the queue table at the top
   of `grid5/run_machine.sh`, commit, pull on the target machine, re-run its line.
+- Shard RSS climbing toward ~1 GB each / swap filling / kernel oom_kill in dmesg:
+  you are running a pre-2026-08-31 build. The old tuple-set resume loaded EVERY
+  done row into every shard (~1.3 GB/shard at 3M rows; OOM-killed naomio's shards
+  30 x 1.3 GB on 32 GB). Pull — the bitmap resume (1 bit/row, ~0.65 MB) replaced
+  it. General rule: per-shard resume state must NOT scale with map size.
+  First OOM in project history; prior "no OOM" forensic signatures (machines B/C,
+  the bash-edit incident) were all ruled-out cases.
 
 ## 6b. Demo / render output convention (Ben, 2026-08-30)
 
