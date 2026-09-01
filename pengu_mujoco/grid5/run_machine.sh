@@ -6,7 +6,7 @@
 #   tail -f results/gait_sweep/grid5_c*_run.log        # live sweep progress
 #
 # machine -> queue (Phase A config first, Phase B second; edit here to reassign):
-#   naomio : c4 c2 c9 (strongest box, carries the extra Phase-A config)
+#   naomio : c4 c9 (c2 moved to NCSA Delta, slice tooling — see machine C memo)
 #   rml3   : c5 c10          mac : c3 c8 (Mac shares CPU with other projects)
 #   rml2   : c6 c7 (full CPU — Ben 2026-08-26: sweeping first, RL track paused)
 #   laptop : c1  (weak box: one config; pick up leftovers when done)
@@ -21,7 +21,7 @@ cd "$(dirname "$0")/.."                                   # repo root pengu_mujo
 M="${1:?usage: run_machine.sh mac|rml3|naomio|rml2|laptop}"
 NICE=0; NSH=""
 case "$M" in
-  naomio) QUEUE="c4 c2 c9" ;;
+  naomio) QUEUE="c4 c9" ;;                   # c2 reassigned to NCSA Delta (cdd0f39)
   rml3)   QUEUE="c5 c10" ;;
   mac)    QUEUE="c3 c8" ;;
   rml2)   QUEUE="c6 c7" ;;                   # full CPU (sweeping first — Ben)
