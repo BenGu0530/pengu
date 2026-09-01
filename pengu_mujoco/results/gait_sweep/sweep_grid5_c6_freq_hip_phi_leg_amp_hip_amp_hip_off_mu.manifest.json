@@ -6,7 +6,7 @@
  "base_model": "../models/pengu1_31/scene.xml",
  "base_model_md5": "c5ea11d3196d15b355daac5237e1a680",
  "mujoco_version": "3.8.1",
- "repo_commit": "f581833a1d16c01aeae606e78a69f13f89d7c366",
+ "repo_commit": "b782799a61d83257c979d3a72fe6f163642fb17f",
  "axes": {
   "freq": [
    1.21,
@@ -160,10 +160,11 @@
    0.1,
    0.3,
    0.5,
-   0.7
+   0.7,
+   0.9
   ]
  },
- "rows": 4147200,
+ "rows": 5184000,
  "K": 1,
  "dr": {
   "map": "deterministic: exact nominal mu, no pose jitter, no RNG, K=1 (grid5-v2, Ben 2026-08-26 \u2014 champion-stage DR designed post-map)"
