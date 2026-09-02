@@ -15,7 +15,12 @@
 //   leg swing amplitude       +-2 deg    hip, half-rectified
 //   hip_phi                   +-10 deg   hip phase RELATIVE TO the crank
 //   frequency                 +-0.05 Hz  bumpless, safe to change mid-walk
-//   hip_off                   +-5 deg    forward lean, boots at 50
+//   hip_off                   +-5 deg    forward lean
+//
+// Two presets, both from GRID-6 on models/hardware_c1 (the CAD export of this robot) and
+// both re-ranked by their worst neighbour rather than by their own grid point:
+//   1   1.39 / 240 / 75 / 32 / 20   CoM ahead of the feet, crank 327
+//   2   1.32 / 260 / 85 / 28 / 20   fastest worst-case, crank 352
 //
 // Two measured constraints this sketch exists to respect:
 //
@@ -37,6 +42,9 @@
 //   crank_L = 0.5*A_leg*(1 + sin(p))              crank_R = 0.5*A_leg*(1 + sin(p + pi))
 //   hip_L   = off + A_hip*max(0, sin(p+pi+PHI))   hip_R   = off + A_hip*max(0, sin(p+PHI))
 
+// rec_dump() below takes a WiFiClient, and the IDE concatenates the main sketch ahead of
+// wireless.ino where the radio actually lives -- so the type has to be visible here too.
+#include <WiFiNINA.h>
 #include <DynamixelShield.h>
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
@@ -52,6 +60,23 @@ const float    KAPPA           = 0.0f;   // torso target = kappa * hip-axis roll
 const float    KP              = 0.5f;   // measured optimum; 1.0 marginal, 2.0 diverges here
 const float    KI              = 0.1f;   // contributes under 1 deg on this robot; near inert
 const float    KD              = 0.0f;   // [s] on -d(roll)/dt. 0.05 would match the whole KP term
+const float    FF_LP_HZ        = 2.0f;   // low-pass on the FEEDFORWARD path only; 0 = off.
+// Why this exists. With KAPPA=0 the law expands to  J_cmd = +1.00*J_meas - 1.50*imu_roll:
+// the (KAPPA-1)*axis feedforward carries a +1 on the torso's OWN measured angle, because
+// axis is reconstructed as (imu_roll - J). Standing still with both gait amplitudes at
+// zero, the robot then sat in a 3.1-3.3 Hz limit cycle (pengu-3, pengu-4, 2026-09-02):
+// +-23 deg of torso, +-16 deg of body roll, 1300 mA, and opening the loop with 'T' stopped
+// it dead (roll rms 8.89 -> 1.30, current 1000 -> 60 mA). Measured round the loop from the
+// robot's own S and B the return ratio was 1.006 at 0.7 deg -- the oscillation condition,
+// hit to within 1% and 1 deg on three independent segments.
+// Lowering KP does not help: the +1*J term is not scaled by KP, and even KP=0 leaves the
+// return ratio at 0.83-1.04. Adding KD makes it worse (1.02 at 6 Hz). What works is taking
+// the gain out of the SELF term at 3 Hz while keeping it at DC and at the gait frequency,
+// so only the feedforward is filtered -- never imu_roll itself, since lag on the error path
+// is the disease rather than the cure. At 2 Hz the worst return ratio over 1.5-6 Hz falls
+// to 0.38 (a 2.6x margin) while 80% of the feedforward survives at a 1.5 Hz gait, arriving
+// 37 deg late. 1.5 Hz gives 3.3x and keeps 71%; 3.0 Hz gives 1.8x and keeps 89%.
+float          axis_lp = 0.0f;
 const float    TORSO_CLAMP_DEG = 25.0f;  // mechanical stop measured +27.8 / -31.0 (torso_rom)
 const uint16_t TORSO_CURRENT_MA= 3210;   // register maximum = no cap. Under 830 mA to bite
 const uint16_t LEG_PGAIN       = 1600;   // POSITION_P_GAIN on hips+cranks; torso left alone
@@ -65,17 +90,21 @@ const float    HIP_REST_DEG    = 10.0f;  // rest lean; the hip_off ramp starts f
 const uint16_t TEL_MS          = 20;     // telemetry period -> 50 Hz, Nyquist 25 Hz. At 20 Hz
                                          // the 2.5-4.5 Hz peak could not be told from an
                                          // alias of something faster; this settles it.
+const int      REC_MAX         = 570;    // x22 B = 12540 B. 11.4 s at 50 Hz, 22.8 s at
+                                         // 25 Hz. Up here rather than beside the buffer
+                                         // because the state line quotes it, and the IDE
+                                         // prototypes functions but not constants.
 const float STEP_LEG = 5.0f, STEP_HIP = 2.0f, STEP_PHI = 10.0f;
 const float STEP_FREQ = 0.05f, STEP_OFF = 5.0f;
 const float FREQ_MIN = 0.30f, FREQ_MAX = 2.60f;
 // ==================================================================================
 
 // live, on buttons. Amplitudes start at zero; the lean starts at the sweep's 50.
-float p_legFreq = 1.05f;      // [Hz]  1.04 is the best executable cell; 1.05 is on the step grid
+float p_legFreq = 1.45f;      // [Hz]  the executable champion, to the 0.05 step grid
 float p_legAmp  = 0.0f;       // [deg] crank amplitude
 float p_hipAmp  = 0.0f;       // [deg] hip swing amplitude
-float p_hipPhi  = 240.0f;     // [deg] hip phase relative to the crank
-float p_hipOff  = 50.0f;      // [deg] forward lean
+float p_hipPhi  = 250.0f;     // [deg] hip phase relative to the crank
+float p_hipOff  = 10.0f;      // [deg] forward lean
 
 // Changing frequency mid-walk is not free: phase = 2*pi*f*(t - t0), so raising f at
 // t - t0 = 13 s by 0.05 jumps the phase by 0.65 of a cycle and kicks the robot. setFreq()
@@ -95,10 +124,87 @@ enum RobotState { STATE_IDLE, STATE_READY_SLIDE, STATE_READY_HIP, STATE_READY_TO
 RobotState robot_state = STATE_IDLE;
 
 float         imu_roll = 0, imu_pitch = 0;
+float         grav_x = 0, grav_y = 0, grav_z = 0;
 float         roll_rate = 0.0f;          // EMA of d(imu_roll)/dt [deg/s], feeds the D term
 float         home_deg[MOTOR_COUNT];
 unsigned long walk_start_ms = 0;
 float         torso_iErr = 0.0f;
+// 'T' opens the torso loop: the kappa PID is not run and the torso simply holds its home
+// angle. With both gait amplitudes at zero the loop is then the ONLY thing left moving, so
+// this button is what separates "the robot rocks because of the feedback" from "the robot
+// rocks whatever the controller does". On 2026-09-02 with amplitudes 0 and the loop CLOSED
+// the robot oscillated at 3.11 Hz, +-23 deg of torso and +-16 deg of body roll, drawing
+// +-1300 mA -- while the same configuration in simulation is motionless to 0.00 deg.
+// No extra column is needed to tell the two apart in a dump: with the loop open goal_torso
+// is identically 0.00 for the whole bout, which never happens when it is closed.
+// 0 = the kappa PID, 1 = held at home, 2 = phase-locked feedforward.
+//
+// The PID has the right sign and the wrong timing. Measured on this robot (pengu-A, -B,
+// -10): the torso joint reaches its extreme 56 ms after the hip axis reaches its own, by
+// which time the axis is already coming back in 76-90% of events, and corr(dJ, d_axis)
+// peaks at -0.94 at exactly -56 ms. Pushing the lower body the way it is already going is
+// what turns a 21 deg peak-to-peak roll (loop held) into 67 (loop closed), and the torso
+// motor is half the robot's mass, so the reaction lands squarely on the legs.
+//
+// Mode 2 removes the measurement from the loop entirely. The disturbance is periodic and
+// the board generates the period itself, so the torso is driven straight off the gait
+// phase: no IMU in the path, no 55 ms to wait for. Only the servo's own lag remains, and
+// that is cancelled by leading the phase rather than by closing a faster loop.
+// In the model, with 56 ms of servo lag applied to both: PID torso_roll_rms 4.74 and the
+// axis WORSE at 6.49; feedforward 0.59 with the axis at 5.01. With no lag the ranking
+// reverses (0.67 vs 2.83), which is the world the sweep was built in.
+// Boots into the feedforward. Calibrated on the robot 2026-09-02 over ten bouts at
+// 1.39/240/80/16/30: with the torso HELD the roll was 7.35 deg rms and the bout completed;
+// with the kappa PID it was 34.09 and the robot went down at 11.5 s with the torso command
+// on its clamp 32% of the time; with the feedforward at phi 119 / A 7.5 it was 1.46 and all
+// 21 cycles walked. The phi scan bottoms out between 114 and 119 -- 94, 129, 144 and 159
+// read 4.83, 3.03, 4.89, 5.34 -- and the amplitude between 7.5 and 9.0, with 6.0 at 2.32.
+// Splitting each bout into thirds puts the run-to-run floor at 0.44 deg, so phi 114 (1.54)
+// and A 9.0 (1.59) are NOT distinguishable from the value below; the region is established,
+// the exact point is not.
+//
+// THIS CALIBRATION IS FOR KAPPA = 0 ONLY. ff_gain scales the whole correction, so
+// gain 1.0 is kappa 0 and gain 0 is the torso held; other kappa values need their own
+// amplitude and phase and none has been measured.
+uint8_t       torso_mode = 2;
+const uint8_t TM_PID = 0, TM_HELD = 1, TM_FF = 2;
+
+// Feedforward parameters. A_t comes from a loop-HELD recording: it is the amplitude of the
+// hip-axis roll the torso has to cancel, 7.49 deg on pengu-12 against 7.55 in the model.
+// PHI is the one number that must be trimmed on the robot -- the model's optimum sits
+// 47.5 deg ahead of the naive value, and only 28 of that is the servo lag; the rest is the
+// plant's own phase, which is not transferable. Sweep it with the buttons and watch the
+// roll. GAIN scales the whole correction: 1.0 is kappa = 0, and a smaller value is a
+// partial correction, i.e. a point between kappa 0 and 1.
+float         ff_amp  = 7.5f;    // [deg]  measured on the robot, see above
+float         ff_phi  = 119.0f;  // [deg] relative to the gait phase. The naive value that
+                                 // cancels the measured axis roll is 75.9; the best on the
+                                 // robot is 43 deg past it, which the model predicted would
+                                 // be 45-70 past. Only the offset had to be measured.
+float         ff_gain = 1.0f;
+
+// 'P' runs a plant identification instead of a gait: the legs hold their rest lean, the
+// kappa loop is not used, and the torso is driven open-loop by a sine whose frequency steps
+// through PROBE_HZ. One recording yields B(f) = torso world roll / torso joint angle -- the
+// transfer the kappa loop closes around, measured on the robot rather than assumed. At
+// 3.11 Hz the closed-loop records give |B| 0.789 at -64.6 deg while the model gives 0.584
+// at -40.0, and that gap is what decides whether the loop oscillates at all. If the phase
+// of B turns out linear in frequency, its slope is a pure transport delay and the remainder
+// is mechanics; only the second half is something the simulation can be asked to reproduce.
+// No bookkeeping is needed in the record: goal_torso IS the drive, so the analysis reads
+// each segment's frequency straight out of the logged command.
+// pengu-5 (2026-09-02) had every one of these but the last scrolled out of the ring: the
+// schedule ran 14.4 s, the buffer holds 570 records and the loop was going at 43.5 Hz, so
+// only the final 13.1 s survived and all of it was the clamped last frequency. Hence a
+// shorter total AND an automatic stop at the end of the sweep -- the bout now ends itself,
+// so the buffer holds exactly the probe and nothing has to be timed by hand.
+// Low frequencies get longer segments: what matters is cycles per segment, not seconds.
+const float    PROBE_HZ[]      = {1.5f, 2.0f, 2.5f, 3.0f, 3.5f, 4.5f, 6.0f};
+const float    PROBE_SEC[]     = {2.0f, 1.6f, 1.4f, 1.3f, 1.2f, 1.2f, 1.2f};  // 9.9 s total
+const int      PROBE_N         = 7;
+const float    PROBE_AMP_DEG   = 8.0f;   // the drive amplitude the simulation sweep used
+bool           probe_on    = false;
+float          probe_phase = 0.0f;       // integrated, so a frequency step cannot jump it
 float         loop_dt_ema = 0.0f;
 unsigned long loop_count = 0, loop_hz = 0;
 bool          motors_ok = false;
@@ -189,9 +295,18 @@ int state_str(char *b) {
   p += sprintf(p, "  phi ");    p = fmt(p, p_hipPhi, 0);
   p += sprintf(p, "  off ");    p = fmt(p, p_hipOff, 0);
   // peak joint rates against the measured 354 deg/s ceiling
-  p += sprintf(p, "   crank "); p = fmt(p, PI * p_legFreq * p_legAmp, 0);
+  p += sprintf(p, "   crank "); p = fmt(p, PI * p_legFreq * fabsf(p_legAmp), 0);
   p += sprintf(p, "/354  hip "); p = fmt(p, 2.0f * PI * p_legFreq * p_hipAmp, 0);
-  p += sprintf(p, "/354%s", (PI * p_legFreq * p_legAmp > 354.0f) ? "  OVER" : "");
+  p += sprintf(p, "/354%s", (PI * p_legFreq * fabsf(p_legAmp) > 354.0f) ? "  OVER" : "");
+  p += sprintf(p, "   torso %s",
+               torso_mode == TM_PID ? "PID" : torso_mode == TM_HELD ? "HELD" : "FF");
+  if (torso_mode == TM_FF) {
+    p += sprintf(p, " famp ");   p = fmt(p, ff_amp, 1);
+    p += sprintf(p, " fphase "); p = fmt(p, ff_phi, 0);
+    p += sprintf(p, " fgain ");  p = fmt(p, ff_gain, 2);
+  }
+  if (probe_on) p += sprintf(p, "   PROBE 7f/9.9s, auto-stops");
+  p += sprintf(p, "   ffLP "); p = fmt(p, FF_LP_HZ, 1); p += sprintf(p, "Hz");
   p += sprintf(p, "   buffered ");  p = fmt(p, rec_seconds(), 1);
   p += sprintf(p, "s of %d", (int)(REC_MAX * TEL_MS / 1000));
   p += sprintf(p, "s   loop %luHz", loop_hz);
@@ -298,8 +413,21 @@ struct __attribute__((packed)) Rec {
   int16_t  gtorso;      // COMMANDED torso, deg x100 -- feedback, so not recomputable
   int16_t  roll, pitch; // IMU, deg x100
   int8_t   mA20;        // torso current / 20 mA, +-2540 mA
+  int16_t  gx, gy, gz;  // BNO gravity vector in body axes, m/s^2 x1000 (+-9810 fits).
+                        // The Euler pitch wraps through +-180 as soon as the roll gets
+                        // large, which is exactly when the interesting gaits run: pengu-A,
+                        // -B and -11 all came back with that channel unusable, so their
+                        // backward falls could not be counted at all. Gravity never wraps
+                        // and carries both tilts. The raw components are logged rather
+                        // than an angle because the board does not know how the sensor is
+                        // mounted relative to the robot; the analysis works that out from
+                        // a standing reference.
+  uint8_t  st;          // bit0-2 robot_state, bit3 torso_loop, bit4 probe_on.
+                        // pengu-6 (2026-09-02) came back 5.7 s long when the bout was meant
+                        // to be 25, and nothing in the file could say whether it had been
+                        // stopped, re-READYed or never started -- so the mode now travels
+                        // with every row.
 };
-const int REC_MAX = 570;              // x21 B = 11970 B. 11.4 s at 50 Hz, 22.8 s at 25 Hz
 Rec      rec[REC_MAX];
 int      rec_head = 0, rec_count = 0;
 
@@ -333,6 +461,10 @@ void rec_push(float t, float phase, float slL, float slR, float hpL, float hpR,
   r.torso = q100(torso); r.gtorso = q100(gtorso);
   r.roll = q100(imu_roll); r.pitch = q100(imu_pitch);
   r.mA20 = (int8_t)constrain(mA / 20.0f, -127.0f, 127.0f);
+  r.gx = (int16_t)constrain(grav_x * 1000.0f, -32000.0f, 32000.0f);
+  r.gy = (int16_t)constrain(grav_y * 1000.0f, -32000.0f, 32000.0f);
+  r.gz = (int16_t)constrain(grav_z * 1000.0f, -32000.0f, 32000.0f);
+  r.st   = (uint8_t)robot_state | ((torso_mode & 0x03) << 3) | (probe_on ? 0x20 : 0);
   rec_head = (rec_head + 1) % REC_MAX;
   if (rec_count < REC_MAX) rec_count++;
 }
@@ -342,9 +474,27 @@ float rec_seconds() { return rec_count * TEL_MS / 1000.0f; }
 // Rebuild the CSV. Slow on purpose: the robot is stopped, so there is no deadline, and a
 // readable text file that phase_probe.py already parses is worth more than a compact one.
 void rec_dump(WiFiClient client) {
+  // A leading comment line, so a recording carries the settings that were flashed into
+  // it. phase_probe.py already skips lines that are not CSV.
+  {
+    char h[192], *p = h;
+    p += sprintf(p, "# kappa "); p = fmt(p, KAPPA, 2);
+    p += sprintf(p, " kp ");     p = fmt(p, KP, 2);
+    p += sprintf(p, " ki ");     p = fmt(p, KI, 2);
+    p += sprintf(p, " kd ");     p = fmt(p, KD, 3);
+    p += sprintf(p, " clamp ");  p = fmt(p, TORSO_CLAMP_DEG, 0);
+    p += sprintf(p, " ffLP ");   p = fmt(p, FF_LP_HZ, 1);
+    p += sprintf(p, " telms %d legP %d torsoP %d", (int)TEL_MS, (int)LEG_PGAIN, (int)TORSO_PGAIN);
+    p += sprintf(p, " ffA ");    p = fmt(p, ff_amp, 1);
+    p += sprintf(p, " ffphi ");  p = fmt(p, ff_phi, 0);
+    p += sprintf(p, " ffgain "); p = fmt(p, ff_gain, 2);
+    p += sprintf(p, "\n");
+    client.print(h);
+  }
   client.print(F("w,t,alpha,goal_slL,pos_slL,goal_slR,pos_slR,goal_hipL,pos_hipL,"
                  "goal_hipR,pos_hipR,goal_torso,pos_torso,mA_torso,imu_roll,imu_pitch,"
-                 "axis,dt_ms,freq,leg_amp,hip_amp,hip_phi,hip_off\n"));
+                 "axis,dt_ms,freq,leg_amp,hip_amp,hip_phi,hip_off,state,tloop,tmode,probe,"
+                 "gx,gy,gz\n"));
   int start = (rec_count == REC_MAX) ? rec_head : 0;     // oldest surviving sample
   int ei = 0;
   float f = ev_count ? ev[0].freq : p_legFreq, A = ev_count ? ev[0].leg : p_legAmp;
@@ -380,7 +530,13 @@ void rec_dump(WiFiClient client) {
     p = fmtc(p, r.pitch / 100.0f, 2);  p = fmtc(p, roll - J, 2);
     p = fmtc(p, (float)(uint16_t)(r.t_ms - prev_t), 1);
     p = fmtc(p, f, 3); p = fmtc(p, A, 1); p = fmtc(p, H, 1);
-    p = fmtc(p, P, 0); p = fmt(p, O, 0);
+    p = fmtc(p, P, 0); p = fmtc(p, O, 0);
+    int tm = (r.st >> 3) & 0x03;
+    // tloop is kept as it was -- 1 when the kappa PID is the thing driving the torso --
+    // so every analysis written before the feedforward mode existed still reads correctly
+    p += sprintf(p, "%d,%d,%d,%d,", r.st & 0x07, tm == 0 ? 1 : 0, tm, (r.st >> 5) & 1);
+    p = fmtc(p, r.gx / 1000.0f, 3); p = fmtc(p, r.gy / 1000.0f, 3);
+    p = fmt(p, r.gz / 1000.0f, 3);
     *p++ = '\n'; *p = 0;
     prev_t = r.t_ms;
     client.print(b);
@@ -393,6 +549,8 @@ void rec_dump(WiFiClient client) {
 void update_imu() {
   imu::Vector<3> e = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
   imu_roll = e.y(); imu_pitch = e.z();          // same mapping as pengu.ino
+  imu::Vector<3> g = bno.getVector(Adafruit_BNO055::VECTOR_GRAVITY);
+  grav_x = g.x(); grav_y = g.y(); grav_z = g.z();
 
   // roll rate by differencing, lightly filtered. tau 30 ms is far below the gait period, so
   // it costs no phase where it matters, and it keeps the 0.07 deg quantisation steps from
@@ -424,28 +582,63 @@ void run_walk() {
                   ? 2.0f * PI * p_legFreq * (t - T_RAMP - T_SETTLE) + gait_phi_off : 0.0f;
 
   // legs: unipolar antiphase   hips: half-rectified antiphase, offset by hip_phi
-  float magL = alpha * 0.5f * p_legAmp * (1.0f + sinf(phase));
-  float magR = alpha * 0.5f * p_legAmp * (1.0f + sinf(phase + PI));
+  float la = probe_on ? 0.0f : p_legAmp;      // a probe drives the torso and nothing else
+  float ha = probe_on ? 0.0f : p_hipAmp;
+  float magL = alpha * 0.5f * la * (1.0f + sinf(phase));
+  float magR = alpha * 0.5f * la * (1.0f + sinf(phase + PI));
   float phi  = p_hipPhi * PI / 180.0f;
-  float hipL_deg = off_deg + alpha * p_hipAmp * max(0.0f, sinf(phase + PI + phi));
-  float hipR_deg = off_deg + alpha * p_hipAmp * max(0.0f, sinf(phase + phi));
+  float hipL_deg = off_deg + alpha * ha * max(0.0f, sinf(phase + PI + phi));
+  float hipR_deg = off_deg + alpha * ha * max(0.0f, sinf(phase + phi));
 
   // torso: target world roll = KAPPA * hip-axis roll. The axis roll is reconstructed as
   // (torso roll - torso joint), which the 2026-08-29 mocap confirmed against directly
   // measured thigh attitude.
   float J_deg = dxl.getPresentPosition(XM_TORSO_ROLL, UNIT_DEGREE) - home_deg[idxOf(XM_TORSO_ROLL)];
   float axis  = imu_roll - J_deg;
-  float err   = KAPPA * axis - imu_roll;
   static unsigned long ctrl_prev_ms = 0;
   unsigned long ctrl_now_ms = millis();
   float ctrl_dt = ctrl_prev_ms ? (ctrl_now_ms - ctrl_prev_ms) * 0.001f : 0.02f;
   ctrl_prev_ms = ctrl_now_ms;
   if (ctrl_dt < 0.001f || ctrl_dt > 0.5f) ctrl_dt = 0.02f;    // ignore pauses / first call
   loop_dt_ema = (loop_dt_ema <= 0.0f) ? ctrl_dt : (0.9f * loop_dt_ema + 0.1f * ctrl_dt);
-  torso_iErr = constrain(torso_iErr + err * ctrl_dt, -20.0f, 20.0f);
-  float torso_deg = alpha * constrain(
-      (KAPPA - 1.0f) * axis + KP * err + KI * torso_iErr + KD * (-roll_rate),
-      -TORSO_CLAMP_DEG, TORSO_CLAMP_DEG);
+
+  // The feedforward's estimate of the hip-axis roll, low-passed. Everything else -- the
+  // error, and so the whole KP path -- still sees the raw measurement.
+  if (FF_LP_HZ > 0.0f) {
+    float tau = 1.0f / (2.0f * PI * FF_LP_HZ);
+    axis_lp += (ctrl_dt / (ctrl_dt + tau)) * (axis - axis_lp);
+  } else {
+    axis_lp = axis;
+  }
+
+  float torso_deg = 0.0f;                    // loop open: hold home, run no controller
+  if (probe_on) {
+    float tp = t - T_RAMP - T_SETTLE;
+    int k = 0;
+    float acc = 0.0f;
+    while (k < PROBE_N && tp > acc + PROBE_SEC[k]) { acc += PROBE_SEC[k]; k++; }
+    if (k >= PROBE_N) {                      // sweep finished: stop, so the ring keeps it
+      robot_state = STATE_IDLE;
+      tx("# probe complete -> IDLE. Press DOWNLOAD.");
+      return;
+    }
+    probe_phase += 2.0f * PI * PROBE_HZ[k] * ctrl_dt;
+    torso_deg = alpha * PROBE_AMP_DEG * sinf(probe_phase);
+  } else if (torso_mode == TM_FF) {
+    // locked to the SAME phase variable the legs use, so a bumpless frequency change
+    // carries the torso with it
+    torso_deg = alpha * ff_gain * ff_amp * sinf(phase + ff_phi * PI / 180.0f);
+    torso_deg = constrain(torso_deg, -TORSO_CLAMP_DEG, TORSO_CLAMP_DEG);
+    torso_iErr = 0.0f;
+  } else if (torso_mode == TM_PID) {
+    float err  = KAPPA * axis_lp - imu_roll;
+    torso_iErr = constrain(torso_iErr + err * ctrl_dt, -20.0f, 20.0f);
+    torso_deg  = alpha * constrain(
+        (KAPPA - 1.0f) * axis_lp + KP * err + KI * torso_iErr + KD * (-roll_rate),
+        -TORSO_CLAMP_DEG, TORSO_CLAMP_DEG);
+  } else {
+    torso_iErr = 0.0f;                       // no windup to dump when it is closed again
+  }
 
   // sign conventions inherited from pengu.ino: left negative, right positive
   dxl.setGoalPosition(XM_LEFT_SLIDE,  home_deg[idxOf(XM_LEFT_SLIDE)]  - magL,      UNIT_DEGREE);
@@ -455,8 +648,12 @@ void run_walk() {
   dxl.setGoalPosition(XM_TORSO_ROLL,  home_deg[idxOf(XM_TORSO_ROLL)]  + torso_deg, UNIT_DEGREE);
 
   // ---- record into RAM. No radio traffic here: that is the whole point of buffering.
+  // Recording starts a second before the blend, not at t=0. The staged start is 14 s and
+  // the ring holds about 15.8, so a bout logged from zero comes back almost entirely
+  // ramp-and-settle: pengu-8 had 53 of 560 rows at alpha=1. Skipping the quiet part gives
+  // a full ring of the gait itself and removes the need to time the STOP by hand.
   static unsigned long tel = 0;
-  if (millis() - tel >= TEL_MS) {
+  if (t >= T_RAMP + T_SETTLE - 1.0f && millis() - tel >= TEL_MS) {
     tel = millis();
     rec_push(t, phase,
              dxl.getPresentPosition(XM_LEFT_SLIDE,  UNIT_DEGREE) - home_deg[idxOf(XM_LEFT_SLIDE)],
@@ -476,16 +673,25 @@ void apply_cmd(char cmd) {
     case 'r': robot_state = STATE_READY_SLIDE; tx("-> READY"); break;
     case 'w':
       if (robot_state == STATE_IDLE) {
-        walk_start_ms = millis(); torso_iErr = 0; gait_phi_off = 0.0f;
+        walk_start_ms = millis(); torso_iErr = 0; gait_phi_off = 0.0f; axis_lp = 0.0f;
         rec_reset(); rec_event(0);          // event 0 = the settings the bout started on
         robot_state = STATE_WALK;
-        tx("-> WALK (staged start: 4 s lean, 6 s settle, 4 s blend)");
+        tx(torso_mode == TM_FF && KAPPA != 0.0f
+           ? "-> WALK  ** feedforward is calibrated for KAPPA=0 only **"
+           : "-> WALK (staged start: 4 s lean, 6 s settle, 4 s blend)");
         announce();
       } else tx("Go READY first.");
       break;
     case 'q': robot_state = STATE_IDLE; tx("-> IDLE"); break;
 
-    case 'j': p_legAmp = max(0.0f, p_legAmp - STEP_LEG);   announce(); break;
+    // leg_amp is allowed to go negative. The crank command is 0.5*A*(1+sin), so the sign
+    // decides which way the crank turns away from its home angle. In the model that makes
+    // no difference at all -- home sits on the crank-slider's dead centre, so turning
+    // either way pulls the slider the same way and +75 and -75 produce the same stroke
+    // (12.8 vs 13.1 mm) and the same gait (v_net 0.1041 vs 0.1041 at 1.46/250/./32/20).
+    // If it DOES make a difference on the robot, the home angle is not on the dead centre
+    // and the executed leg motion is not the commanded waveform.
+    case 'j': p_legAmp = max(-180.0f, p_legAmp - STEP_LEG); announce(); break;
     case 'k': p_legAmp = min(180.0f, p_legAmp + STEP_LEG); announce(); break;
     case 'n': p_hipAmp = max(0.0f, p_hipAmp - STEP_HIP);   announce(); break;
     case 'm': p_hipAmp = min(45.0f, p_hipAmp + STEP_HIP);  announce(); break;
@@ -497,6 +703,52 @@ void apply_cmd(char cmd) {
     case 'O': p_hipOff = min(70.0f, p_hipOff + STEP_OFF); announce(); break;
     case '0': p_legAmp = 0.0f; p_hipAmp = 0.0f;
               tx("# amplitudes zeroed (still walking, still recording)"); announce(); break;
+    // The two GRID-6 champions at mu = 0.5 on models/hardware_c1 (2026-09-02).
+    // Both were re-measured for the things the sweep's pass gate does not check --
+    // whether the feet leave the ground every cycle, and whether the body's roll stays
+    // locked to the gait -- because the sweep's first mu=0.5 winner failed both: a step
+    // where the foot never rose above its loaded height, and a roll phase wandering
+    // 25.5 deg per cycle. These two do not.
+    // Chosen on four measurements at once, not on grid-point speed: net speed, foot
+    // clearance, roll phase lock, and where the CoM sits FORE-AND-AFT of the loaded feet.
+    // The last of these had never been recorded -- the sweep logs the CoM against the
+    // stance foot laterally only -- and it is the axis this robot falls about. Measuring
+    // all 1570 passing cells at mu=0.5 found 43 that keep clearance above 5 mm, roll drift
+    // under 6 deg/cycle, the CoM within 5 mm of the feet, and speed above 0.08 m/s. Each
+    // of the two below was then re-checked over leg_amp +-3 and freq +-0.03: nothing in
+    // either box falls, and the worst cell in the box is 15-20% down rather than the 38%
+    // the old grid-point winner lost.
+    case '1':   // the only fast cell in the whole passing set whose CoM sits AHEAD of the
+                // feet on average (+0.4 mm, behind only 52% of the time, against -8.6 mm
+                // and 64% for the cell flashed before it). Worst-in-box clearance 10.9 mm
+                // and drift 1.3 deg/cycle. crank 327 / hip 279, comfortably inside 354.
+      setFreq(1.39f); p_legAmp = 75.0f; p_hipAmp = 32.0f; p_hipPhi = 240.0f; p_hipOff = 20.0f;
+      announce(); break;
+    case '3':   // the torso calibration gait, not a candidate: exactly what pengu-12 ran
+                // with the loop held, which is the only bout so far that never fell (max
+                // total tilt 11.1 deg over 15 s). Its axis roll is clean enough to fit
+                // (16% residual, against 64% for the same gait at hip_amp 32), which is
+                // what the feedforward needs.
+      setFreq(1.39f); p_legAmp = 80.0f; p_hipAmp = 16.0f; p_hipPhi = 240.0f; p_hipOff = 30.0f;
+      ff_amp = 7.5f; ff_gain = 1.0f;
+      announce(); break;
+    case '2':   // fastest worst-case of the 43 (0.0817 over its box). CoM -3.3 mm. Its
+                // crank demand is 352 against the 354 ceiling, so the executed leg_amp
+                // will sit just under the 85 commanded.
+      setFreq(1.32f); p_legAmp = 85.0f; p_hipAmp = 28.0f; p_hipPhi = 260.0f; p_hipOff = 20.0f;
+      announce(); break;
+    case 'F': p_legAmp = -p_legAmp; announce(); break;
+    case 'T': torso_mode = (torso_mode + 1) % 3;
+              torso_iErr = 0.0f; axis_lp = 0.0f; announce(); break;
+    case 'Q': ff_phi = fmod(ff_phi + 45.0f, 360.0f);         announce(); break;
+    case 'h': ff_phi = fmod(ff_phi - 5.0f + 360.0f, 360.0f); announce(); break;
+    case 'H': ff_phi = fmod(ff_phi + 5.0f, 360.0f);          announce(); break;
+    case 'a': ff_amp = max(0.0f,  ff_amp - 0.5f);            announce(); break;
+    case 'A': ff_amp = min(25.0f, ff_amp + 0.5f);            announce(); break;
+    case 'g': ff_gain = max(0.0f, ff_gain - 0.05f);          announce(); break;
+    case 'G': ff_gain = min(2.0f, ff_gain + 0.05f);          announce(); break;
+    case 'P': probe_on = !probe_on; probe_phase = 0.0f; torso_iErr = 0.0f; axis_lp = 0.0f;
+              announce(); break;
     case 'i': robot_state = STATE_IDLE; tx("# re-initialising motors"); initMotors(); break;
   }
 }

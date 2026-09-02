@@ -90,8 +90,17 @@ void update_wifi() {
   }
 
   if (strstr(req, "GET /cmd")) {
+    // The page sends the key through encodeURIComponent, which leaves letters, digits and
+    // -_.!~*'() alone but escapes everything else. Reading k[4] raw therefore worked for
+    // every alphanumeric button and silently returned '%' for the three that are not:
+    // '[' and ']' (frequency) and ',' (hip_phi down) arrived as %5B, %5D, %2C. Decoding
+    // here fixes the whole class rather than renaming the keys away from it.
     char *k = strstr(req, "key=");
     char cmd = k ? k[4] : 0;
+    if (cmd == '%' && isxdigit((unsigned char)k[5]) && isxdigit((unsigned char)k[6])) {
+      char hx[3] = { k[5], k[6], 0 };
+      cmd = (char)strtol(hx, NULL, 16);
+    }
     if (cmd) apply_cmd(cmd);          // act first, then report -- otherwise the page shows
                                       // the state from before the button was pressed
     char st[192];

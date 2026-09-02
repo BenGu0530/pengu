@@ -206,14 +206,37 @@ def cycle_table(d, f, t0=14.0):
     on its side -- and a fit over the whole thing reports the falls as if they were gait.
     The two labels below come straight from what those segments look like:
 
-      DOWN  : the roll sits past 25 deg AND the torso joint has stopped moving (<6 deg of
-              travel in a whole cycle) because its command is pinned against the clamp.
+      DOWN  : any of
+                - the roll sits past 25 deg AND the torso joint has stopped moving (<6 deg
+                  of travel in a whole cycle) because its command is pinned on the clamp;
+                - the torso command is on the clamp for the WHOLE cycle. pengu-4 had two
+                  cycles at 100% rail with 1.1 and 9.9 deg of joint travel that the roll
+                  rule let through as walking;
+                - the PITCH sits more than 35 deg off its walking value. pengu-10 ended
+                  with five cycles at +70 to +85 deg of pitch -- flat on its back -- while
+                  the roll stayed under 12, so a roll-only rule called every one of them
+                  a walking cycle. The robot falls backwards; the classifier was blind to
+                  the entire axis it falls about.
       quiet : the lower body swings less than 15 deg peak-to-peak -- held, or standing.
 
     Everything else is `walk`. Only runs of >=4 consecutive walk cycles are used, so a
     single cycle between two falls never enters a phase difference.
     """
     t = d["t"]
+    # The BNO's pitch carries a fixed offset and, when the roll is large, its Euler
+    # decomposition wraps through +-180 and the channel is unusable. Both are handled here:
+    # the baseline is the centre of the dominant cluster (one refinement pass, so a record
+    # that ends fallen still baselines on the walking part), and a wrapped channel disables
+    # the pitch rule instead of firing it on everything.
+    pit = d.get("imu_pitch")
+    pit_ok = pit is not None and float(np.max(pit) - np.min(pit)) < 170.0
+    if pit_ok:
+        pit0 = float(np.median(pit))
+        near = np.abs(pit - pit0) < 35.0
+        if near.sum() > 10:
+            pit0 = float(np.median(pit[near]))
+    else:
+        pit0 = 0.0
     rows = []
     for k in range(int((t[-1] - t0) * f) + 1):
         a, b = t0 + k / f, t0 + (k + 1) / f
@@ -226,11 +249,15 @@ def cycle_table(d, f, t0=14.0):
         c, *_ = np.linalg.lstsq(M, roll, rcond=None)
         jp2p = float(J.max() - J.min())
         axp2p = float(ax.max() - ax.min())
-        st = ("DOWN" if (abs(roll.mean()) > 25 and jp2p < 6)
+        rail = float((np.abs(cmd) > 24.5).mean())
+        dpit = float(np.mean(pit[m] - pit0)) if pit_ok else 0.0
+        st = ("DOWN" if ((abs(roll.mean()) > 25 and jp2p < 6)
+                         or rail > 0.99
+                         or abs(dpit) > 35.0)
               else ("quiet" if axp2p < 15 else "walk"))
         rows.append(dict(k=k, t=a, mask=m, state=st, roll_mean=float(roll.mean()),
                          roll_p2p=float(roll.max() - roll.min()), axis_p2p=axp2p, J_p2p=jp2p,
-                         rail=float((np.abs(cmd) > 24.5).mean()),
+                         rail=rail, dpitch=dpit, pit_ok=pit_ok,
                          amp=math.hypot(c[1], c[2]), psi=math.degrees(math.atan2(c[1], c[2]))))
     return rows
 
