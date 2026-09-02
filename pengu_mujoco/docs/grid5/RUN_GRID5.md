@@ -145,6 +145,20 @@ probe outputs only (e.g. the IMU frame demo). Demo videos use TWO camera angles
 (side + front, hstacked) like grid4_demos.py, and champion clips should ship with
 a torso-roll trace figure when kappa != 0.
 
+## 6c. rml2 shard governor (live control, Ben 2026-09-02)
+
+rml2 runs c2 slices through `grid5/run_c2_governed.sh`. Shard count is LIVE-tunable
+via a one-integer control file — no restarts, no downtime beyond a <1 s slice reload:
+
+    echo 14 > results/gait_sweep/SHARDS_RML2    # desktop free: full speed
+    echo 8  > results/gait_sweep/SHARDS_RML2    # someone working: 60%
+    echo 0  > results/gait_sweep/SHARDS_RML2    # pause entirely
+
+The governor reconciles every 20 s (kill + bitmap-resume relaunch — lossless, rows
+flush per line and slice CSVs are small) and doubles as the watchdog (revives dead
+shards). Typical schedule: 14 from 04:00, drop to 8 when the desktop is needed
+(~13:00) — but it's manual by design; just say the number (or write the file).
+
 ## 7. After the maps (not yet started)
 
 Per config: the champion DR stage (jittered repeats on selected rows; exact design
