@@ -6,7 +6,7 @@
  "base_model": "../models/pengu1_31/scene.xml",
  "base_model_md5": "c5ea11d3196d15b355daac5237e1a680",
  "mujoco_version": "3.8.1",
- "repo_commit": "ca0f3eefa9656bb5b97421306d0f5405c791649b",
+ "repo_commit": "9addf717753eb75dfcea2d926e36fdd09b1755e6",
  "axes": {
   "freq": [
    1.21,
@@ -91,7 +91,7 @@
    2.0
   ],
   "hip_phi": [
-   30.0
+   280.0
   ],
   "leg_amp": [
    75.0,
