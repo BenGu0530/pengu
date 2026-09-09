@@ -15,8 +15,8 @@ at 0.3 and 0.5).
 
 Output: results/grid6_hw/<cfg>/cells_<cfg>_mu012_r1.csv (freq,hip_phi,leg_amp,hip_amp,hip_off),
 which hw_sweep.py --cells-file consumes. The candidate grid is the union range: freq
-1.20-1.70 step 0.02, hip_phi all 36, leg_amp 70-130 step 5, hip_amp {12..32}, hip_off
-{20..40 step 5}.
+1.20-1.70 step HW_FREQ_STEP (0.05, Ben 2026-09-09), hip_phi all 36, leg_amp 70-130 step 5,
+hip_amp {12..32}, hip_off {20..40 step 5}.
 """
 import argparse
 import os
@@ -34,7 +34,8 @@ MAP_MU = {0.12: (0.1, 0.3), 0.45: (0.3, 0.5)}
 STEP = dict(freq=0.02, hip_phi=10.0, leg_amp=10.0, hip_amp=4.0, hip_off=10.0)
 
 # candidate grid (union of everything on the table)
-FREQ = [round(1.20 + 0.02 * k, 2) for k in range(26)]
+FREQ_STEP = float(os.environ.get("HW_FREQ_STEP", "0.05"))   # Ben 2026-09-09: 0.05 (was 0.02)
+FREQ = [round(1.20 + FREQ_STEP * k, 2) for k in range(int(round(0.50 / FREQ_STEP)) + 1)]
 PHI = list(range(0, 360, 10))
 LEG = list(range(70, 135, 5))
 HIP = [12, 16, 20, 24, 28, 32]
