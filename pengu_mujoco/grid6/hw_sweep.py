@@ -400,9 +400,14 @@ def main():
                 rows += [r for r in rd if r]
         if not rows:
             raise SystemExit("no shard output")
-        if len(rows) != len(cl):
-            print(f"WARNING: merged {len(rows):,} rows but the grid has "
-                  f"{len(cl):,} cells ({len(cl) - len(rows):,} short)")
+        # No row-count assertion here, deliberately. Two things make one wrong:
+        # --merge is invoked without --cells-file, so `cl` is the full generated
+        # grid rather than the pruned list the shards actually ran; and score()
+        # returns None for any cell whose held rollout falls, so fewer rows than
+        # cells is the normal outcome, not a loss. The shard-contiguity check
+        # above is the one that catches real gaps.
+        print(f"{len(rows):,} rows from {len(found)} shards "
+              f"(cells whose held rollout fell write no row)")
         i_v = COLS.index("v_net_ff")
         rows.sort(key=lambda r: -(float(r[i_v]) if r[i_v] not in ("", "nan") else -1))
         with open(os.path.join(OUT, f"{tag}.csv"), "w", newline="") as fh:
