@@ -56,3 +56,21 @@ exposed. Part of the gap (~10%) also comes from the 100 g mass difference itself
    this CAD (penguV3-convention) would replace the slide variant for replays;
    a c1/c4 sensitivity check (slide vs CAD-true inertia on the same champion
    gaits) would quantify what the map numbers miss.
+
+---
+
+## Addendum 2026-09-08 — updated hardware export: models/pengu1_05_hw_updated/
+
+Ben updated the CAD; re-exported into a NEW directory (nothing overwritten).
+
+| | old export (09-01) | **updated (09-08)** | sweep model (slide-tuned) |
+|---|---|---|---|
+| total mass | 2.1724 kg | **2.2724 kg** | 2.2724 kg |
+| easytorso mass | 1.02208 | **1.12208** | 1.12208 |
+| COM ratio (hips-0) | 1.0440 | **1.0490** | 1.0500 |
+
+The -100 g discrepancy is RESOLVED (missing plate restored in CAD). Actuators:
+raw export has 9 as always — 5 real (hip-L/R, crank1-R, torso, crank1-L) + 4
+passive crank-slider members (slider-L/R, crank2-L, and the crank2_R twin closed
+by the 4 connect equalities). A hardened 5-actuator version (penguV3 convention)
+is the remaining step before this model can replay c1/c4 champions CAD-true.
