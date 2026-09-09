@@ -23,6 +23,11 @@
 #SBATCH --output=logs/hwsweep-%A_%a.out
 #SBATCH --error=logs/hwsweep-%A_%a.out
 
+# Re-running a subset of failed shards: SLURM_ARRAY_TASK_COUNT becomes the
+# size of the RESUBMITTED array, not the original one, so --array=13,23,81
+# would make each task compute 1/3 of the grid instead of 1/256 -- silently
+# the wrong cells. Pass the original width instead:
+#   OF=256 sbatch --array=13,23,81 psc/hw_sweep.slurm ...
 set -euo pipefail
 CFG="${1:?config c1|c2|c5|c6}"
 MU="${2:?mu, e.g. 0.12}"
@@ -42,6 +47,6 @@ CELLS="results/grid6_hw/${CFG}/cells_${CFG}_mu${MU/0./0}_r1.csv"      # 0.12 -> 
 [ -f "${CELLS}" ] && CF=(--cells-file "${CELLS}") || CF=()
 echo "cells: ${CELLS} ($([ -f "${CELLS}" ] && wc -l < "${CELLS}" || echo none))"
 python grid6/hw_sweep.py --mu "${MU}" "${CF[@]}" \
-    --shard "${SLURM_ARRAY_TASK_ID}" --of "${SLURM_ARRAY_TASK_COUNT}"
+    --shard "${SLURM_ARRAY_TASK_ID}" --of "${OF:-${SLURM_ARRAY_TASK_COUNT}}"
 
 echo "done $(date)"
