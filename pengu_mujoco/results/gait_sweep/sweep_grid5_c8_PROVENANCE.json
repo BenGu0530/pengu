@@ -1,0 +1,6 @@
+{
+ "note": "c8 slice CSVs pre-seeded with the Mac partial (commit f9664bd): 701,794 rows, ~96% of the hip_off=0 block plus an off=10 sliver, distributed across all 36 phi slices (~19.6k rows each). Rows of mac origin are FP-platform distinct from rml3 rows within the same slice; pass-level statistics are the robust layer (grid5_design.md).",
+ "seeded_at": "2026-09-08 15:35:02",
+ "mac_rows_total": 701794,
+ "source_artifact": "sweep_grid5_c8_PARTIAL_701794_of_4147200_rows.csv.gz"
+}
