@@ -4,8 +4,8 @@
 # drag-measured friction 0.12 / 0.45 with the 354 deg/s + 29 ms leg servo model, and for
 # c6 also with the 56 ms torso lag on the kappa = 2 loop.
 #
-#   sbatch --array=0-255 psc/realism_filter.slurm c1 act
 #   sbatch --array=0-255 psc/realism_filter.slurm c6 act,both
+#   (c1 dropped 2026-09-08: the slide-tuned c1 is superseded by the hardware-model sweep)
 #
 # COST: one core per array task, billed on elapsed time. ~1.2 s per rollout, so
 #   c1: 192,152 cells x 2 mu x 1 variant = 384k rollouts / 256 tasks ~ 30 min each

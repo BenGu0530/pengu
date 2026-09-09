@@ -67,8 +67,13 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(_HERE)
 sys.path.insert(0, _HERE)
 sys.path.append(ROOT)
-os.environ.setdefault("PENGU_MODEL", "hardware_c1")
-os.environ.setdefault("CONFIG", "c1")
+# hardware-model sweep table (Ben 2026-09-08): every config on its as-built CAD model
+HW_CONFIGS = {"c1": (0.0, "pengu1_05_hw_updated"), "c2": (0.0, "pengu1_20_hw_updated"),
+              "c5": (2.0, "pengu1_20_hw_updated"), "c6": (2.0, "1.31")}
+CONFIG = os.environ.get("CONFIG", "c1").lower()
+assert CONFIG in HW_CONFIGS, f"CONFIG={CONFIG!r} (want {sorted(HW_CONFIGS)})"
+KAPPA, HW_MODEL = HW_CONFIGS[CONFIG]
+os.environ["PENGU_MODEL"] = HW_MODEL
 
 import mujoco                                    # noqa: E402
 import gait_config as gc                         # noqa: E402
@@ -92,7 +97,9 @@ LEADS = (30.0, 50.0, 70.0)      # deg past the naive cancelling phase
 # rebuilt, only re-scored.
 LEG_RATE = 354.0                # deg/s, twelve measurements 2026-08-30, air and ground
 LEG_TAU = 0.0                   # Ben 2026-09-08: hard velocity cap only, no one-pole
-TORSO_CLAMP_DEG = 25.0          # firmware TORSO_CLAMP_DEG (pengu_tune_wifi); c6 as flashed 08-29 was 45
+# torso clamp as flashed: kappa=0 firmware (pengu_tune_wifi) 25 deg; kappa=2 firmware (pengu_champ,
+# 2026-08-29) 45 deg. Set after the config table below.
+TORSO_CLAMP_DEG = 25.0 if KAPPA == 0.0 else 45.0
 CLEAR_MIN_MM = 10.0             # clear_ok flag threshold; the clear column stays for re-thresholding
 CEILING = 1e9                   # no cell is excluded any more
 
@@ -102,10 +109,10 @@ PHI = list(range(200, 310, 10))                            # 200 .. 300
 LEG = list(range(70, 135, 5))                              # 70 .. 130
 HIP = [12, 16, 20, 24, 28, 32]
 OFF = [20, 25, 30, 35, 40]                                 # 0/10/50 dropped
-OUT = os.path.join(ROOT, "results", "grid6_hw")
+OUT = os.path.join(ROOT, "results", "grid6_hw", CONFIG)
 COLS = (["freq", "hip_phi", "leg_amp", "hip_amp", "hip_off", "mu",
          "A0", "phi0", "best_lead"]
-        + [f"{m}_{w}" for w in ("held", "ff")
+        + [f"{m}_{w}" for w in ("held", "ff", "pid")
            for m in ("fell", "v_net", "straight", "clear", "clear_ok", "drift", "rollrms",
                      "axisrms", "fore", "rearp5", "sat")])
 
@@ -166,8 +173,12 @@ def rollout(freq, phi, leg, hip, off, mu, mode, A=0.0, ph=0.0, kappa=0.0):
         elif mode == "held":
             u = 0.0
         else:
+            # torso joint = s * (kappa-1) * axis roll, phase-locked: A is the fitted axis
+            # amplitude, ph its phase plus the lead; the sign folds into a 180 deg shift
+            g = pid.s * (kappa - 1.0)
             w = 2 * math.pi * freq * (t - gc.T_HOLD - gc.T_TRANSITION)
-            u = alpha * math.radians(A) * math.sin(w + math.radians(ph))
+            u = alpha * math.radians(abs(g) * A) * math.sin(
+                w + math.radians(ph + (180.0 if g < 0 else 0.0)))
             u = max(-pid.limit, min(pid.limit, u))
         buf.append((t, u))
         while len(buf) > 1 and buf[1][0] <= t - SERVO_LAG:
@@ -309,13 +320,18 @@ def score(cell, mu):
     A0, p0, _ = held["_fit"]
     best, best_lead = None, float("nan")
     for lead in LEADS:
-        r = rollout(f, phi, leg, hip, off, mu, "ff", A=A0, ph=p0 + 180.0 + lead)
+        # feedforward for any kappa: torso joint = (kappa-1) * axis roll, phase-locked.
+        # kappa=0 cancels the roll (amplitude A0, 180 deg), kappa=2 leans with it (+A0).
+        r = rollout(f, phi, leg, hip, off, mu, "ff", A=A0, ph=p0 + lead, kappa=KAPPA)
         if r.get("fell") is not None:
             continue
         if best is None or r["rollrms"] < best["rollrms"]:
             best, best_lead = r, lead
+    # the loop the robot actually ran for kappa=2 (pengu_champ 08-29), with the 56 ms in it;
+    # for kappa=0 that loop is the documented failure mode and is not rolled out
+    pid = rollout(f, phi, leg, hip, off, mu, "pid", kappa=KAPPA) if KAPPA != 0.0 else blank()
     row = list(cell) + [mu, round(A0, 3), round(p0 % 360, 1), best_lead]
-    for r in (held, best if best else blank()):
+    for r in (held, best if best else blank(), pid):
         for k in ("fell", "v_net", "straight", "clear", "clear_ok", "drift", "rollrms",
                   "axisrms", "fore", "rearp5", "sat"):
             v = r.get(k, float("nan"))
@@ -330,17 +346,27 @@ def main():
     ap.add_argument("--shard", type=int, default=0)
     ap.add_argument("--of", type=int, default=1)
     ap.add_argument("--merge", action="store_true")
+    ap.add_argument("--cells-file", default="",
+                    help="csv of freq,hip_phi,leg_amp,hip_amp,hip_off from hw_mask.py; replaces the grid")
     a = ap.parse_args()
     os.makedirs(OUT, exist_ok=True)
-    tag = f"hwact_mu{int(round(a.mu * 100)):03d}"
-    cl = cells()
+    tag = f"hwact_{CONFIG}_mu{int(round(a.mu * 100)):03d}"
+    if a.cells_file:
+        with open(a.cells_file) as fh:
+            rd = csv.DictReader(fh)
+            cl = [tuple(float(r[k]) for k in ("freq", "hip_phi", "leg_amp", "hip_amp", "hip_off"))
+                  for r in rd]
+    else:
+        cl = cells()
 
     if a.cmd == "count":
         full = len(FREQ) * len(PHI) * len(LEG) * len(HIP) * len(OFF)
         print(f"grid {len(FREQ)}x{len(PHI)}x{len(LEG)}x{len(HIP)}x{len(OFF)} = {full:,}")
         print(f"inside the {CEILING:.0f} deg/s envelope: {len(cl):,} cells")
-        print(f"rollouts: {len(cl)} x (1 held + {len(LEADS)} ff) "
-              f"= {len(cl) * (1 + len(LEADS)):,}")
+        npid = 1 if KAPPA != 0.0 else 0
+        print(f"{CONFIG}: kappa={KAPPA} model={HW_MODEL}  torso clamp {TORSO_CLAMP_DEG:.0f}")
+        print(f"rollouts: {len(cl)} x (1 held + {len(LEADS)} ff + {npid} pid) "
+              f"= {len(cl) * (1 + len(LEADS) + npid):,}")
         return
 
     if a.merge:

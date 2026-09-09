@@ -26,6 +26,9 @@ _COM_MODELS = {
     # same 5-actuator convention and ballasted to 2.2724 kg / ratio 1.0500.
     # Its COM ratio comes from the geometry, so it is NOT slid at load time.
     "hardware_c1": "../models/hardware_c1/scene.xml",
+    # 2026-09-08 hardware CAD re-exports (Ben), hardened, no hand ballast: 1.05 / 1.20
+    "pengu1_05_hw_updated": "../models/pengu1_05_hw_updated/scene.xml",
+    "pengu1_20_hw_updated": "../models/pengu1_20_hw_updated/scene.xml",
 }
 if _MODEL in _COM_MODELS:
     XML_PATH = _COM_MODELS[_MODEL]
