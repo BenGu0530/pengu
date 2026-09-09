@@ -74,3 +74,14 @@ raw export has 9 as always — 5 real (hip-L/R, crank1-R, torso, crank1-L) + 4
 passive crank-slider members (slider-L/R, crank2-L, and the crank2_R twin closed
 by the 4 connect equalities). A hardened 5-actuator version (penguV3 convention)
 is the remaining step before this model can replay c1/c4 champions CAD-true.
+
+## Addendum 2026-09-08b — models/pengu1_20_hw_updated/ (1.20 hardware CAD, hardened)
+
+Second hardware export (new Onshape doc ea5a08a3...): mass 2.2724 kg (conserved),
+COM ratio 1.1938 ~ 1.20 target, easytorso 1.12208. Hardened with the same recipe
+(raw kept as robot_raw_export.xml; 5 actuators; feet-only collision; 1 ms +
+implicitfast; +/-4.1 N.m). Functional smoke (staged deterministic): kappa=0 mild
+gaits WALK (1.6/270/105/20/off10 @mu0.3 -> net 0.115, head 0.99; 1.4/290/95/16 @
+mu0.5 -> net 0.037); the 1.31-tuned kappa=2 champion gait falls on this CAD-true
+1.20 — expected sensitivity, part of the slide-vs-CAD-true comparison story.
+Hardware model set now: 1.05 + 1.20 CAD-true hardened, ready for champion replays.
