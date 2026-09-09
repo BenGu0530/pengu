@@ -25,8 +25,10 @@
 # Re-running a subset of failed shards: SLURM_ARRAY_TASK_COUNT becomes the
 # size of the RESUBMITTED array, not the original one, so --array=13,23,81
 # would make each task compute 1/3 of the grid instead of 1/256 -- silently
-# the wrong cells. Pass the original width instead:
-#   OF=256 sbatch --array=13,23,81 psc/realism_filter.slurm ...
+# the wrong cells. Pass the original width as the LAST POSITIONAL ARGUMENT.
+# (An environment variable does not survive submission on Bridges-2 -- neither
+# `OF=256 sbatch` nor `sbatch --export=ALL,OF=256` reaches the job.)
+#   sbatch --array=13,23,81 psc/realism_filter.slurm ...
 set -euo pipefail
 CFG="${1:?config c1|c6}"
 VARIANTS="${2:-act}"
@@ -44,6 +46,6 @@ python grid6/realism_check.py \
     --cells-file "results/grid6_hw/filter_cells_${CFG}.csv" \
     --mu 0.12 0.45 \
     --variants ${VARIANTS//,/ } \
-    --shard "${SLURM_ARRAY_TASK_ID}" --of "${OF:-${SLURM_ARRAY_TASK_COUNT}}"
+    --shard "${SLURM_ARRAY_TASK_ID}" --of "${3:-${SLURM_ARRAY_TASK_COUNT}}"
 
 echo "done $(date)"
