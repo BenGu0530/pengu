@@ -17,7 +17,7 @@
 #SBATCH --partition=RM-shared
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=2G
+#SBATCH --mem=2000M
 #SBATCH --time=03:00:00
 #SBATCH --output=logs/realism-%A_%a.out
 #SBATCH --error=logs/realism-%A_%a.out
