@@ -344,16 +344,39 @@ def main():
         return
 
     if a.merge:
+        # Discover the shards instead of assuming how many there are. The array
+        # size is chosen at submit time (--array=0-255 today, wider if the run
+        # is spread over more cores), so a hardcoded range silently drops every
+        # shard above it -- at 256 tasks the old range(64) kept a quarter of the
+        # grid and reported success. A gap in the middle means a task died;
+        # those cells are simply absent, so say so rather than merge a hole.
+        pre = tag + "."
+        found = {}
+        for fn in os.listdir(OUT):
+            if fn.startswith(pre) and fn.endswith(".csv"):
+                mid = fn[len(pre):-4]
+                if mid.isdigit():
+                    found[int(mid)] = os.path.join(OUT, fn)
+        if not found:
+            raise SystemExit(f"no shard files matching {OUT}/{tag}.<n>.csv")
+        n_shards = max(found) + 1
+        missing = [i for i in range(n_shards) if i not in found]
+        print(f"shards: {len(found)} found, highest index {max(found)}")
+        if missing:
+            print(f"WARNING: {len(missing)} of {n_shards} shards missing: "
+                  f"{missing[:10]}{' ...' if len(missing) > 10 else ''}")
+            print("  their cells are NOT in this merge -- re-run them first")
         rows = []
-        for i in range(64):
-            p = os.path.join(OUT, f"{tag}.{i}.csv")
-            if os.path.exists(p):
-                with open(p) as fh:
-                    rd = csv.reader(fh)
-                    next(rd, None)
-                    rows += [r for r in rd if r]
+        for i in sorted(found):
+            with open(found[i]) as fh:
+                rd = csv.reader(fh)
+                next(rd, None)
+                rows += [r for r in rd if r]
         if not rows:
             raise SystemExit("no shard output")
+        if len(rows) != len(cl):
+            print(f"WARNING: merged {len(rows):,} rows but the grid has "
+                  f"{len(cl):,} cells ({len(cl) - len(rows):,} short)")
         i_v = COLS.index("v_net_ff")
         rows.sort(key=lambda r: -(float(r[i_v]) if r[i_v] not in ("", "nan") else -1))
         with open(os.path.join(OUT, f"{tag}.csv"), "w", newline="") as fh:

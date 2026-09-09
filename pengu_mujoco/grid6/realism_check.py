@@ -189,19 +189,36 @@ def main():
     hdr = ["freq", "hip_phi", "leg_amp", "hip_amp", "hip_off", "mu", "variant"] + list(KEYS)
 
     if a.merge:
+        # Discover the shards rather than assuming a count -- the array size is
+        # a submit-time choice, and a hardcoded range silently drops anything
+        # above it. A gap means a task died and those rows are absent.
+        pre = tag + "."
+        found = {}
+        for fn in os.listdir(OUT):
+            if fn.startswith(pre) and fn.endswith(".csv"):
+                mid = fn[len(pre):-4]
+                if mid.isdigit():
+                    found[int(mid)] = os.path.join(OUT, fn)
+        if not found:
+            raise SystemExit(f"no shard files matching {OUT}/{tag}.<n>.csv")
+        n_shards = max(found) + 1
+        missing = [i for i in range(n_shards) if i not in found]
+        print(f"shards: {len(found)} found, highest index {max(found)}")
+        if missing:
+            print(f"WARNING: {len(missing)} of {n_shards} shards missing: "
+                  f"{missing[:10]}{' ...' if len(missing) > 10 else ''}")
+            print("  their rows are NOT in this merge -- re-run them first")
         rows = []
-        for i in range(256):
-            p = os.path.join(OUT, f"{tag}.{i}.csv")
-            if os.path.exists(p):
-                with open(p) as fh:
-                    rd = csv.reader(fh)
-                    next(rd, None)
-                    rows += [r for r in rd if r]
+        for i in sorted(found):
+            with open(found[i]) as fh:
+                rd = csv.reader(fh)
+                next(rd, None)
+                rows += [r for r in rd if r]
         with open(os.path.join(OUT, f"{tag}.csv"), "w", newline="") as fh:
             w = csv.writer(fh)
             w.writerow(hdr)
             w.writerows(rows)
-        print(f"merged {len(rows)} rows -> {OUT}/{tag}.csv")
+        print(f"merged {len(rows):,} rows -> {OUT}/{tag}.csv")
         return
 
     fsw.mujoco = _Mujoco()
